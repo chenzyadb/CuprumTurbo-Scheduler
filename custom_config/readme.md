@@ -53,25 +53,24 @@ CPU功耗计算公式:`Power=A*Freq*volt^2`，其中的A为功耗常量，依据
 #### Governor 用户态调频器 
 一直以来，CuprumTurbo都依靠一套基于CPU负载的主动调频机制进行动态性能限制，她可以无视系统和内核的差异，实现全平台统一体验.  
 CuprumTurbo Governor的CPU调频机制类似于Android早期的interactive调频器，依据CPU实时负载进行调频，具体流程如下：  
-1.获取实时CPU性能需求(demand):  
-- demand计算公式:`demand=max_usage+(100-max_usage)*(margin+boost)/100`，其中`max_usage`为丛集最高CPU负载，`margin`为性能冗余，`boost`为用于加速的额外性能冗余.
+1.获取实时CPU负载(cpu_load):  
+- cpu_load计算公式:`cpu_load=max_usage+(100-max_usage)*(boost)/100`，其中`max_usage`为丛集最高CPU负载，`boost`为用于加速的额外性能冗余.
   
 2.计算目标CPU频率(target_cpu_freq):  
-- target_cpu_freq计算公式:`target_cpu_freq=current_cpu_freq*demand/X`，其中`X`为依据场景进行动态调整的变量.  
+- target_cpu_freq计算公式:`target_cpu_freq=cur_freq*cpu_load/freq_to_load(cur_freq)` `freq_to_load=cur_freq*(100-margin)/next_freq`.  
 
 3.CPU功耗限制:  
-- 在不同的调度模式下，CuprumTurbo调度主要通过CPU功耗限制来对应不同的性能释放需求，CPU功耗限制拥有两种状态，一种为瞬时性能释放状态，一种为长期功耗限制状态.   
+- 在不同的调度模式下，CuprumTurbo调度主要通过CPU功耗限制来对应不同的性能释放需求，CPU功耗限制拥有两种状态，一种为常规状态，一种为加速状态.   
 - CuprumTurbo调度依靠两种状态的切换来应对复杂的使用场景，在保证长时间使用下CPU功耗受控的同时，尽量提供充足的性能释放.     
-- 瞬时性能释放状态由`fast_state_pool`来进行限制，当实时功耗超过长期功耗限制时，按照功耗减少`fast_state_pool`数值，当`fast_state_pool`低于0时回落到长期功耗限制状态.   
-- 当实时功耗低于长期功耗限制时，按照`fast_recover_stair`来恢复`fast_state_pool`中的数值.   
+- 当调度boost被触发时切换至加速状态功耗限制，提供充足的冗余以应对瞬时高爆发负载；当boost结束时使用常规状态功耗限制以降低功耗.   
 - 当CPU功耗超过当前状态的功耗限制时，将会按照不同丛集的算力来分配各个丛集的最大功耗，扫描CPU频率表中对应的功耗并选择一个低于功耗限制的频率作为新的目标频率.   
 
 4.CPU升降频限制:  
 - 当目标频率低于当前频率且距离上次降低CPU频率的间隔小于`freq_down_delay`时，将会忽略当前的降频请求.  
-- 当目标频率高于`expect_freq`且距离上次升频到`expect_freq`以上的间隔小于`freq_up_delay`时，将会忽略当前的升频请求.    
+- 当目标频率高于当前频率且距离上次提升CPU频率的间隔小于`freq_up_delay`时，将会忽略当前的升频请求.   
 
 5.写入CPU频率:  
-- CuprumTurbo的CPU频率写入器经过高度优化，性能开销极低，写入器支持多线程并行，每次写入CPU频率的时间低于0.01ms.  
+- CuprumTurbo的CPU频率写入器经过高度优化，性能开销极低，写入器支持多线程并行，每次写入CPU频率的时间低于0.1ms.  
 ##### 用户态调频器可以自定义的参数如下，按照`powersave` `balance` `performance` `fast`四个调度模式进行分类:  
 |字段               |类型    |定义                                   |
 |:-----------------|:-------|:--------------------------------------|
@@ -83,11 +82,9 @@ CuprumTurbo Governor的CPU调频机制类似于Android早期的interactive调频
 |xc_freq_up_delay  |int     |超大核丛集升频延迟(单位:ms)             |
 |sc_freq_down_delay|int     |小核丛集降频延迟(单位:ms)               |
 |bc_freq_down_delay|int     |大核丛集降频延迟(单位:ms)               |
-|xc_freq_down_delay|int     |超大核丛集降频延迟(单位:ms)              |
-|fast_state_pool   |long int|瞬时性能释放状态限制池(单位:mW·ms)       |
-|fast_recover_stair|int     |瞬时性能释放状态恢复阶梯(单位:mW/ms)     |
-|comm_limit_pwr    |int     |长期功耗限制状态CPU整体功耗最大值(单位:mW)|
-|fast_limit_pwr    |int     |瞬时性能释放状态CPU整体功耗最大值(单位:mW)|
+|xc_freq_down_delay|int     |超大核丛集降频延迟(单位:ms)             |
+|comm_limit_pwr    |int     |常规状态CPU整体功耗最大值(单位:mW)      |
+|boost_limit_pwr   |int     |加速状态CPU整体功耗最大值(单位:mW)      |
 #### Hint 用户态场景触发信号  
 CuprumTurbo能识别屏幕滑动，点击，全面屏手势，顶层activity切换场景，可用于触发调度进行实时调整.
 Hint 的类型如下:
@@ -111,10 +108,7 @@ Hint 的类型如下:
 ##### Boost的自定义参数如下:
 |字段                    |类型    |定义                                |
 |:----------------------|:-------|:-----------------------------------|
-|governor.boost         |int     |Boost被触发时用户态调频器调整的boost值 |
-|TasksetHelper.scene    |char    |Boost被触发时TasksetHelper调整的scene |
-#### Script 脚本
-- 暂不启用此项设定
+|governor.boost         |int     |Boost被触发时用户态调频器调整的boost值|
 
 
 
