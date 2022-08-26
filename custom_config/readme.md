@@ -54,7 +54,7 @@ CPU功耗计算公式:`Power=A*Freq*volt^2`，其中的A为功耗常量，依据
 一直以来，CuprumTurbo都依靠一套基于CPU负载的主动调频机制进行动态性能限制，她可以无视系统和内核的差异，实现全平台统一体验.  
 CuprumTurbo Governor的CPU调频机制类似于Android早期的interactive调频器，依据CPU实时负载进行调频，具体流程如下：  
 1.获取实时CPU负载(cpu_load):  
-- cpu_load计算公式:`cpu_load=max_usage+(100-max_usage)*(boost)/100`，其中`max_usage`为丛集最高CPU负载，`boost`为用于加速的额外性能冗余.
+- cpu_load计算公式:`cpu_load=max_usage+(100-max_usage)*boost/100`，其中`max_usage`为丛集最高CPU负载，`boost`为用于加速的额外性能冗余.
   
 2.计算目标CPU频率(target_cpu_freq):  
 - target_cpu_freq计算公式:`target_cpu_freq=cur_freq*cpu_load/freq_to_load(cur_freq)` `freq_to_load=cur_freq*(100-margin)/next_freq`.  
