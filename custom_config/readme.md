@@ -30,26 +30,26 @@ TasksetHelper支持两种Scene，`normal`对应的是普通情况下的设定，
 CuprumTurbo用户态调频器依赖计算出的虚拟能耗模型进行功耗限制，仅需提供一组数据就能完成自动计算.  
 CPU功耗计算公式:`Power=C*Freq*volt^2`，其中的C为功耗常量，依据提供的真实功耗进行推算.  
 其中的`sc`对应小核丛集，`bc`对应大核丛集，`xc`对应超大核丛集，不存在的丛集请将参数全部置零.  
-|字段                |类型  |定义                                             |
+|字段                |类型  |定义                                            |
 |:------------------|:-----|:------------------------------------------------|
-|sc_efficiency      |int   |小核丛集同频性能，以Cortex-A55@1.0GHz为100进行基准  |
-|bc_efficiency      |int   |大核丛集同频性能，以Cortex-A55@1.0GHz为100进行基准  |
-|xc_efficiency      |int   |超大核丛集同频性能，以Cortex-A55@1.0GHz为100进行基准|
-|sc_basic_freq_mhz  |int   |小核丛集基础频率，当CPU存在一定负载时保持在此频率     |
-|bc_basic_freq_mhz  |int   |大核丛集基础频率，当CPU存在一定负载时保持在此频率     |
-|xc_basic_freq_mhz  |int   |超大核丛集基础频率，当CPU存在一定负载时保持在此频率   |
-|sc_burst_freq_mhz  |int   |小核丛集加速频率，CPU电压在这个挡位开始升高          |
-|bc_burst_freq_mhz  |int   |大核丛集加速频率，CPU电压在这个挡位开始升高          |
-|xc_burst_freq_mhz  |int   |超大核丛集加速频率，CPU电压在这个挡位开始升高        |
-|sc_expect_freq_mhz |int   |小核丛集期望频率，超过此频率的CPU能效比急剧降低      |
-|bc_expect_freq_mhz |int   |小核丛集期望频率，超过此频率的CPU能效比急剧降低      |
-|xc_expect_freq_mhz |int   |超大核丛集期望频率，超过此频率的CPU能效比急剧降低    |
-|sc_current_freq_mhz|int   |小核丛集真实频率，用于建立能耗模型                  |
-|bc_current_freq_mhz|int   |大核丛集真实频率，用于建立能耗模型                  |
-|xc_current_freq_mhz|int   |超大核丛集真实频率，用于建立能耗模型                |
-|sc_power_mw        |int   |小核丛集真实功耗，用于建立能耗模型                  |
-|bc_power_mw        |int   |大核丛集真实功耗，用于建立能耗模型                  |
-|xc_power_mw        |int   |超大核丛集真实功耗，用于建立能耗模型                |
+|sc_capacity        |int   |小核丛集算力值，用于分配cpu功耗                   |
+|bc_capacity        |int   |大核丛集算力值，用于分配cpu功耗                   |
+|xc_capacity        |int   |超大核丛集算力值，用于分配cpu功耗                 |
+|sc_basic_freq_mhz  |int   |小核丛集基础频率，当CPU存在一定负载时保持在此频率 |
+|bc_basic_freq_mhz  |int   |大核丛集基础频率，当CPU存在一定负载时保持在此频率 |
+|xc_basic_freq_mhz  |int   |超大核丛集基础频率，当CPU存在一定负载时保持在此频率|
+|sc_burst_freq_mhz  |int   |小核丛集加速频率，CPU电压在这个挡位开始升高       |
+|bc_burst_freq_mhz  |int   |大核丛集加速频率，CPU电压在这个挡位开始升高       |
+|xc_burst_freq_mhz  |int   |超大核丛集加速频率，CPU电压在这个挡位开始升高     |
+|sc_expect_freq_mhz |int   |小核丛集期望频率，超过此频率的CPU能效比急剧降低   |
+|bc_expect_freq_mhz |int   |小核丛集期望频率，超过此频率的CPU能效比急剧降低   |
+|xc_expect_freq_mhz |int   |超大核丛集期望频率，超过此频率的CPU能效比急剧降低 |
+|sc_current_freq_mhz|int   |小核丛集真实频率，用于建立能耗模型                |
+|bc_current_freq_mhz|int   |大核丛集真实频率，用于建立能耗模型                |
+|xc_current_freq_mhz|int   |超大核丛集真实频率，用于建立能耗模型              |
+|sc_power_mw        |int   |小核丛集真实功耗，用于建立能耗模型                |
+|bc_power_mw        |int   |大核丛集真实功耗，用于建立能耗模型                |
+|xc_power_mw        |int   |超大核丛集真实功耗，用于建立能耗模型              |
 #### Governor 用户态调频器 
 一直以来，CuprumTurbo都依靠一套基于CPU负载的主动调频机制进行动态性能限制，她可以无视系统和内核的差异，实现全平台统一体验.  
 CuprumTurbo Governor的CPU调频机制类似于Android早期的interactive调频器，依据CPU实时负载进行调频，具体流程如下：  
