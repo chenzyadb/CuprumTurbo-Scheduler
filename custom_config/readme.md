@@ -16,9 +16,9 @@ TasksetHelper支持扫描前台窗口的所有线程，并按照线程名称和�
 通过修改配置文件可以自定义各种类型线程的绑核及调度优先级设定，TasksetHelper的线程分类如下：
 - `efficiency`性能需求极低的日志/垃圾回收线程，尽量降低分配给此类线程的CPU资源以减少性能浪费.  
 - `common`性能需求中等的普通线程，如WebView/Download/Media线程，无需分配大量的CPU资源.  
-- `all_perf`性能需求较高且难以分类的线程，如Thread-线程，需要优先考虑此类线程的CPU资源分配，且不能进行过于严格的绑核操作.  
 - `multi_perf`性能需求较高且依赖多核性能的线程，如Unity引擎的WorkerThread，必须优先考虑此类线程的CPU资源分配且尽量绑定在较多的CPU核心上，如CPU大核丛集.  
-- `single_perf`性能需求较高且依赖单核性能的线程，如负责界面渲染的RenderThread，必须优先考虑此类线程的CPU资源分配且尽量绑定在单核性能较强的CPU核心上，如CPU超大核丛集.  
+- `single_perf`性能需求较高且依赖单核性能的线程，如负责界面渲染的RenderThread，必须优先考虑此类线程的CPU资源分配且尽量绑定在单核性能较强的CPU核心上，如CPU超大核丛集. 
+- `other`其他未知线程，尽量不与`single_perf`重叠以避免抢占单核性能.
 ##### TasksetHelper Scene定义
 TasksetHelper支持两种Scene，`normal`对应的是普通情况下的设定，`boost`对应的是瞬时性能需求较高情况下的设定，主要为了应对手机亮屏/app冷启动等场景.
 ##### 线程类型对应参数设定   
@@ -99,7 +99,7 @@ Hint 的类型如下:
 |:--------------|:------|:----------------------|
 |boost_type     |char   |对应的boost类型         |
 |boost_duration |int    |boost持续的时间(单位:ms)|
-#### Boost 调度调整策略
+#### Boost 用户态调频器加速  
 依据Hint设定触发的调度状态调整策略，按照以下优先级切换:  
 `heavyload` > `gesture` > `swipe` > `touch` > `none`  
 当现在的boost持续时间未超过`boost_duration`且目标boost优先级低于当前boost时，忽略boost的切换请求.  
