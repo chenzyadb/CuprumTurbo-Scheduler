@@ -37,9 +37,9 @@ CPU功耗计算公式:`Power=C*Freq*volt^2`，其中的C为功耗常量，依据
 |sc_basic_freq_mhz  |int   |小核丛集基础频率，当CPU存在一定负载时保持在此频率 |
 |bc_basic_freq_mhz  |int   |大核丛集基础频率，当CPU存在一定负载时保持在此频率 |
 |xc_basic_freq_mhz  |int   |超大核丛集基础频率，当CPU存在一定负载时保持在此频率|
-|sc_burst_freq_mhz  |int   |小核丛集加速频率，CPU电压在这个挡位开始升高       |
-|bc_burst_freq_mhz  |int   |大核丛集加速频率，CPU电压在这个挡位开始升高       |
-|xc_burst_freq_mhz  |int   |超大核丛集加速频率，CPU电压在这个挡位开始升高     |
+|sc_burst_freq_mhz  |int   |小核丛集加速频率                                 |
+|bc_burst_freq_mhz  |int   |大核丛集加速频率                                 |
+|xc_burst_freq_mhz  |int   |超大核丛集加速频率                               |
 |sc_expect_freq_mhz |int   |小核丛集期望频率，超过此频率的CPU能效比急剧降低   |
 |bc_expect_freq_mhz |int   |小核丛集期望频率，超过此频率的CPU能效比急剧降低   |
 |xc_expect_freq_mhz |int   |超大核丛集期望频率，超过此频率的CPU能效比急剧降低 |
