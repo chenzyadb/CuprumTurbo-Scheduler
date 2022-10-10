@@ -70,7 +70,7 @@ CuprumTurbo支持`powersave` `balance` `performance` `fast`四种调度模式.
 调度程序支持`touch` `swipe` `gesture` `heavyload`四种加速策略.  
 `touch`为用户按压/触碰屏幕时触发的加速.  
 `swipe`为用户滑动屏幕一段距离时触发的加速.  
-`gesture`为用户进行手势操作时触发的加速.
+`gesture`为用户进行手势操作时触发的加速.  
 `heavyload`为处于点亮屏幕/切换应用等重负载场景时触发的加速.  
 当触发的加速策略`boost`大于当前boost值时切换到新的`boost`，反之则维持当前`boost`.  
 当`boost`触发的时间超过`durationTime`时结束`boost`并将boost值置零.  
