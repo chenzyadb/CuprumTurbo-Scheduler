@@ -75,7 +75,7 @@ CuprumTurbo支持`powersave` `balance` `performance` `fast`四种调度模式.
 当触发的加速策略`boost`大于当前boost值时切换到新的`boost`，反之则维持当前`boost`.  
 当`boost`触发的时间超过`durationTime`时结束`boost`并将boost值置零.  
 CPU目标频率计算公式(参考):`cpuMaxFreq * (cpuUtil + (1024 - cpuUtil) * boost / 100) / 1024`
-|字段           |类型     |定义                  |
-|:--------------|:-------|:---------------------|
-|boost          |int     |CPU调频加速值          |
-|durationTime   |int     |boost持续时间(单位:ms) |
+|字段           |类型     |定义                    |
+|:--------------|:-------|:-----------------------|
+|boost          |int     |CPU调频加速值(范围0~100) |
+|durationTime   |int     |boost持续时间(单位:ms)   |
