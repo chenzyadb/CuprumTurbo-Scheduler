@@ -44,7 +44,7 @@
 		"modelFreq": 2840,
 		"modelPower": 2240
 	},
-    "policy3_Config": {
+    	"policy3_Config": {
 		"enable": 1,
 		"freqTablePath": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_available_frequencies",
 		"cpu_capacity": 1024,
@@ -84,7 +84,7 @@
 				"upRateLatency": 120,
 				"downRateDelay": 40
 			},
-            "policy3": {
+            		"policy3": {
 				"upRateLatency": 120,
 				"downRateDelay": 40
 			},
@@ -121,7 +121,7 @@
 				"upRateLatency": 100,
 				"downRateDelay": 80
 			},
-            "policy3": {
+            		"policy3": {
 				"upRateLatency": 100,
 				"downRateDelay": 80
 			},
@@ -158,7 +158,7 @@
 				"upRateLatency": 80,
 				"downRateDelay": 120
 			},
-            "policy3": {
+            		"policy3": {
 				"upRateLatency": 100,
 				"downRateDelay": 80
 			},
@@ -195,7 +195,7 @@
 				"upRateLatency": 60,
 				"downRateDelay": 160
 			},
-            "policy3": {
+            		"policy3": {
 				"upRateLatency": 100,
 				"downRateDelay": 80
 			},
