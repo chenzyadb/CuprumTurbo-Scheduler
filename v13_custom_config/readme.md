@@ -48,6 +48,7 @@ CPU核心由单个数字表示，如`0-3,6-7`核心可写为"012367"，`4-7`核�
 |efficiencyCpus |string  |包含在`efficiency`分组的CPU核心                     |
 |multiPerfCpus  |string  |包含在`multiPerf`分组的CPU核心                      |
 |singlePerfCpus |string  |包含在`singlePerf`分组的CPU核心                     |
+|otherCpus      |string  |包含在`other`分组的CPU核心                          |
 |efficiencyNice |int     |`efficiency`分组调度优先级(范围-20~19)              |
 |performanceNice|int     |`multiPerf` `singlePerf`分组调度优先级(范围-20~19)  |
 |otherNice      |int     |`other`分组调度优先级(范围-20~19)                   |
