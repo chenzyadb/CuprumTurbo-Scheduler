@@ -1,6 +1,6 @@
-## CuprumTurbo V13 自定义配置开发文档  
+## CuprumTurbo V13 自定义配置开发文档 V2.0  
 CuprumTurbo V13支持用户对调度配置进行自定义，通过修改调度参数可以满足用户对性能调控的多元化需求.  
-在进行自定义前请务必仔细阅读此文档以了解调度的工作原理，避免操作不当导致无法达到预定目标.  
+在进行自定义前请务必仔细阅读此文档以了解调度的工作原理，避免调参有误导致无法达到预定目标.  
 ### Json信息  
 |字段            |类型    |定义             |
 |:---------------|:------|:----------------|
@@ -36,23 +36,23 @@ CPU协调频器可以自动调整内核调频器的各项参数以改善系统�
 |slowSampleTime |int    |缓慢采样间隔时间(单位:ms)|
 ### 线程优化模块设定 TasksetHelper_Config  
 线程优化模块可以自动调整前台进程的线程亲和性/线程优先级以改善流畅度和能效表现.  
-`efficiency`分组: 不需要大量CPU资源的日志/垃圾回收线程，如`ReferenceQueue` `Jit thread pool` `xcrash`.  
-`singlePerf`分组: 需要大量CPU单核资源的线程，如`UnityMain` `GameThread` `RenderThread`.  
-`multiPerf`分组: 需要大量CPU多核资源的线程，如`Worker Thread` `Job.Worker` `TaskGraphNP`.  
-`other`分组: 无法分类的未知类型线程.  
+TasksetHelper模块可以基于线程名称和CPU占用等数据智能分类前台线程，组别如下:  
+`GameSingleThread`分组: 包含游戏程序中占用CPU单核性能较多的线程.  
+`GameMultiThread`分组: 包含游戏程序中占用CPU多核性能较多的线程.  
+`RenderThread`分组: 包含应用程序中负责界面渲染的相关线程.  
+`UIThread`分组: 包含应用程序中负责生成用户界面的相关线程.  
+`MediaThread`分组: 包含应用程序中负责媒体（包括音频/视频解码或渲染）的相关线程.  
+`WebViewThread`分组: 包含应用程序中WebView组件的相关线程.  
+`ProcessThread`分组: 包含应用程序中负责数据处理的相关线程.  
+`NonRealTimeThread`分组: 包含应用程序中不需要数据实时处理的线程.  
+`OtherThread`分组: 包含TasksetHelper无法分类的线程.  
 CPU核心由单个数字表示，如`0-3,6-7`核心可写为"012367"，`4-7`核心可写为"4567".  
 调度优先级与Linux内核nice值相同，范围为-20~19，数字越小优先级越高.  
-|字段           |类型     |定义                                              |
-|:--------------|:-------|:--------------------------------------------------|
-|enable         |int     |是否启用线程优化模块                                |
-|setDelayTime   |int     |亲和性设定生效延迟(单位:ms)                         |
-|efficiencyCpus |string  |包含在`efficiency`分组的CPU核心                     |
-|multiPerfCpus  |string  |包含在`multiPerf`分组的CPU核心                      |
-|singlePerfCpus |string  |包含在`singlePerf`分组的CPU核心                     |
-|otherCpus      |string  |包含在`other`分组的CPU核心                          |
-|efficiencyNice |int     |`efficiency`分组调度优先级(范围-20~19)              |
-|performanceNice|int     |`multiPerf` `singlePerf`分组调度优先级(范围-20~19)  |
-|otherNice      |int     |`other`分组调度优先级(范围-20~19)                   |
+|字段           |类型     |定义                           |
+|:--------------|:-------|:------------------------------|
+|enable         |int     |是否启用线程优化模块            |
+|cpus           |string  |此分组的cpu亲和性设定           |
+|nice           |int     |此分组的调度优先级(范围-20~19)  |
 ### 模式切换器 modeSwitcher  
 CuprumTurbo支持`powersave` `balance` `performance` `fast`四种调度模式.  
 当用户进行模式切换操作后，程序将按照模式切换器中预设的参数重新设定调度程序.  
