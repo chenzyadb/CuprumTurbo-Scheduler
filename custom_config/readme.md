@@ -35,8 +35,7 @@ CPU协调频器可以自动调整内核调频器的各项参数以改善系统�
 |:--------------|:------|:-----------------------|
 |fastSampleTime |int    |快速采样间隔时间(单位:ms)|
 |slowSampleTime |int    |缓慢采样间隔时间(单位:ms)|
-### 线程优化模块设定 TasksetHelper_Config  
-线程优化模块可以自动调整前台进程的线程亲和性/线程优先级以改善流畅度和能效表现.  
+### 线程优化模块设定 TasksetHelper_Config   
 TasksetHelper模块可以基于线程名称和CPU占用等数据智能分类前台线程，组别如下:  
 `GameSingleThread`分组: 包含游戏程序中占用CPU单核性能较多的线程.  
 `GameMultiThread`分组: 包含游戏程序中占用CPU多核性能较多的线程.  
