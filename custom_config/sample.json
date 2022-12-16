@@ -1,6 +1,6 @@
 {
-	"name": "Snapdragon8Gen2",
-	"author": "chenzyadb",
+	"name": "[Platform Name][Version/Date]",
+	"author": "[Author Name]",
 	"configVersion": 2,
 	"cpuPolicy": {
 		"cpu0": 0,
