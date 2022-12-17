@@ -27,8 +27,8 @@ CuprumTurbo V13支持用户对调度配置进行自定义，通过修改调度�
 |lowPowerFreq   |int    |CPU功耗最低频率(单位:MHz)           |
 |basicFreq      |int    |能保持流畅度的最低CPU频率(单位:MHz) |
 |expectFreq     |int    |CPU能效比最高频率(单位:MHz)         |
-|modelFreq      |int    |用于生成能耗模型的CPU频率(单位:MHz) |
-|modelPower     |int    |用于生成能耗模型的CPU功耗(单位:mW)  |
+|modelFreq      |int    |用于生成功耗模型的CPU频率(单位:MHz) |
+|modelPower     |int    |用于生成功耗模型的CPU功耗(单位:mW)  |
 ### CPU协调频器设定 CoCpuGovernor_Config  
 CPU协调频器可以自动调整内核调频器的各项参数以改善系统流畅度和降低功耗.  
 |字段           |类型    |定义                   |
@@ -74,8 +74,8 @@ CuprumTurbo支持`powersave` `balance` `performance` `fast`四种调度模式.
 `swipe`为用户滑动屏幕一段距离时触发的加速.  
 `gesture`为用户进行手势操作时触发的加速.  
 `heavyload`为处于点亮屏幕/切换应用等重负载场景时触发的加速.  
-当触发的加速策略`boost`大于当前boost值时切换到新的`boost`，反之则维持当前`boost`.  
-当`boost`触发的时间超过`durationTime`时结束`boost`并将boost值置零.  
+当触发的加速策略boost值大于当前boost值时设定为新的boost值，反之则维持当前boost值.  
+当加速触发的时间超过`durationTime`时结束加速并将boost值置零.  
 CPU目标频率计算公式(参考):`cpuMaxFreq * (cpuUtil + (1024 - cpuUtil) * boost / 100) / 1024`
 |字段           |类型     |定义                    |
 |:--------------|:-------|:-----------------------|
