@@ -187,8 +187,8 @@
 				"downRateDelay": 120
 			},
             		"policy3": {
-				"upRateLatency": 100,
-				"downRateDelay": 80
+				"upRateLatency": 80,
+				"downRateDelay": 120
 			},
 			"boostConfig": {
 				"touch": {
@@ -224,8 +224,8 @@
 				"downRateDelay": 160
 			},
             		"policy3": {
-				"upRateLatency": 100,
-				"downRateDelay": 80
+				"upRateLatency": 60,
+				"downRateDelay": 160
 			},
 			"boostConfig": {
 				"touch": {
