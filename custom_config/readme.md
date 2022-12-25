@@ -1,4 +1,4 @@
-## CuprumTurbo V13 自定义配置开发文档 V2.0  
+## CuprumTurbo V13 自定义配置开发文档 V3.0  
 CuprumTurbo V13支持用户对调度配置进行自定义，通过修改调度参数可以满足用户对性能调控的多元化需求.  
 在进行自定义前请务必仔细阅读此文档以了解调度的工作原理，避免调参有误导致无法达到预定目标.  
 ### Json信息  
@@ -37,6 +37,7 @@ CPU协调频器可以自动调整内核调频器的各项参数以改善系统�
 |slowSampleTime |int    |缓慢采样间隔时间(单位:ms)|
 ### 线程优化模块设定 TasksetHelper_Config   
 TasksetHelper模块可以基于线程名称和CPU占用等数据智能分类前台线程，组别如下:  
+`MainThread`分组: 包含应用程序的主线程.   
 `GameSingleThread`分组: 包含游戏程序中占用CPU单核性能较多的线程.  
 `GameMultiThread`分组: 包含游戏程序中占用CPU多核性能较多的线程.  
 `RenderThread`分组: 包含应用程序中负责界面渲染的相关线程.  

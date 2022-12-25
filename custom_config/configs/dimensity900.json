@@ -1,7 +1,7 @@
 {
 	"name": "Dimensity900/920/1080",
 	"author": "chenzyadb",
-	"configVersion": 2,
+	"configVersion": 3,
 	"cpuPolicy": {
 		"cpu0": 0,
 		"cpu1": 0,
@@ -40,14 +40,46 @@
 	},
 	"TasksetHelper_Config": {
 		"enable": 1,
-		"setDelayTime": 1000,
-		"efficiencyCpus": "0123",
-		"multiPerfCpus": "0123456",
-		"singlePerfCpus": "7",
-		"otherCpus": "0123456",
-		"efficiencyNice": 10,
-		"performanceNice": -20,
-		"otherNice": 0
+		"MainThread": {
+			"cpus": "67",
+			"nice": -12
+		},
+		"GameSingleThread": {
+			"cpus": "7",
+			"nice": -20
+		},
+		"GameMultiThread": {
+			"cpus": "0123456",
+			"nice": -20
+		},
+		"RenderThread": {
+			"cpus": "7",
+			"nice": -20
+		},
+		"UIThread": {
+			"cpus": "67",
+			"nice": -12
+		},
+		"MediaThread": {
+			"cpus": "0123456",
+			"nice": -16
+		},
+		"WebViewThread": {
+			"cpus": "67",
+			"nice": -12
+		},
+		"ProcessThread": {
+			"cpus": "0123456",
+			"nice": -10
+		},
+		"NonRealTimeThread": {
+			"cpus": "0123",
+			"nice": 10
+		},
+		"OtherThread": {
+			"cpus": "01234567",
+			"nice": 0
+		}
 	},
 	"modeSwitcher": {
 		"powersave": {

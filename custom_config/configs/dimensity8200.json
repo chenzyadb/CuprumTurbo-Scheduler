@@ -50,6 +50,10 @@
 	},
 	"TasksetHelper_Config": {
 		"enable": 1,
+		"MainThread": {
+			"cpus": "4567",
+			"nice": -12
+		},
 		"GameSingleThread": {
 			"cpus": "7",
 			"nice": -20

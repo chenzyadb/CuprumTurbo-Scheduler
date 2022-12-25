@@ -1,7 +1,7 @@
 {
 	"name": "Helio_G90/G90T",
 	"author": "chenzyadb",
-	"configVersion": 2,
+	"configVersion": 3,
 	"cpuPolicy": {
 		"cpu0": 0,
 		"cpu1": 0,
@@ -40,6 +40,10 @@
 	},
 	"TasksetHelper_Config": {
 		"enable": 1,
+		"MainThread": {
+			"cpus": "67",
+			"nice": -12
+		},
 		"GameSingleThread": {
 			"cpus": "7",
 			"nice": -20

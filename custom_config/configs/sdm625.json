@@ -1,7 +1,7 @@
 {
 	"name": "Snapdragon625/626/450",
 	"author": "chenzyadb",
-	"configVersion": 2,
+	"configVersion": 3,
 	"cpuPolicy": {
 		"cpu0": 0,
 		"cpu1": 0,
@@ -30,6 +30,10 @@
 	},
 	"TasksetHelper_Config": {
 		"enable": 1,
+		"MainThread": {
+			"cpus": "01234567",
+			"nice": -12
+		},
 		"GameSingleThread": {
 			"cpus": "7",
 			"nice": -20

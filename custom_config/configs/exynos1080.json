@@ -1,7 +1,7 @@
 {
 	"name": "Exynos1080",
 	"author": "chenzyadb",
-	"configVersion": 2,
+	"configVersion": 3,
 	"cpuPolicy": {
 		"cpu0": 0,
 		"cpu1": 0,
@@ -50,6 +50,10 @@
 	},
 	"TasksetHelper_Config": {
 		"enable": 1,
+		"MainThread": {
+			"cpus": "4567",
+			"nice": -12
+		},
 		"GameSingleThread": {
 			"cpus": "7",
 			"nice": -20
