@@ -1,7 +1,7 @@
 {
 	"name": "Dimensity8200",
 	"author": "chenzyadb",
-	"configVersion": 2,
+	"configVersion": 3,
 	"cpuPolicy": {
 		"cpu0": 0,
 		"cpu1": 0,
