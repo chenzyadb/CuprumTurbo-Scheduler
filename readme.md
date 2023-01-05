@@ -14,4 +14,4 @@
 `cd ./CuprumTurbo-Scheduler/source`  
 `cmake .`  
 `make`  
-4.编译后的二进制文件位于./source/CuDaemon  
+4.编译后的二进制文件位于./CuDaemon  
