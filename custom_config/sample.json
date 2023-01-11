@@ -44,7 +44,7 @@
 		"modelFreq": 2800,
 		"modelPower": 1880
 	},
-    "policy3_Config": {
+    	"policy3_Config": {
 		"enable": 1,
 		"freqTablePath": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_available_frequencies",
 		"cpu_capacity": 1024,
@@ -61,7 +61,7 @@
 	"TasksetHelper_Config": {
 		"enable": 1,
 		"MainThread": {
-			"cpus": "4567",
+			"cpus": "3456",
 			"nice": -12
 		},
 		"GameSingleThread": {
@@ -69,7 +69,7 @@
 			"nice": -20
 		},
 		"GameMultiThread": {
-			"cpus": "56",
+			"cpus": "3456",
 			"nice": -20
 		},
 		"RenderThread": {
@@ -89,7 +89,7 @@
 			"nice": -12
 		},
 		"ProcessThread": {
-			"cpus": "34",
+			"cpus": "3456",
 			"nice": -10
 		},
 		"NonRealTimeThread": {
@@ -116,7 +116,7 @@
 				"upRateLatency": 120,
 				"downRateDelay": 40
 			},
-            "policy3": {
+            		"policy3": {
 				"upRateLatency": 120,
 				"downRateDelay": 40
 			},
@@ -153,7 +153,7 @@
 				"upRateLatency": 100,
 				"downRateDelay": 80
 			},
-            "policy3": {
+            		"policy3": {
 				"upRateLatency": 100,
 				"downRateDelay": 80
 			},
@@ -190,7 +190,7 @@
 				"upRateLatency": 80,
 				"downRateDelay": 120
 			},
-            "policy3": {
+            		"policy3": {
 				"upRateLatency": 80,
 				"downRateDelay": 120
 			},
@@ -227,7 +227,7 @@
 				"upRateLatency": 60,
 				"downRateDelay": 160
 			},
-            "policy3": {
+                	"policy3": {
 				"upRateLatency": 60,
 				"downRateDelay": 160
 			},
