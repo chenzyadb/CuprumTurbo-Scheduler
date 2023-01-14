@@ -1,4 +1,4 @@
-### CuprumTurbo Scheduler  
+## CuprumTurbo Scheduler  
 一个易于上手的调度  
 #### 自定义配置  
 - 详见: [自定义配置帮助文档](https://github.com/chenzyyzd/CuprumTurbo-Scheduler/blob/main/custom_config/readme.md).  
@@ -11,7 +11,7 @@
 2.安装CMake(已安装的可跳过).  
 `apt-get install cmake`  
 3.使用CMake编译源码.  
-`cd ./source`  
+`cd ./CuprumTurbo-Scheduler/source`  
 `cmake .`  
 `make`  
-4.编译后的二进制文件位于./source/CuDaemon  
+4.编译后的二进制文件位于./CuDaemon  
