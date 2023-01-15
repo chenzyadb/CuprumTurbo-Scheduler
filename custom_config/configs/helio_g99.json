@@ -1,5 +1,5 @@
 {
-	"name": "Snapdragon765/765G/768G",
+	"name": "Helio_G99",
 	"author": "chenzyadb",
 	"configVersion": 3,
 	"cpuPolicy": {
@@ -10,7 +10,7 @@
 		"cpu4": 0,
 		"cpu5": 0,
 		"cpu6": 1,
-		"cpu7": 2,
+		"cpu7": 1,
 		"cpu8": -1,
 		"cpu9": -1
 	},
@@ -20,29 +20,19 @@
 		"cpu_capacity": 420,
 		"lowPowerFreq": 600,
 		"basicFreq": 1000,
-		"expectFreq": 1400,
-		"modelFreq": 1800,
-		"modelPower": 320
+		"expectFreq": 1600,
+		"modelFreq": 2000,
+		"modelPower": 285
 	},
 	"policy1_Config": {
 		"enable": 1,
 		"freqTablePath": "/sys/devices/system/cpu/cpu6/cpufreq/scaling_available_frequencies",
-		"cpu_capacity": 942,
-		"lowPowerFreq": 700,
-		"basicFreq": 1100,
-		"expectFreq": 1900,
-		"modelFreq": 2200,
-		"modelPower": 1100
-	},
-	"policy2_Config": {
-		"enable": 1,
-		"freqTablePath": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_available_frequencies",
 		"cpu_capacity": 1024,
-		"lowPowerFreq": 800,
+		"lowPowerFreq": 700,
 		"basicFreq": 1200,
-		"expectFreq": 2100,
-		"modelFreq": 2400,
-		"modelPower": 1500
+		"expectFreq": 2000,
+		"modelFreq": 2200,
+		"modelPower": 950
 	},
 	"CoCpuGovernor_Config": {
 		"fastSampleTime": 20,
@@ -102,10 +92,6 @@
 				"upRateLatency": 120,
 				"downRateDelay": 40
 			},
-			"policy2": {
-				"upRateLatency": 120,
-				"downRateDelay": 40
-			},
 			"boostConfig": {
 				"touch": {
 					"boost": 0,
@@ -132,10 +118,6 @@
 				"downRateDelay": 80
 			},
 			"policy1": {
-				"upRateLatency": 100,
-				"downRateDelay": 80
-			},
-			"policy2": {
 				"upRateLatency": 100,
 				"downRateDelay": 80
 			},
@@ -168,10 +150,6 @@
 				"upRateLatency": 80,
 				"downRateDelay": 120
 			},
-			"policy2": {
-				"upRateLatency": 80,
-				"downRateDelay": 120
-			},
 			"boostConfig": {
 				"touch": {
 					"boost": 10,
@@ -198,10 +176,6 @@
 				"downRateDelay": 160
 			},
 			"policy1": {
-				"upRateLatency": 60,
-				"downRateDelay": 160
-			},
-			"policy2": {
 				"upRateLatency": 60,
 				"downRateDelay": 160
 			},

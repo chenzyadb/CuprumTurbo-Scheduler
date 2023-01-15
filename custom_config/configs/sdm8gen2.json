@@ -61,7 +61,7 @@
 	"TasksetHelper_Config": {
 		"enable": 1,
 		"MainThread": {
-			"cpus": "4567",
+			"cpus": "3456",
 			"nice": -12
 		},
 		"GameSingleThread": {
@@ -69,7 +69,7 @@
 			"nice": -20
 		},
 		"GameMultiThread": {
-			"cpus": "56",
+			"cpus": "3456",
 			"nice": -20
 		},
 		"RenderThread": {
@@ -89,7 +89,7 @@
 			"nice": -12
 		},
 		"ProcessThread": {
-			"cpus": "34",
+			"cpus": "3456",
 			"nice": -10
 		},
 		"NonRealTimeThread": {

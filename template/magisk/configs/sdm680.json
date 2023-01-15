@@ -1,5 +1,5 @@
 {
-	"name": "Snapdragon765/765G/768G",
+	"name": "Snapdragon680",
 	"author": "chenzyadb",
 	"configVersion": 3,
 	"cpuPolicy": {
@@ -7,42 +7,32 @@
 		"cpu1": 0,
 		"cpu2": 0,
 		"cpu3": 0,
-		"cpu4": 0,
-		"cpu5": 0,
+		"cpu4": 1,
+		"cpu5": 1,
 		"cpu6": 1,
-		"cpu7": 2,
+		"cpu7": 1,
 		"cpu8": -1,
 		"cpu9": -1
 	},
 	"policy0_Config": {
 		"enable": 1,
 		"freqTablePath": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
-		"cpu_capacity": 420,
+		"cpu_capacity": 409,
 		"lowPowerFreq": 600,
 		"basicFreq": 1000,
-		"expectFreq": 1400,
-		"modelFreq": 1800,
-		"modelPower": 320
+		"expectFreq": 1600,
+		"modelFreq": 1900,
+		"modelPower": 280
 	},
 	"policy1_Config": {
 		"enable": 1,
-		"freqTablePath": "/sys/devices/system/cpu/cpu6/cpufreq/scaling_available_frequencies",
-		"cpu_capacity": 942,
+		"freqTablePath": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_available_frequencies",
+		"cpu_capacity": 1024,
 		"lowPowerFreq": 700,
 		"basicFreq": 1100,
-		"expectFreq": 1900,
-		"modelFreq": 2200,
-		"modelPower": 1100
-	},
-	"policy2_Config": {
-		"enable": 1,
-		"freqTablePath": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_available_frequencies",
-		"cpu_capacity": 1024,
-		"lowPowerFreq": 800,
-		"basicFreq": 1200,
-		"expectFreq": 2100,
+		"expectFreq": 2000,
 		"modelFreq": 2400,
-		"modelPower": 1500
+		"modelPower": 900
 	},
 	"CoCpuGovernor_Config": {
 		"fastSampleTime": 20,
@@ -51,7 +41,7 @@
 	"TasksetHelper_Config": {
 		"enable": 1,
 		"MainThread": {
-			"cpus": "67",
+			"cpus": "4567",
 			"nice": -12
 		},
 		"GameSingleThread": {
@@ -59,7 +49,7 @@
 			"nice": -20
 		},
 		"GameMultiThread": {
-			"cpus": "0123456",
+			"cpus": "456",
 			"nice": -20
 		},
 		"RenderThread": {
@@ -67,19 +57,19 @@
 			"nice": -20
 		},
 		"UIThread": {
-			"cpus": "67",
+			"cpus": "456",
 			"nice": -12
 		},
 		"MediaThread": {
-			"cpus": "0123456",
+			"cpus": "012345",
 			"nice": -16
 		},
 		"WebViewThread": {
-			"cpus": "67",
+			"cpus": "456",
 			"nice": -12
 		},
 		"ProcessThread": {
-			"cpus": "0123456",
+			"cpus": "456",
 			"nice": -10
 		},
 		"NonRealTimeThread": {
@@ -87,7 +77,7 @@
 			"nice": 10
 		},
 		"OtherThread": {
-			"cpus": "01234567",
+			"cpus": "0123456",
 			"nice": 0
 		}
 	},
@@ -99,10 +89,6 @@
 				"downRateDelay": 40
 			},
 			"policy1": {
-				"upRateLatency": 120,
-				"downRateDelay": 40
-			},
-			"policy2": {
 				"upRateLatency": 120,
 				"downRateDelay": 40
 			},
@@ -135,10 +121,6 @@
 				"upRateLatency": 100,
 				"downRateDelay": 80
 			},
-			"policy2": {
-				"upRateLatency": 100,
-				"downRateDelay": 80
-			},
 			"boostConfig": {
 				"touch": {
 					"boost": 5,
@@ -168,10 +150,6 @@
 				"upRateLatency": 80,
 				"downRateDelay": 120
 			},
-			"policy2": {
-				"upRateLatency": 80,
-				"downRateDelay": 120
-			},
 			"boostConfig": {
 				"touch": {
 					"boost": 10,
@@ -198,10 +176,6 @@
 				"downRateDelay": 160
 			},
 			"policy1": {
-				"upRateLatency": 60,
-				"downRateDelay": 160
-			},
-			"policy2": {
 				"upRateLatency": 60,
 				"downRateDelay": 160
 			},

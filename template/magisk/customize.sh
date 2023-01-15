@@ -15,7 +15,6 @@ function get_taro_name() {
 	fi
 }
 
-#Some 778G/780G also named lahaina.
 function get_lahaina_name() {
 	cpu7_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
 	cpu4_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy4/cpuinfo_max_freq)
@@ -55,6 +54,15 @@ function get_mt6895_name() {
 	fi
 }
 
+function get_bengal_name() {
+	cpu_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
+	if [ $cpu_max_freq -gt 2300000 ] ; then
+		echo "sdm680"
+	else 
+		echo "sdm665"
+	fi
+}
+
 function get_config_name() {
 	case "$1" in
 	sunstone*)
@@ -64,6 +72,7 @@ function get_config_name() {
 	taro*) 
 		get_taro_name ;;
 	lahaina*) 
+		# snapdragon 888/778/780
 		get_lahaina_name ;;
 	shima*) 
 		get_lahaina_name ;;
@@ -85,6 +94,9 @@ function get_config_name() {
 		echo "sdm710" ;;
 	sdm450*) 
 		echo "sdm625" ;; 
+	sdm4350*) 
+		# snapdragon 480
+		echo "sdm730" ;; 
 	msm8953*) 
 		echo "sdm625" ;; 
 	sdm660*) 
@@ -94,7 +106,11 @@ function get_config_name() {
 	trinket*) 
 		echo "sdm665" ;;
 	bengal*) 
-		echo "sdm665" ;;
+		# snapdragon 665/460/680
+		get_bengal_name ;;
+	holi*)
+		# snapdragon 695
+		echo "sdm4gen1" ;;
 	msm8976*) 
 		echo "sdm652" ;;
 	msm8956*) 
