@@ -1,12 +1,13 @@
-// CuprumTurbo V12
-// Format Code use clang-format -style=WebKit -i main.c
-#define check_bit(bit, array) (array[bit / 8] & (1 << (bit % 8)))
-#define MAX_INT (((unsigned int)(-1)) >> 1)
+// CuprumTurbo Scheduler V13
+// Author: chenzyadb
+
 #define __USE_GNU
 #include <dirent.h>
+#include <limits.h>
 #include <linux/input.h>
 #include <math.h>
 #include <pthread.h>
+#include <regex.h>
 #include <sched.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -15,2085 +16,1325 @@
 #include <sys/inotify.h>
 #include <sys/prctl.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
 #include "cJSON.h"
-#include "cJSON_Utils.h"
-#include "libcu.h"
+#include "cu_util.h"
 
-struct governor_config {
-    int sc_perf_margin;
-    int bc_perf_margin;
-    int xc_perf_margin;
-    int sc_freq_up_delay;
-    int bc_freq_up_delay;
-    int xc_freq_up_delay;
-    int sc_freq_down_delay;
-    int bc_freq_down_delay;
-    int xc_freq_down_delay;
-    int comm_limit_pwr;
-    int boost_limit_pwr;
-};
-struct hint_config {
-    char boost_type[16];
-    int boost_duration;
-};
-struct boost_config {
-    int gov_boost;
-};
-struct sched_config {
-    int efficiency_cpu_start;
-    int efficiency_cpu_end;
-    int common_cpu_start;
-    int common_cpu_end;
-    int other_cpu_start;
-    int other_cpu_end;
-    int multi_perf_cpu_start;
-    int multi_perf_cpu_end;
-    int single_perf_cpu_start;
-    int single_perf_cpu_end;
-    int efficiency_sched_prio;
-    int common_sched_prio;
-    int other_sched_prio;
-    int multi_perf_sched_prio;
-    int single_perf_sched_prio;
-};
+#define FREQ_WRITER_GOV 0
+#define FREQ_WRITER_PPM 1
+#define FREQ_WRITER_EPIC 2
 
-pthread_t thread_info;
-pthread_t taskset_tid;
-struct governor_config powersave_conf;
-struct governor_config balance_conf;
-struct governor_config performance_conf;
-struct governor_config fast_conf;
-struct hint_config touch_hint;
-struct hint_config swipe_hint;
-struct hint_config gesture_hint;
-struct hint_config top_activity_changed;
-struct boost_config touch_boost;
-struct boost_config swipe_boost;
-struct boost_config gesture_boost;
-struct boost_config heavyload_boost;
-struct boost_config no_boost;
-struct sched_config normal_sched;
-struct sched_config boost_sched;
-char config_url[1024];
-char mode_url[1024];
-char log_url[1024];
-char path[256];
-char mode[16];
-char boost[32];
-float cpu_usage[8] = { 0 };
-int core_num = 0;
-int governor_boost = 0;
-int boost_duration_ms = 0;
-int SCREEN_OFF = 0;
-int cpu_perf_mask[8] = { 0 };
-int basic_sc_level = -1;
-int basic_bc_level = -1;
-int basic_xc_level = -1;
-int burst_sc_level = -1;
-int burst_bc_level = -1;
-int burst_xc_level = -1;
-int expect_sc_level = -1;
-int expect_bc_level = -1;
-int expect_xc_level = -1;
-int current_sc_level = -1;
-int current_bc_level = -1;
-int current_xc_level = -1;
-int sc_pwr_ratio = 0;
-int bc_pwr_ratio = 0;
-int xc_pwr_ratio = 0;
-int sc_core_num = 0;
-int bc_core_num = 0;
-int xc_core_num = 0;
-long int cluster0_freq_table[11] = { 0 };
-long int cluster1_freq_table[11] = { 0 };
-long int cluster2_freq_table[11] = { 0 };
-int sc_pwr_mask[11] = { 0 };
-int bc_pwr_mask[11] = { 0 };
-int xc_pwr_mask[11] = { 0 };
-int cluster0_cpu = -1;
-int cluster1_cpu = -1;
-int cluster2_cpu = -1;
-int freq_writer_type = -1;
-int foreground_pid_num = 0;
-void init_log(void)
+#define BOOST_NONE 0
+#define BOOST_TOUCH 1
+#define BOOST_SWIPE 2
+#define BOOST_GESTURE 3
+#define BOOST_HEAVYLOAD 4
+
+char daemonPath[256];
+char configPath[256];
+char modePath[256];
+char logPath[256];
+
+char configData[16 * 1024];
+
+int screenState = SCREEN_ON;
+
+char curMode[16] = "balance";
+
+pthread_t threadsTid = 0;
+pthread_t tasksetTid = 0;
+
+int cpuCoreNum = 0;
+int cpuClusterNum = 0;
+
+int curCpuFreqWriter = FREQ_WRITER_GOV;
+
+int govBoost = 0;
+int boostDurationTime = 0;
+
+void InitLogWriter(void)
 {
-    FILE* fp;
-    fp = fopen(log_url, "w");
-    fprintf(fp, "CuprumTurbo Scheduler V12 by chenzyadb.\n");
+    FILE* fp = fopen(logPath, "w");
+    if (!fp) {
+        exit(0);
+    }
+    fprintf(fp, "");
     fflush(fp);
     fclose(fp);
+
+    chmod(logPath, 0666);
 }
-void write_log(const char* format, ...)
+
+void WriteLog(const char* logLevel, const char* format, ...)
 {
-    FILE* fp;
-    fp = fopen(log_url, "a");
+    char logText[128];
     va_list arg;
     va_start(arg, format);
-    time_t time_log = time(NULL);
-    struct tm* tm_log = localtime(&time_log);
-    fprintf(fp, "%04d-%02d-%02d %02d:%02d:%02d ", tm_log->tm_year + 1900, tm_log->tm_mon + 1, tm_log->tm_mday,
-        tm_log->tm_hour, tm_log->tm_min, tm_log->tm_sec);
-    vfprintf(fp, format, arg);
+    vsprintf(logText, format, arg);
     va_end(arg);
-    fprintf(fp, "\n");
-    fflush(fp);
-    fclose(fp);
+
+    time_t timeInfo = time(NULL);
+    struct tm* logTime = localtime(&timeInfo);
+
+    FILE* fp = fopen(logPath, "a");
+    if (fp) {
+        fprintf(fp, "%02d-%02d %02d:%02d:%02d [%s] %s\n", logTime->tm_mon + 1, logTime->tm_mday, logTime->tm_hour, logTime->tm_min, logTime->tm_sec, logLevel, logText);
+        fflush(fp);
+        fclose(fp);
+    }
 }
-void get_config(void)
+
+void InitConfigReader(void)
 {
-    FILE* fp;
-    cJSON* json_buffer = NULL;
-    cJSON* json_name = NULL;
-    cJSON* json_author = NULL;
-    cJSON* item_buffer = NULL;
-    cJSON* item_folder = NULL;
-    cJSON* item_folder2 = NULL;
-    cJSON* item_info = NULL;
-    double sc_power_cost = 0;
-    double bc_power_cost = 0;
-    double xc_power_cost = 0;
-    float cpu_pwr_ratio;
-    int sc_volt_table[11] = { 0 };
-    int bc_volt_table[11] = { 0 };
-    int xc_volt_table[11] = { 0 };
-    int i, j, min_diff, diff, cur_freq, fd;
-    int config_exist = 0;
-    int sc_basic_freq_mhz = 0;
-    int bc_basic_freq_mhz = 0;
-    int xc_basic_freq_mhz = 0;
-    int sc_burst_freq_mhz = 0;
-    int bc_burst_freq_mhz = 0;
-    int xc_burst_freq_mhz = 0;
-    int sc_expect_freq_mhz = 0;
-    int bc_expect_freq_mhz = 0;
-    int xc_expect_freq_mhz = 0;
-    int sc_current_freq_mhz = 0;
-    int bc_current_freq_mhz = 0;
-    int xc_current_freq_mhz = 0;
-    int sc_current_volt = 0;
-    int bc_current_volt = 0;
-    int xc_current_volt = 0;
-    int sc_power_mw = 0;
-    int bc_power_mw = 0;
-    int xc_power_mw = 0;
-    int sc_capacity = 0;
-    int bc_capacity = 0;
-    int xc_capacity = 0;
-    char config_text[128 * 1024];
-    char buf[1024];
-    char file_url[256];
-    fd = open(config_url, O_RDONLY);
-    if (fd <= 0) {
-        close(fd);
-        write_log("[E] Can't open \"%s\".", config_url);
+    int fd = open(configPath, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    if (!fd) {
+        WriteLog("E", "Can't read config file.");
         exit(0);
-    } else {
-        read(fd, config_text, sizeof(config_text));
-        close(fd);
-        // Get JSON Buffer & Info
-        json_buffer = cJSON_Parse(config_text);
-        if (json_buffer == NULL) {
-            write_log("[E] Can't read config file.");
-            exit(0);
-        }
-        json_name = cJSON_GetObjectItem(json_buffer, "name");
-        json_author = cJSON_GetObjectItem(json_buffer, "author");
-        write_log("[I] Config \"%s\" by \"%s\".", json_name->valuestring, json_author->valuestring);
-        // Get PowerModel Value
-        item_buffer = cJSON_GetObjectItem(json_buffer, "power_model");
-        item_info = cJSON_GetObjectItem(item_buffer, "sc_capacity");
-        sc_capacity = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "bc_capacity");
-        bc_capacity = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "xc_capacity");
-        xc_capacity = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "sc_basic_freq_mhz");
-        sc_basic_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "bc_basic_freq_mhz");
-        bc_basic_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "xc_basic_freq_mhz");
-        xc_basic_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "sc_burst_freq_mhz");
-        sc_burst_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "bc_burst_freq_mhz");
-        bc_burst_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "xc_burst_freq_mhz");
-        xc_burst_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "sc_expect_freq_mhz");
-        sc_expect_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "bc_expect_freq_mhz");
-        bc_expect_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "xc_expect_freq_mhz");
-        xc_expect_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "sc_current_freq_mhz");
-        sc_current_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "bc_current_freq_mhz");
-        bc_current_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "xc_current_freq_mhz");
-        xc_current_freq_mhz = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "sc_power_mw");
-        sc_power_mw = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "bc_power_mw");
-        bc_power_mw = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_buffer, "xc_power_mw");
-        xc_power_mw = item_info->valueint;
-        // Get governor value
-        item_buffer = cJSON_GetObjectItem(json_buffer, "governor_config");
-        item_folder = cJSON_GetObjectItem(item_buffer, "powersave");
-        item_info = cJSON_GetObjectItem(item_folder, "sc_perf_margin");
-        powersave_conf.sc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_perf_margin");
-        powersave_conf.bc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_perf_margin");
-        powersave_conf.xc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "sc_freq_up_delay");
-        powersave_conf.sc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_freq_up_delay");
-        powersave_conf.bc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_freq_up_delay");
-        powersave_conf.xc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "sc_freq_down_delay");
-        powersave_conf.sc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_freq_down_delay");
-        powersave_conf.bc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_freq_down_delay");
-        powersave_conf.xc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "comm_limit_pwr");
-        powersave_conf.comm_limit_pwr = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "boost_limit_pwr");
-        powersave_conf.boost_limit_pwr = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "balance");
-        item_info = cJSON_GetObjectItem(item_folder, "sc_perf_margin");
-        balance_conf.sc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_perf_margin");
-        balance_conf.bc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_perf_margin");
-        balance_conf.xc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "sc_freq_up_delay");
-        balance_conf.sc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_freq_up_delay");
-        balance_conf.bc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_freq_up_delay");
-        balance_conf.xc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "sc_freq_down_delay");
-        balance_conf.sc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_freq_down_delay");
-        balance_conf.bc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_freq_down_delay");
-        balance_conf.xc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "comm_limit_pwr");
-        balance_conf.comm_limit_pwr = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "boost_limit_pwr");
-        balance_conf.boost_limit_pwr = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "performance");
-        item_info = cJSON_GetObjectItem(item_folder, "sc_perf_margin");
-        performance_conf.sc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_perf_margin");
-        performance_conf.bc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_perf_margin");
-        performance_conf.xc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "sc_freq_up_delay");
-        performance_conf.sc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_freq_up_delay");
-        performance_conf.bc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_freq_up_delay");
-        performance_conf.xc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "sc_freq_down_delay");
-        performance_conf.sc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_freq_down_delay");
-        performance_conf.bc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_freq_down_delay");
-        performance_conf.xc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "comm_limit_pwr");
-        performance_conf.comm_limit_pwr = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "boost_limit_pwr");
-        performance_conf.boost_limit_pwr = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "fast");
-        item_info = cJSON_GetObjectItem(item_folder, "sc_perf_margin");
-        fast_conf.sc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_perf_margin");
-        fast_conf.bc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_perf_margin");
-        fast_conf.xc_perf_margin = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "sc_freq_up_delay");
-        fast_conf.sc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_freq_up_delay");
-        fast_conf.bc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_freq_up_delay");
-        fast_conf.xc_freq_up_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "sc_freq_down_delay");
-        fast_conf.sc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "bc_freq_down_delay");
-        fast_conf.bc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "xc_freq_down_delay");
-        fast_conf.xc_freq_down_delay = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "comm_limit_pwr");
-        fast_conf.comm_limit_pwr = item_info->valueint;
-        item_info = cJSON_GetObjectItem(item_folder, "boost_limit_pwr");
-        fast_conf.boost_limit_pwr = item_info->valueint;
-        // get hint config
-        item_buffer = cJSON_GetObjectItem(json_buffer, "hint_config");
-        item_folder = cJSON_GetObjectItem(item_buffer, "touch");
-        item_info = cJSON_GetObjectItem(item_folder, "boost_type");
-        sprintf(touch_hint.boost_type, "%s", item_info->valuestring);
-        item_info = cJSON_GetObjectItem(item_folder, "boost_duration");
-        touch_hint.boost_duration = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "swipe");
-        item_info = cJSON_GetObjectItem(item_folder, "boost_type");
-        sprintf(swipe_hint.boost_type, "%s", item_info->valuestring);
-        item_info = cJSON_GetObjectItem(item_folder, "boost_duration");
-        swipe_hint.boost_duration = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "gesture");
-        item_info = cJSON_GetObjectItem(item_folder, "boost_type");
-        sprintf(gesture_hint.boost_type, "%s", item_info->valuestring);
-        item_info = cJSON_GetObjectItem(item_folder, "boost_duration");
-        gesture_hint.boost_duration = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "top_activity_changed");
-        item_info = cJSON_GetObjectItem(item_folder, "boost_type");
-        sprintf(top_activity_changed.boost_type, "%s", item_info->valuestring);
-        item_info = cJSON_GetObjectItem(item_folder, "boost_duration");
-        top_activity_changed.boost_duration = item_info->valueint;
-        // get boost config
-        item_buffer = cJSON_GetObjectItem(json_buffer, "boost_config");
-        item_folder = cJSON_GetObjectItem(item_buffer, "touch");
-        item_info = cJSON_GetObjectItem(item_folder, "governor.boost");
-        touch_boost.gov_boost = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "swipe");
-        item_info = cJSON_GetObjectItem(item_folder, "governor.boost");
-        swipe_boost.gov_boost = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "gesture");
-        item_info = cJSON_GetObjectItem(item_folder, "governor.boost");
-        gesture_boost.gov_boost = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "heavyload");
-        item_info = cJSON_GetObjectItem(item_folder, "governor.boost");
-        heavyload_boost.gov_boost = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "none");
-        item_info = cJSON_GetObjectItem(item_folder, "governor.boost");
-        no_boost.gov_boost = item_info->valueint;
-        // TasksetHelper config
-        item_buffer = cJSON_GetObjectItem(json_buffer, "TasksetHelper_config");
-        item_folder = cJSON_GetObjectItem(item_buffer, "efficiency");
-        item_folder2 = cJSON_GetObjectItem(item_folder, "normal");
-        item_info = cJSON_GetObjectItem(item_folder2, "cpu_set_t");
-        sscanf(item_info->valuestring, "%d-%d", &normal_sched.efficiency_cpu_start, &normal_sched.efficiency_cpu_end);
-        item_info = cJSON_GetObjectItem(item_folder2, "sched_priority");
-        normal_sched.efficiency_sched_prio = item_info->valueint;
-        item_folder2 = cJSON_GetObjectItem(item_folder, "boost");
-        item_info = cJSON_GetObjectItem(item_folder2, "cpu_set_t");
-        sscanf(item_info->valuestring, "%d-%d", &boost_sched.efficiency_cpu_start, &boost_sched.efficiency_cpu_end);
-        item_info = cJSON_GetObjectItem(item_folder2, "sched_priority");
-        boost_sched.efficiency_sched_prio = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "common");
-        item_folder2 = cJSON_GetObjectItem(item_folder, "normal");
-        item_info = cJSON_GetObjectItem(item_folder2, "cpu_set_t");
-        sscanf(item_info->valuestring, "%d-%d", &normal_sched.common_cpu_start, &normal_sched.common_cpu_end);
-        item_info = cJSON_GetObjectItem(item_folder2, "sched_priority");
-        normal_sched.common_sched_prio = item_info->valueint;
-        item_folder2 = cJSON_GetObjectItem(item_folder, "boost");
-        item_info = cJSON_GetObjectItem(item_folder2, "cpu_set_t");
-        sscanf(item_info->valuestring, "%d-%d", &boost_sched.common_cpu_start, &boost_sched.common_cpu_end);
-        item_info = cJSON_GetObjectItem(item_folder2, "sched_priority");
-        boost_sched.common_sched_prio = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "multi_perf");
-        item_folder2 = cJSON_GetObjectItem(item_folder, "normal");
-        item_info = cJSON_GetObjectItem(item_folder2, "cpu_set_t");
-        sscanf(item_info->valuestring, "%d-%d", &normal_sched.multi_perf_cpu_start, &normal_sched.multi_perf_cpu_end);
-        item_info = cJSON_GetObjectItem(item_folder2, "sched_priority");
-        normal_sched.multi_perf_sched_prio = item_info->valueint;
-        item_folder2 = cJSON_GetObjectItem(item_folder, "boost");
-        item_info = cJSON_GetObjectItem(item_folder2, "cpu_set_t");
-        sscanf(item_info->valuestring, "%d-%d", &boost_sched.multi_perf_cpu_start, &boost_sched.multi_perf_cpu_end);
-        item_info = cJSON_GetObjectItem(item_folder2, "sched_priority");
-        boost_sched.multi_perf_sched_prio = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "single_perf");
-        item_folder2 = cJSON_GetObjectItem(item_folder, "normal");
-        item_info = cJSON_GetObjectItem(item_folder2, "cpu_set_t");
-        sscanf(item_info->valuestring, "%d-%d", &normal_sched.single_perf_cpu_start, &normal_sched.single_perf_cpu_end);
-        item_info = cJSON_GetObjectItem(item_folder2, "sched_priority");
-        normal_sched.single_perf_sched_prio = item_info->valueint;
-        item_folder2 = cJSON_GetObjectItem(item_folder, "boost");
-        item_info = cJSON_GetObjectItem(item_folder2, "cpu_set_t");
-        sscanf(item_info->valuestring, "%d-%d", &boost_sched.single_perf_cpu_start, &boost_sched.single_perf_cpu_end);
-        item_info = cJSON_GetObjectItem(item_folder2, "sched_priority");
-        boost_sched.single_perf_sched_prio = item_info->valueint;
-        item_folder = cJSON_GetObjectItem(item_buffer, "other");
-        item_folder2 = cJSON_GetObjectItem(item_folder, "normal");
-        item_info = cJSON_GetObjectItem(item_folder2, "cpu_set_t");
-        sscanf(item_info->valuestring, "%d-%d", &normal_sched.other_cpu_start, &normal_sched.other_cpu_end);
-        item_info = cJSON_GetObjectItem(item_folder2, "sched_priority");
-        normal_sched.other_sched_prio = item_info->valueint;
-        item_folder2 = cJSON_GetObjectItem(item_folder, "boost");
-        item_info = cJSON_GetObjectItem(item_folder2, "cpu_set_t");
-        sscanf(item_info->valuestring, "%d-%d", &boost_sched.other_cpu_start, &boost_sched.other_cpu_end);
-        item_info = cJSON_GetObjectItem(item_folder2, "sched_priority");
-        boost_sched.other_sched_prio = item_info->valueint;
     }
-    // get freq_table
-    long int origin_freq_table[50] = { 0 };
-    long int cluster_min_freq, cluster_max_freq, freq_stair, target_freq, min_freq_diff;
-    int freq_table_num, start_p, end_p, target_freq_idx;
-    char freq_buf[16];
-    if (cluster0_cpu != -1) {
-        memset(origin_freq_table, 0, sizeof(origin_freq_table));
-        sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_available_frequencies", cluster0_cpu);
-        sprintf(buf, "%s", read_value(file_url));
-        freq_table_num = 0;
-        start_p = -1;
-        end_p = -1;
-        for (i = 0; i < strlen(buf); i++) {
-            if (buf[i] == ' ') {
-                memset(freq_buf, 0, sizeof(freq_buf));
-                start_p = end_p + 1;
-                end_p = i;
-                for (j = 0; j <= end_p - start_p; j++) {
-                    freq_buf[j] = buf[start_p + j];
-                }
-                sscanf(freq_buf, "%ld", &origin_freq_table[freq_table_num]);
-                freq_table_num++;
-            }
-        }
-        sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_min_freq", cluster0_cpu);
-        sscanf(read_value(file_url), "%ld", &cluster_min_freq);
-        sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", cluster0_cpu);
-        sscanf(read_value(file_url), "%ld", &cluster_max_freq);
-        cluster0_freq_table[0] = cluster_min_freq;
-        cluster0_freq_table[10] = cluster_max_freq;
-        freq_stair = (cluster_max_freq / 1000 - sc_basic_freq_mhz) / 10;
-        for (i = 1; i <= 9; i++) {
-            target_freq_idx = 0;
-            min_freq_diff = 9999999;
-            target_freq = (sc_basic_freq_mhz + (i - 1) * freq_stair) * 1000;
-            for (j = 0; j <= freq_table_num; j++) {
-                if (labs(origin_freq_table[j] - target_freq) <= min_freq_diff) {
-                    min_freq_diff = labs(origin_freq_table[j] - target_freq);
-                    target_freq_idx = j;
-                }
-            }
-            cluster0_freq_table[i] = origin_freq_table[target_freq_idx];
-        }
+    read(fd, configData, sizeof(configData));
+    close(fd);
+
+    cJSON* jsonBuffer = cJSON_Parse(configData);
+    if (jsonBuffer == NULL) {
+        WriteLog("E", "cJson can't parse this config.");
+        exit(0);
     }
-    if (cluster1_cpu != -1) {
-        memset(origin_freq_table, 0, sizeof(origin_freq_table));
-        sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_available_frequencies", cluster1_cpu);
-        sprintf(buf, "%s", read_value(file_url));
-        freq_table_num = 0;
-        start_p = -1;
-        end_p = -1;
-        for (i = 0; i <= strlen(buf); i++) {
-            if (buf[i] == ' ') {
-                memset(freq_buf, 0, sizeof(freq_buf));
-                start_p = end_p + 1;
-                end_p = i;
-                for (j = 0; j <= end_p - start_p; j++) {
-                    freq_buf[j] = buf[start_p + j];
-                }
-                sscanf(freq_buf, "%ld", &origin_freq_table[freq_table_num]);
-                freq_table_num++;
-            }
-        }
-        sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_min_freq", cluster1_cpu);
-        sscanf(read_value(file_url), "%ld", &cluster_min_freq);
-        sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", cluster1_cpu);
-        sscanf(read_value(file_url), "%ld", &cluster_max_freq);
-        cluster1_freq_table[0] = cluster_min_freq;
-        cluster1_freq_table[10] = cluster_max_freq;
-        freq_stair = (cluster_max_freq / 1000 - sc_basic_freq_mhz) / 10;
-        for (i = 1; i <= 9; i++) {
-            target_freq_idx = 0;
-            min_freq_diff = 9999999;
-            target_freq = (bc_basic_freq_mhz + (i - 1) * freq_stair) * 1000;
-            for (j = 0; j <= freq_table_num; j++) {
-                if (labs(origin_freq_table[j] - target_freq) <= min_freq_diff) {
-                    min_freq_diff = labs(origin_freq_table[j] - target_freq);
-                    target_freq_idx = j;
-                }
-            }
-            cluster1_freq_table[i] = origin_freq_table[target_freq_idx];
-        }
+
+    cJSON* itemBuffer = NULL;
+    char configName[64];
+    char configAuthor[16];
+    int configVersion = 0;
+    itemBuffer = cJSON_GetObjectItem(jsonBuffer, "name");
+    sscanf(itemBuffer->valuestring, "%s", configName);
+    itemBuffer = cJSON_GetObjectItem(jsonBuffer, "author");
+    sscanf(itemBuffer->valuestring, "%s", configAuthor);
+    itemBuffer = cJSON_GetObjectItem(jsonBuffer, "configVersion");
+    configVersion = itemBuffer->valueint;
+    if (configVersion != 3) {
+        WriteLog("E", "Config version does not meet the requirements.");
+        WriteLog("E", "Need config version: 3, your config version: %d.", configVersion);
+        exit(0);
     }
-    if (cluster2_cpu != -1) {
-        memset(origin_freq_table, 0, sizeof(origin_freq_table));
-        sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_available_frequencies", cluster2_cpu);
-        sprintf(buf, "%s", read_value(file_url));
-        freq_table_num = 0;
-        start_p = -1;
-        end_p = -1;
-        for (i = 0; i <= strlen(buf); i++) {
-            if (buf[i] == ' ') {
-                memset(freq_buf, 0, sizeof(freq_buf));
-                start_p = end_p + 1;
-                end_p = i;
-                for (j = 0; j <= end_p - start_p; j++) {
-                    freq_buf[j] = buf[start_p + j];
-                }
-                sscanf(freq_buf, "%ld", &origin_freq_table[freq_table_num]);
-                freq_table_num++;
-            }
-        }
-        sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_min_freq", cluster2_cpu);
-        sscanf(read_value(file_url), "%ld", &cluster_min_freq);
-        sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", cluster2_cpu);
-        sscanf(read_value(file_url), "%ld", &cluster_max_freq);
-        cluster2_freq_table[0] = cluster_min_freq;
-        cluster2_freq_table[10] = cluster_max_freq;
-        freq_stair = (cluster_max_freq / 1000 - sc_basic_freq_mhz) / 10;
-        for (i = 1; i <= 9; i++) {
-            target_freq_idx = 0;
-            min_freq_diff = 9999999;
-            target_freq = (xc_basic_freq_mhz + (i - 1) * freq_stair) * 1000;
-            for (j = 0; j <= freq_table_num; j++) {
-                if (labs(origin_freq_table[j] - target_freq) <= min_freq_diff) {
-                    min_freq_diff = labs(origin_freq_table[j] - target_freq);
-                    target_freq_idx = j;
-                }
-            }
-            cluster2_freq_table[i] = origin_freq_table[target_freq_idx];
-        }
-    }
-    // freq_mhz -> freq_idx
-    basic_sc_level = 0;
-    min_diff = 9999;
-    for (i = 0; i <= 10; i++) {
-        diff = cluster0_freq_table[i] / 1000 - sc_basic_freq_mhz;
-        if (abs(diff) < min_diff) {
-            basic_sc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    burst_sc_level = 0;
-    min_diff = 9999;
-    for (i = 1; i <= 10; i++) {
-        diff = cluster0_freq_table[i] / 1000 - sc_burst_freq_mhz;
-        if (abs(diff) < min_diff) {
-            burst_sc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    expect_sc_level = 0;
-    min_diff = 9999;
-    for (i = 1; i <= 10; i++) {
-        diff = cluster0_freq_table[i] / 1000 - sc_expect_freq_mhz;
-        if (abs(diff) < min_diff) {
-            expect_sc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    current_sc_level = 0;
-    min_diff = 9999;
-    for (i = 1; i <= 10; i++) {
-        diff = cluster0_freq_table[i] / 1000 - sc_current_freq_mhz;
-        if (abs(diff) < min_diff) {
-            current_sc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    basic_bc_level = 0;
-    min_diff = 9999;
-    for (i = 0; i <= 10; i++) {
-        diff = cluster1_freq_table[i] / 1000 - bc_basic_freq_mhz;
-        if (abs(diff) < min_diff) {
-            basic_bc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    burst_bc_level = 0;
-    min_diff = 9999;
-    for (i = 1; i <= 10; i++) {
-        diff = cluster1_freq_table[i] / 1000 - bc_burst_freq_mhz;
-        if (abs(diff) < min_diff) {
-            burst_bc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    expect_bc_level = 0;
-    min_diff = 9999;
-    for (i = 1; i <= 10; i++) {
-        diff = cluster1_freq_table[i] / 1000 - bc_expect_freq_mhz;
-        if (abs(diff) < min_diff) {
-            expect_bc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    current_bc_level = 0;
-    min_diff = 9999;
-    for (i = 1; i <= 10; i++) {
-        diff = cluster1_freq_table[i] / 1000 - bc_current_freq_mhz;
-        if (abs(diff) < min_diff) {
-            current_bc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    basic_xc_level = 0;
-    min_diff = 9999;
-    for (i = 0; i <= 10; i++) {
-        diff = cluster2_freq_table[i] / 1000 - xc_basic_freq_mhz;
-        if (abs(diff) < min_diff) {
-            basic_xc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    burst_xc_level = 0;
-    min_diff = 9999;
-    for (i = 1; i <= 10; i++) {
-        diff = cluster2_freq_table[i] / 1000 - xc_burst_freq_mhz;
-        if (abs(diff) < min_diff) {
-            burst_xc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    expect_xc_level = 0;
-    min_diff = 9999;
-    for (i = 1; i <= 10; i++) {
-        diff = cluster2_freq_table[i] / 1000 - xc_expect_freq_mhz;
-        if (abs(diff) < min_diff) {
-            expect_xc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    current_xc_level = 0;
-    min_diff = 9999;
-    for (i = 1; i <= 10; i++) {
-        diff = cluster2_freq_table[i] / 1000 - xc_current_freq_mhz;
-        if (abs(diff) < min_diff) {
-            current_xc_level = i;
-            min_diff = abs(diff);
-        }
-    }
-    // Get CPU Volt Table
-    for (i = 0; i <= 10; i++) {
-        sc_volt_table[i] = get_freq_volt(cluster0_freq_table[i] / 1000, sc_burst_freq_mhz, sc_expect_freq_mhz);
-    }
-    for (i = 0; i <= 10; i++) {
-        bc_volt_table[i] = get_freq_volt(cluster1_freq_table[i] / 1000, bc_burst_freq_mhz, bc_expect_freq_mhz);
-    }
-    for (i = 0; i <= 10; i++) {
-        xc_volt_table[i] = get_freq_volt(cluster2_freq_table[i] / 1000, xc_burst_freq_mhz, xc_expect_freq_mhz);
-    }
-    sc_current_volt = get_freq_volt(sc_current_freq_mhz, sc_burst_freq_mhz, sc_expect_freq_mhz);
-    bc_current_volt = get_freq_volt(bc_current_freq_mhz, bc_burst_freq_mhz, bc_expect_freq_mhz);
-    xc_current_volt = get_freq_volt(xc_current_freq_mhz, xc_burst_freq_mhz, xc_expect_freq_mhz);
-    // Get Power Model
-    sc_power_cost = (double)sc_power_mw * 10000 / ((long long int)sc_current_freq_mhz * sc_current_volt * sc_current_volt);
-    for (i = 0; i <= 10; i++) {
-        sc_pwr_mask[i] = sc_power_cost * cluster0_freq_table[i] / 1000 * sc_volt_table[i] * sc_volt_table[i] / 10000;
-    }
-    bc_power_cost = (double)bc_power_mw * 10000 / ((long long int)bc_current_freq_mhz * bc_current_volt * bc_current_volt);
-    for (i = 0; i <= 10; i++) {
-        bc_pwr_mask[i] = bc_power_cost * cluster1_freq_table[i] / 1000 * bc_volt_table[i] * bc_volt_table[i] / 10000;
-    }
-    xc_power_cost = (double)xc_power_mw * 10000 / ((long long int)xc_current_freq_mhz * xc_current_volt * xc_current_volt);
-    for (i = 0; i <= 10; i++) {
-        xc_pwr_mask[i] = xc_power_cost * cluster2_freq_table[i] / 1000 * xc_volt_table[i] * xc_volt_table[i] / 10000;
-    }
-    // Get Power Ratio
-    cpu_pwr_ratio = (float)sc_capacity * sc_core_num + bc_capacity * bc_core_num + xc_capacity * xc_core_num;
-    sc_pwr_ratio = sc_capacity * sc_core_num * 100 / cpu_pwr_ratio;
-    bc_pwr_ratio = bc_capacity * bc_core_num * 100 / cpu_pwr_ratio;
-    xc_pwr_ratio = xc_capacity * xc_core_num * 100 / cpu_pwr_ratio;
+    WriteLog("I", "Config \"%s\" by \"%s\".", configName, configAuthor);
+
+    memset(configData, 0, sizeof(configData));
+    cJSON_PrintPreallocated(jsonBuffer, configData, sizeof(configData), 0);
+    cJSON_Delete(jsonBuffer);
 }
-void get_cpu_clusters(void)
+
+struct CoCpuGovernor_Data {
+    int enable;
+    int policy;
+    int firstCpu;
+    int lastCpu;
+    int cpuCapacity;
+    long int freqTable[50];
+    long int lowPowerFreq;
+    long int basicFreq;
+    long int expectFreq;
+    long int modelFreq;
+    int powerTable[50];
+    int freqTableItemNum;
+} govData[10];
+
+struct Dynamic_CoCpuGovernor_Data {
+    int powerLimit;
+    int upRateLatency[10];
+    int downRateDelay[10];
+    int govBoost[5];
+    int boostDurationTime[5];
+    int boostDurationSleepTime;
+} dynamicGovData;
+
+void WriteCpuFreqViaMSM(int cpuCore, long int minFreq, long int maxFreq)
 {
-    FILE* fp;
-    char buf[128];
-    char url[1024];
-    long int cpu_freq, last_cpu_freq;
+    WriteFile("/sys/module/msm_performance/parameters/cpu_min_freq", "%d:%ld\n", cpuCore, minFreq);
+    WriteFile("/sys/module/msm_performance/parameters/cpu_max_freq", "%d:%ld\n", cpuCore, maxFreq);
+}
+
+void WriteCpuFreqViaPPM(int targetCluster, long int minFreq, long int maxFreq)
+{
+    long int minCpuFreq[3] = { 0 };
+    long int maxCpuFreq[3] = { 0 };
+
+    if (cpuClusterNum > 3) {
+        return;
+    }
+
     int i;
-    cluster0_cpu = 0;
-    if ((access("/sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq", 0)) != -1) {
-        cluster1_cpu = 4;
-        if ((access("/sys/devices/system/cpu/cpufreq/policy6/scaling_min_freq", 0)) != -1) {
-            cluster2_cpu = 6;
-        } else if ((access("/sys/devices/system/cpu/cpufreq/policy7/scaling_min_freq", 0)) != -1) {
-            cluster2_cpu = 7;
+    for (i = 0; i < cpuClusterNum; i++) {
+        if (i == targetCluster) {
+            minCpuFreq[i] = minFreq;
+            maxCpuFreq[i] = maxFreq;
+        } else {
+            sscanf(ReadFile(NULL, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", govData[i].firstCpu), "%ld", &minCpuFreq[i]);
+            sscanf(ReadFile(NULL, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq", govData[i].firstCpu), "%ld", &maxCpuFreq[i]);
         }
-    } else if ((access("/sys/devices/system/cpu/cpufreq/policy2/scaling_min_freq", 0)) != -1) {
-        cluster1_cpu = 2;
-    } else if ((access("/sys/devices/system/cpu/cpufreq/policy6/scaling_min_freq", 0)) != -1) {
-        cluster1_cpu = 6;
-        if ((access("/sys/devices/system/cpu/cpufreq/policy7/scaling_min_freq", 0)) != -1) {
-            cluster2_cpu = 7;
-        }
+    }
+
+    if (cpuClusterNum == 1) {
+        WriteFile("/proc/ppm/policy/hard_userlimit_cpu_freq", "%ld %ld\n", minCpuFreq[0], maxCpuFreq[0]);
+    } else if (cpuClusterNum == 2) {
+        WriteFile("/proc/ppm/policy/hard_userlimit_cpu_freq", "%ld %ld %ld %ld\n", minCpuFreq[0], maxCpuFreq[0], minCpuFreq[1], maxCpuFreq[1]);
+    } else if (cpuClusterNum == 3) {
+        WriteFile("/proc/ppm/policy/hard_userlimit_cpu_freq", "%ld %ld %ld %ld %ld %ld\n", minCpuFreq[0], maxCpuFreq[0], minCpuFreq[1], maxCpuFreq[1], minCpuFreq[2], maxCpuFreq[2]);
+    }
+}
+
+void WriteCpuFreqViaEpic(int cluster, long int minFreq, long int maxFreq)
+{
+    WriteFile(StrMerge("/dev/cluster%d_freq_min", cluster), "%ld\n", minFreq);
+    WriteFile(StrMerge("/dev/cluster%d_freq_min", cluster), "%ld\n", maxFreq);
+}
+
+void WriteCpuFreqViaGovernor(int cpuCore, long int minFreq, long int maxFreq)
+{
+    WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", cpuCore), "%ld\n", minFreq);
+    WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq", cpuCore), "%ld\n", maxFreq);
+}
+
+void CheckCpuFreqWriter(void)
+{
+    if (IsFileExist("/proc/ppm/policy/hard_userlimit_cpu_freq")) {
+        curCpuFreqWriter = FREQ_WRITER_PPM;
+        WriteLog("I", "Use CpuFreqWriterPPM.");
+    } else if (IsFileExist("/dev/cluster0_freq_min") && IsFileExist("/dev/cluster0_freq_max")) {
+        curCpuFreqWriter = FREQ_WRITER_EPIC;
+        WriteLog("I", "Use CpuFreqWriterEPIC.");
+    } else if (IsFileExist("/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq") && IsFileExist("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq")) {
+        curCpuFreqWriter = FREQ_WRITER_GOV;
+        WriteLog("I", "Use CpuFreqWriterGovernor.");
     } else {
-        cluster0_cpu = -1;
-        cluster1_cpu = -1;
-        cluster2_cpu = -1;
-        for (i = 0; i <= core_num; i++) {
-            sprintf(url, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", i);
-            fp = fopen(url, "r");
-            if (fp) {
-                fgets(buf, sizeof(buf), fp);
-                fclose(fp);
-                last_cpu_freq = cpu_freq;
-                sscanf(buf, "%ld", &cpu_freq);
-                if (cpu_freq != last_cpu_freq) {
-                    if (cluster0_cpu == -1) {
-                        cluster0_cpu = i;
-                    } else if (cluster1_cpu == -1) {
-                        cluster1_cpu = i;
-                    } else if (cluster2_cpu == -1) {
-                        cluster2_cpu = i;
-                    }
-                }
-            }
-        }
+        WriteLog("E", "Can't find availiable CpuFreqWriter on your device.");
+        exit(0);
     }
 }
-void get_core_num(void)
+
+void SetGovHispeed(int cpuCore, long int cpuFreq)
 {
-    if (cluster1_cpu == -1) {
-        sc_core_num = core_num + 1;
-        bc_core_num = 0;
-        xc_core_num = 0;
-    } else if (cluster2_cpu == -1) {
-        sc_core_num = cluster1_cpu;
-        bc_core_num = core_num - cluster1_cpu + 1;
-        xc_core_num = 0;
-    } else {
-        sc_core_num = cluster1_cpu;
-        bc_core_num = cluster2_cpu - cluster1_cpu;
-        xc_core_num = core_num - cluster2_cpu + 1;
+    char curCpuGovernor[16];
+    sscanf(ReadFile(NULL, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_governor", cpuCore), "%s", curCpuGovernor);
+
+    char govHispeedPath[128];
+    sprintf(govHispeedPath, "/sys/devices/system/cpu/cpu%d/cpufreq/%s/hispeed_freq", cpuCore, curCpuGovernor);
+    if (IsFileExist(govHispeedPath)) {
+        WriteFile(govHispeedPath, "%ld\n", cpuFreq);
     }
 }
-void restore_task_affinity(int pid)
-{
-    DIR* dir;
-    struct dirent* entry;
-    cpu_set_t cpu_mask;
-    struct sched_param prio;
-    char dir_url[128];
-    int tid, i;
-    prio.sched_priority = 120;
-    CPU_ZERO(&cpu_mask);
-    for (i = 0; i <= core_num; i++) {
-        CPU_SET(i, &cpu_mask);
-    }
-    sprintf(dir_url, "/proc/%d/task/", pid);
-    dir = opendir(dir_url);
-    if (dir != NULL) {
-        while ((entry = readdir(dir)) != NULL) {
-            sscanf((*entry).d_name, "%d", &tid);
-            sched_setaffinity(tid, sizeof(cpu_mask), &cpu_mask);
-            sched_setscheduler(tid, SCHED_NORMAL, &prio);
-        }
-    }
-}
-void set_boost_affinity(int pid)
-{
-    FILE* fp;
-    DIR* dir;
-    cpu_set_t efficiency_mask;
-    cpu_set_t multi_perf_mask;
-    cpu_set_t single_perf_mask;
-    cpu_set_t comm_mask;
-    cpu_set_t other_mask;
-    struct sched_param efficiency_prio;
-    struct sched_param comm_prio;
-    struct sched_param multi_perf_prio;
-    struct sched_param single_perf_prio;
-    struct sched_param other_prio;
-    struct dirent* entry;
-    char buf[256];
-    char tid_dir[128];
-    char tid_url[128];
-    char tid_name[32];
-    int tid, i;
-    CPU_ZERO(&efficiency_mask);
-    for (i = boost_sched.efficiency_cpu_start; i <= boost_sched.efficiency_cpu_end; i++) {
-        CPU_SET(i, &efficiency_mask);
-    }
-    CPU_ZERO(&comm_mask);
-    for (i = boost_sched.common_cpu_start; i <= boost_sched.common_cpu_end; i++) {
-        CPU_SET(i, &comm_mask);
-    }
-    CPU_ZERO(&other_mask);
-    for (i = boost_sched.other_cpu_start; i <= boost_sched.other_cpu_end; i++) {
-        CPU_SET(i, &other_mask);
-    }
-    CPU_ZERO(&multi_perf_mask);
-    for (i = boost_sched.multi_perf_cpu_start; i <= boost_sched.multi_perf_cpu_end; i++) {
-        CPU_SET(i, &multi_perf_mask);
-    }
-    CPU_ZERO(&single_perf_mask);
-    for (i = boost_sched.single_perf_cpu_start; i <= boost_sched.single_perf_cpu_end; i++) {
-        CPU_SET(i, &single_perf_mask);
-    }
-    efficiency_prio.sched_priority = boost_sched.efficiency_sched_prio;
-    comm_prio.sched_priority = boost_sched.common_sched_prio;
-    other_prio.sched_priority = boost_sched.other_sched_prio;
-    multi_perf_prio.sched_priority = boost_sched.multi_perf_sched_prio;
-    single_perf_prio.sched_priority = boost_sched.single_perf_sched_prio;
-    sprintf(tid_dir, "/proc/%d/task/", pid);
-    dir = opendir(tid_dir);
-    if (dir != NULL) {
-        while ((entry = readdir(dir)) != NULL) {
-            sscanf((*entry).d_name, "%d", &tid);
-            sprintf(tid_url, "%s%d/comm", tid_dir, tid);
-            fp = fopen(tid_url, "r");
-            if (fp != NULL) {
-                memset(tid_name, 0, sizeof(tid_name));
-                fgets(tid_name, sizeof(tid_name), fp);
-                fclose(fp);
-                reset_task_nice(tid);
-                if (tid == pid) {
-                    sched_setaffinity(tid, sizeof(multi_perf_mask), &multi_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &multi_perf_prio);
-                } else if (check_regex(tid_name, "^(UnityMain|MainThread-UE4|GameThread|SDLThread|RenderThread|MINECRAFT|GLThread|Thread-)")) {
-                    sched_setaffinity(tid, sizeof(single_perf_mask), &single_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &single_perf_prio);
-                } else if (strstr(tid_name, "^(UnityMulti|UnityPreload|UnityChoreograp|UnityGfx|Worker Thread)")) {
-                    sched_setaffinity(tid, sizeof(multi_perf_mask), &multi_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &multi_perf_prio);
-                } else if (check_regex(tid_name, "^(LoadingThread|RHIThread|FrameThread|Job.Worker|CmpJob|TaskGraphNP|glp)")) {
-                    sched_setaffinity(tid, sizeof(multi_perf_mask), &multi_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &multi_perf_prio);
-                } else if (check_regex(tid_name, "^(JNISurfaceText|IJK_External|ForkJoinPool-|UiThread|AndroidUI|RenderEngine|[.]raster|Compositor)")) {
-                    sched_setaffinity(tid, sizeof(multi_perf_mask), &multi_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &multi_perf_prio);
-                } else if (check_regex(tid_name, "^([Gg]esture|.gifmaker|Binder|mali-|[Aa]sync|[Vv]sync|android.anim|android.ui|[Bb]lur|[Aa]nim|Chrome_|Viz)")) {
-                    sched_setaffinity(tid, sizeof(multi_perf_mask), &multi_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &multi_perf_prio);
-                } else if (check_regex(tid_name, "^(Chrome_InProc|Chromium|Gecko|[Ww]eb[Vv]iew|[Jj]ava[Ss]cript|js|JS|android.fg|android.io)")) {
-                    sched_setaffinity(tid, sizeof(comm_mask), &comm_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &comm_prio);
-                } else if (check_regex(tid_name, "^(CrGpuMain|CrRendererMain|work_thread|NativeThread|[Dd]ownload|[Mm]ixer|[Aa]udio|[Vv]ideo)")) {
-                    sched_setaffinity(tid, sizeof(comm_mask), &comm_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &comm_prio);
-                } else if (check_regex(tid_name, "^(OkHttp|ThreadPool|PoolThread|glide-|pool-|launcher-|Fresco)")) {
-                    sched_setaffinity(tid, sizeof(comm_mask), &comm_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &comm_prio);
-                } else if (check_regex(tid_name, "^(SearchDaemon|Profile|ged-swd|GPU completion|FramePolicy|ScrollPolicy|HeapTaskDaemon|FinalizerDaemon)")) {
-                    sched_setaffinity(tid, sizeof(efficiency_mask), &efficiency_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &efficiency_prio);
-                } else if (check_regex(tid_name, "^(ReferenceQueue|Jit thread pool|Timer-|log|xcrash|Ysa|Xqa|Rx|APM|TVKDL-|tp-|cgi-|ODCP-|xlog_|[Bb]ugly|android.bg|SensorService)")) {
-                    sched_setaffinity(tid, sizeof(efficiency_mask), &efficiency_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &efficiency_prio);
-                } else if (check_regex(tid_name, "^(HealthService|[Bb]ackground|[Rr]eport|tt_pangle|xg_vip_service|default_matrix|FrameDecoder|FrameSeq|hwui)")) {
-                    sched_setaffinity(tid, sizeof(efficiency_mask), &efficiency_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &efficiency_prio);
-                } else {
-                    sched_setaffinity(tid, sizeof(other_mask), &other_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &other_prio);
-                }
-            }
-        }
-        closedir(dir);
-    }
-}
-void write_freq(int sc_min, int sc_max, int bc_min, int bc_max, int xc_min, int xc_max)
-{
-    long int SC_MIN_FREQ = cluster0_freq_table[sc_min];
-    long int SC_MAX_FREQ = cluster0_freq_table[sc_max];
-    long int MC_MIN_FREQ = cluster1_freq_table[bc_min];
-    long int MC_MAX_FREQ = cluster1_freq_table[bc_max];
-    long int BC_MIN_FREQ = cluster2_freq_table[xc_min];
-    long int BC_MAX_FREQ = cluster2_freq_table[xc_max];
-    char file_url[128];
-    sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", cluster0_cpu);
-    write_value(file_url, "%ld\n", SC_MIN_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq", cluster0_cpu);
-    write_value(file_url, "%ld\n", SC_MAX_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", cluster1_cpu);
-    write_value(file_url, "%ld\n", MC_MIN_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq", cluster1_cpu);
-    write_value(file_url, "%ld\n", MC_MAX_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", cluster2_cpu);
-    write_value(file_url, "%ld\n", BC_MIN_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq", cluster2_cpu);
-    write_value(file_url, "%ld\n", BC_MAX_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_min_freq", cluster0_cpu);
-    write_value(file_url, "%ld\n", SC_MIN_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_max_freq", cluster0_cpu);
-    write_value(file_url, "%ld\n", SC_MAX_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_min_freq", cluster1_cpu);
-    write_value(file_url, "%ld\n", MC_MIN_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_max_freq", cluster1_cpu);
-    write_value(file_url, "%ld\n", MC_MAX_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_min_freq", cluster2_cpu);
-    write_value(file_url, "%ld\n", BC_MIN_FREQ);
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_max_freq", cluster2_cpu);
-    write_value(file_url, "%ld\n", BC_MAX_FREQ);
-    if ((access("/proc/ppm/policy/hard_userlimit_cpu_freq", 0)) != -1) {
-        if ((access("/sys/devices/system/cpu/cpufreq/policy7/scaling_min_freq", 0)) != -1) {
-            write_value("/proc/ppm/policy/hard_userlimit_cpu_freq", "%ld %ld %ld %ld %ld %ld\n", SC_MIN_FREQ,
-                SC_MAX_FREQ, MC_MIN_FREQ, MC_MAX_FREQ, BC_MIN_FREQ, BC_MAX_FREQ);
-        } else {
-            write_value("/proc/ppm/policy/hard_userlimit_cpu_freq", "%ld %ld %ld %ld\n", SC_MIN_FREQ, SC_MAX_FREQ,
-                MC_MIN_FREQ, MC_MAX_FREQ);
-        }
-    }
-    if (access("/sys/module/msm_performance/parameters/cpu_max_freq", 0) != -1) {
-        if ((access("/sys/devices/system/cpu/cpufreq/policy7/scaling_min_freq", 0)) != -1) {
-            write_value("/sys/module/msm_performance/parameters/cpu_max_freq", "%d:%ld %d:%ld %d:%ld\n", cluster0_cpu,
-                SC_MAX_FREQ, cluster1_cpu, MC_MAX_FREQ, cluster2_cpu, BC_MAX_FREQ);
-            write_value("/sys/module/msm_performance/parameters/cpu_min_freq", "%d:%ld %d:%ld %d:%ld\n", cluster0_cpu,
-                SC_MIN_FREQ, cluster1_cpu, MC_MIN_FREQ, cluster2_cpu, BC_MIN_FREQ);
-        } else {
-            write_value("/sys/module/msm_performance/parameters/cpu_max_freq", "%d:%ld %d:%ld\n", cluster0_cpu,
-                SC_MAX_FREQ, cluster1_cpu, MC_MAX_FREQ);
-            write_value("/sys/module/msm_performance/parameters/cpu_min_freq", "%d:%ld %d:%ld\n", cluster0_cpu,
-                SC_MIN_FREQ, cluster1_cpu, MC_MIN_FREQ);
-        }
-    }
-    if ((access("/dev/cluster0_freq_min", 0)) != -1) {
-        write_value("/dev/cluster0_freq_min", "%ld\n", SC_MIN_FREQ);
-    }
-    if ((access("/dev/cluster0_freq_max", 0)) != -1) {
-        write_value("/dev/cluster0_freq_max", "%ld\n", SC_MAX_FREQ);
-    }
-    if ((access("/dev/cluster1_freq_min", 0)) != -1) {
-        write_value("/dev/cluster1_freq_min", "%ld\n", MC_MIN_FREQ);
-    }
-    if ((access("/dev/cluster1_freq_max", 0)) != -1) {
-        write_value("/dev/cluster1_freq_max", "%ld\n", MC_MAX_FREQ);
-    }
-    if ((access("/dev/cluster2_freq_min", 0)) != -1) {
-        write_value("/dev/cluster2_freq_min", "%ld\n", BC_MIN_FREQ);
-    }
-    if ((access("/dev/cluster2_freq_max", 0)) != -1) {
-        write_value("/dev/cluster2_freq_max", "%ld\n", BC_MAX_FREQ);
-    }
-}
-void qti_freq_writer(int cpu, long int freq)
-{
-    if (access("/sys/module/msm_performance/parameters/cpu_max_freq", 0) != -1) {
-        write_value("/sys/module/msm_performance/parameters/cpu_max_freq", "%d:%ld\n", cpu, freq);
-        write_value("/sys/module/msm_performance/parameters/cpu_min_freq", "%d:%ld\n", cpu, freq);
-    }
-}
-void mtk_freq_writer(int cluster, long int freq)
-{
-    FILE* fp;
-    long int cluster0_cur_freq, cluster1_cur_freq, cluster2_cur_freq;
-    char buf[128];
-    char file_url[128];
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_cur_freq", cluster0_cpu);
-    fp = fopen(file_url, "r");
-    if (fp) {
-        fgets(buf, sizeof(buf), fp);
-        sscanf(buf, "%ld", &cluster0_cur_freq);
-        fclose(fp);
-    }
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_cur_freq", cluster1_cpu);
-    fp = fopen(file_url, "r");
-    if (fp) {
-        fgets(buf, sizeof(buf), fp);
-        sscanf(buf, "%ld", &cluster1_cur_freq);
-        fclose(fp);
-    }
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_cur_freq", cluster2_cpu);
-    fp = fopen(file_url, "r");
-    if (fp) {
-        fgets(buf, sizeof(buf), fp);
-        sscanf(buf, "%ld", &cluster2_cur_freq);
-        fclose(fp);
-    }
-    if (cluster == 0) {
-        cluster0_cur_freq = freq;
-    } else if (cluster == 1) {
-        cluster1_cur_freq = freq;
-    } else if (cluster == 2) {
-        cluster2_cur_freq = freq;
-    }
-    if (access("/proc/ppm/policy/hard_userlimit_cpu_freq", 0) != -1) {
-        if (access("/sys/devices/system/cpu/cpufreq/policy7/scaling_min_freq", 0) != -1) {
-            write_value("/proc/ppm/policy/hard_userlimit_cpu_freq", "%ld %ld %ld %ld %ld %ld\n", cluster0_cur_freq,
-                cluster0_cur_freq, cluster1_cur_freq, cluster1_cur_freq, cluster2_cur_freq, cluster2_cur_freq);
-        } else {
-            write_value("/proc/ppm/policy/hard_userlimit_cpu_freq", "%ld %ld %ld %ld\n", cluster0_cur_freq,
-                cluster0_cur_freq, cluster1_cur_freq, cluster1_cur_freq);
-        }
-    }
-}
-void exynos_freq_writer(int cluster, long int freq)
-{
-    char file_url[128];
-    sprintf(file_url, "/dev/cluster%d_freq_min", cluster);
-    write_value(file_url, "%ld\n", freq);
-    sprintf(file_url, "/dev/cluster%d_freq_max", cluster);
-    write_value(file_url, "%ld\n", freq);
-}
-void userspace_freq_writer(int cpu, long int freq)
-{
-    char file_url[128];
-    sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_setspeed", cpu);
-    write_value(file_url, "%ld\n", freq);
-}
-void eas_freq_writer(int cpu, long int freq)
-{
-    char file_url[128];
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_min_freq", cpu);
-    write_value(file_url, "%ld\n", freq);
-    sprintf(file_url, "/sys/devices/system/cpu/cpufreq/policy%d/scaling_max_freq", cpu);
-    write_value(file_url, "%ld\n", freq);
-}
-void hmp_freq_writer(int cpu, long int freq)
-{
-    char file_url[128];
-    sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", cpu);
-    write_value(file_url, "%ld\n", freq);
-    sprintf(file_url, "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq", cpu);
-    write_value(file_url, "%ld\n", freq);
-}
-void write_xc_freq(long int freq_level)
+
+void CoCpuGovernor(void)
 {
     pthread_detach(pthread_self());
-    prctl(PR_SET_NAME, "CpuFreqWriter0");
-    if (freq_writer_type == 1) {
-        qti_freq_writer(cluster2_cpu, cluster2_freq_table[freq_level]);
-    } else if (freq_writer_type == 2) {
-        exynos_freq_writer(2, cluster2_freq_table[freq_level]);
-    } else if (freq_writer_type == 3) {
-        mtk_freq_writer(2, cluster2_freq_table[freq_level]);
-    } else if (freq_writer_type == 4) {
-        userspace_freq_writer(cluster2_cpu, cluster2_freq_table[freq_level]);
-    } else if (freq_writer_type == 5) {
-        eas_freq_writer(cluster2_cpu, cluster2_freq_table[freq_level]);
-    } else if (freq_writer_type == 6) {
-        hmp_freq_writer(cluster2_cpu, cluster2_freq_table[freq_level]);
+    prctl(PR_SET_NAME, "CoCpuGovernor");
+
+    long int govRunTime = 0;
+
+    int i, j;
+
+    cJSON* jsonBuffer = cJSON_Parse(configData);
+    cJSON* objectBuffer = cJSON_GetObjectItem(jsonBuffer, "CoCpuGovernor_Config");
+    cJSON* itemBuffer = cJSON_GetObjectItem(objectBuffer, "fastSampleTime");
+    int fastSampleTime = itemBuffer->valueint;
+    itemBuffer = cJSON_GetObjectItem(objectBuffer, "slowSampleTime");
+    int slowSampleTime = itemBuffer->valueint;
+    cJSON_Delete(jsonBuffer);
+
+    FILE* fp = NULL;
+    char statBuffer[128];
+    int curCpuCore;
+    long int user, nice, sys, idle, iowait, irq, softirq;
+    long int nowaSumtime, nowaRuntime;
+    long int prevRuntime[10] = { 0 };
+    long int prevSumtime[10] = { 0 };
+
+    int cpuLoad[10] = { 0 };
+    int clusterMaxLoad = 0;
+    int clusterDemand = 0;
+
+    long int nowaMinFreq[10] = { 0 };
+    long int nowaMaxFreq[10] = { 0 };
+    long int prevMinFreq[10] = { 0 };
+    long int prevMaxFreq[10] = { 0 };
+
+    int prevCurFreqIdx[10] = { 0 };
+    int nowaCurFreqIdx[10] = { 0 };
+
+    int totalPower, pendingPower, pendingTotalCapRatio;
+    int clusterPower[10] = { 0 };
+    int overPowerLimit[10] = { 0 };
+    float clusterCapRatio[10] = { 0 };
+
+    long int totalCapacity = 0;
+    for (i = 0; i < cpuClusterNum; i++) {
+        totalCapacity += govData[i].cpuCapacity * (govData[i].lastCpu - govData[i].firstCpu + 1);
     }
-    pthread_exit(0);
-}
-void write_bc_freq(long int freq_level)
-{
-    pthread_detach(pthread_self());
-    prctl(PR_SET_NAME, "CpuFreqWriter1");
-    if (freq_writer_type == 1) {
-        qti_freq_writer(cluster1_cpu, cluster1_freq_table[freq_level]);
-    } else if (freq_writer_type == 2) {
-        exynos_freq_writer(1, cluster1_freq_table[freq_level]);
-    } else if (freq_writer_type == 3) {
-        mtk_freq_writer(1, cluster1_freq_table[freq_level]);
-    } else if (freq_writer_type == 4) {
-        userspace_freq_writer(cluster1_cpu, cluster1_freq_table[freq_level]);
-    } else if (freq_writer_type == 5) {
-        eas_freq_writer(cluster1_cpu, cluster1_freq_table[freq_level]);
-    } else if (freq_writer_type == 6) {
-        hmp_freq_writer(cluster1_cpu, cluster1_freq_table[freq_level]);
+    for (i = 0; i < cpuClusterNum; i++) {
+        clusterCapRatio[i] = (float)govData[i].cpuCapacity * (govData[i].lastCpu - govData[i].firstCpu + 1) * 100 / totalCapacity;
     }
-    pthread_exit(0);
-}
-void write_sc_freq(int freq_level)
-{
-    pthread_detach(pthread_self());
-    prctl(PR_SET_NAME, "CpuFreqWriter2");
-    if (freq_writer_type == 1) {
-        qti_freq_writer(cluster0_cpu, cluster0_freq_table[freq_level]);
-    } else if (freq_writer_type == 2) {
-        exynos_freq_writer(0, cluster0_freq_table[freq_level]);
-    } else if (freq_writer_type == 3) {
-        mtk_freq_writer(0, cluster0_freq_table[freq_level]);
-    } else if (freq_writer_type == 4) {
-        userspace_freq_writer(cluster0_cpu, cluster0_freq_table[freq_level]);
-    } else if (freq_writer_type == 5) {
-        eas_freq_writer(cluster0_cpu, cluster0_freq_table[freq_level]);
-    } else if (freq_writer_type == 6) {
-        hmp_freq_writer(cluster0_cpu, cluster0_freq_table[freq_level]);
-    }
-    pthread_exit(0);
-}
-void cpu_governor(void)
-{
-    pthread_detach(pthread_self());
-    prctl(PR_SET_NAME, "CpuGovernor");
-    FILE* fp;
-    long long int user, nice, sys, idle, iowait, irq, softirq, all, used;
-    long long int last_all[8] = { 0 };
-    long long int last_used[8] = { 0 };
-    long long int gov_runtime_ms = 0;
-    long long int get_sampling_time = 0;
-    long long int sc_freq_up_time = 0;
-    long long int bc_freq_up_time = 0;
-    long long int xc_freq_up_time = 0;
-    long long int sc_freq_down_time = 0;
-    long long int bc_freq_down_time = 0;
-    long long int xc_freq_down_time = 0;
-    float prev_cpu_usage[8] = { 0 };
-    float nowa_cpu_usage;
-    float sc_max_usage = 0;
-    float bc_max_usage = 0;
-    float xc_max_usage = 0;
-    float target_level = 0;
-    float cpu_load = 0;
-    float cpu_total_pwr = 0;
-    int comm_limit_pwr = 0;
-    int boost_limit_pwr = 0;
-    int cur_limit_pwr = 0;
-    int total_pwr_ratio = 0;
-    int i, cur_cpu_core;
-    int gov_sample_ms = 0;
-    int sc_limit_pwr = 0;
-    int bc_limit_pwr = 0;
-    int xc_limit_pwr = 0;
-    int sc_over_limit = 0;
-    int bc_over_limit = 0;
-    int xc_over_limit = 0;
-    int sc_perf_margin = 0;
-    int bc_perf_margin = 0;
-    int xc_perf_margin = 0;
-    int target_sc_level = 10;
-    int target_bc_level = 10;
-    int target_xc_level = 10;
-    int prev_target_level = 0;
-    int now_sc_level = 1;
-    int now_bc_level = 1;
-    int now_xc_level = 1;
-    int sc_freq_up_delay = 0;
-    int bc_freq_up_delay = 0;
-    int xc_freq_up_delay = 0;
-    int sc_freq_down_delay = 0;
-    int bc_freq_down_delay = 0;
-    int xc_freq_down_delay = 0;
-    int sc_latency_ms[11] = { 0 };
-    int bc_latency_ms[11] = { 0 };
-    int xc_latency_ms[11] = { 0 };
-    int target_latency_ms = 0;
-    int sc_cur_latency_ms = 0;
-    int bc_cur_latency_ms = 0;
-    int xc_cur_latency_ms = 0;
-    char buf[1024];
-    char now_mode[16];
-    while (SCREEN_OFF == 0) {
-        if (strcmp(boost, "null") != 0) {
-            gov_sample_ms = 10;
-        } else {
-            gov_sample_ms = 40;
+
+    long int freqDownTime = 0;
+    long int freqUpTime = 0;
+
+    int upRateDelay = 0;
+    float delayRatio = 0;
+    long int unexpectedFreq = 0;
+
+    int clusterMaxPower = 0;
+    long int clusterIdleMaxFreq[10] = { 0 };
+
+    while (screenState == SCREEN_ON) {
+        for (i = 0; i < cpuCoreNum; i++) {
+            cpuLoad[i] = 0;
         }
-        if (strcmp(mode, now_mode) != 0) {
-            // Get Governor Values
-            if (strcmp(mode, "powersave") == 0) {
-                sc_perf_margin = powersave_conf.sc_perf_margin;
-                bc_perf_margin = powersave_conf.bc_perf_margin;
-                xc_perf_margin = powersave_conf.xc_perf_margin;
-                sc_freq_up_delay = powersave_conf.sc_freq_up_delay;
-                bc_freq_up_delay = powersave_conf.bc_freq_up_delay;
-                xc_freq_up_delay = powersave_conf.xc_freq_up_delay;
-                sc_freq_down_delay = powersave_conf.sc_freq_down_delay;
-                bc_freq_down_delay = powersave_conf.bc_freq_down_delay;
-                xc_freq_down_delay = powersave_conf.xc_freq_down_delay;
-                comm_limit_pwr = powersave_conf.comm_limit_pwr;
-                boost_limit_pwr = powersave_conf.boost_limit_pwr;
-            } else if (strcmp(mode, "balance") == 0) {
-                sc_perf_margin = balance_conf.sc_perf_margin;
-                bc_perf_margin = balance_conf.bc_perf_margin;
-                xc_perf_margin = balance_conf.xc_perf_margin;
-                sc_freq_up_delay = balance_conf.sc_freq_up_delay;
-                bc_freq_up_delay = balance_conf.bc_freq_up_delay;
-                xc_freq_up_delay = balance_conf.xc_freq_up_delay;
-                sc_freq_down_delay = balance_conf.sc_freq_down_delay;
-                bc_freq_down_delay = balance_conf.bc_freq_down_delay;
-                xc_freq_down_delay = balance_conf.xc_freq_down_delay;
-                comm_limit_pwr = balance_conf.comm_limit_pwr;
-                boost_limit_pwr = balance_conf.boost_limit_pwr;
-            } else if (strcmp(mode, "performance") == 0) {
-                sc_perf_margin = performance_conf.sc_perf_margin;
-                bc_perf_margin = performance_conf.bc_perf_margin;
-                xc_perf_margin = performance_conf.xc_perf_margin;
-                sc_freq_up_delay = performance_conf.sc_freq_up_delay;
-                bc_freq_up_delay = performance_conf.bc_freq_up_delay;
-                xc_freq_up_delay = performance_conf.xc_freq_up_delay;
-                sc_freq_down_delay = performance_conf.sc_freq_down_delay;
-                bc_freq_down_delay = performance_conf.bc_freq_down_delay;
-                xc_freq_down_delay = performance_conf.xc_freq_down_delay;
-                comm_limit_pwr = performance_conf.comm_limit_pwr;
-                boost_limit_pwr = performance_conf.boost_limit_pwr;
-            } else {
-                sc_perf_margin = fast_conf.sc_perf_margin;
-                bc_perf_margin = fast_conf.bc_perf_margin;
-                xc_perf_margin = fast_conf.xc_perf_margin;
-                sc_freq_up_delay = fast_conf.sc_freq_up_delay;
-                bc_freq_up_delay = fast_conf.bc_freq_up_delay;
-                xc_freq_up_delay = fast_conf.xc_freq_up_delay;
-                sc_freq_down_delay = fast_conf.sc_freq_down_delay;
-                bc_freq_down_delay = fast_conf.bc_freq_down_delay;
-                xc_freq_down_delay = fast_conf.xc_freq_down_delay;
-                comm_limit_pwr = fast_conf.comm_limit_pwr;
-                boost_limit_pwr = fast_conf.boost_limit_pwr;
-            }
-            // Get Latency MS
-            for (i = 0; i <= 10; i++) {
-                if (i < expect_sc_level) {
-                    sc_latency_ms[i] = sc_freq_up_delay;
-                } else {
-                    target_latency_ms = (i - expect_sc_level + 1) * 20;
-                    if (target_latency_ms > 100) {
-                        sc_latency_ms[i] = 100;
-                    } else if (target_latency_ms > sc_freq_up_delay) {
-                        sc_latency_ms[i] = target_latency_ms;
-                    } else {
-                        sc_latency_ms[i] = sc_freq_up_delay;
-                    }
-                }
-                if (i < expect_bc_level) {
-                    bc_latency_ms[i] = bc_freq_up_delay;
-                } else {
-                    target_latency_ms = (i - expect_bc_level + 1) * 20;
-                    if (target_latency_ms > 100) {
-                        bc_latency_ms[i] = 100;
-                    } else if (target_latency_ms > bc_freq_up_delay) {
-                        bc_latency_ms[i] = target_latency_ms;
-                    } else {
-                        bc_latency_ms[i] = bc_freq_up_delay;
-                    }
-                }
-                if (i < expect_xc_level) {
-                    xc_latency_ms[i] = xc_freq_up_delay;
-                } else {
-                    target_latency_ms = (i - expect_xc_level + 1) * 20;
-                    if (target_latency_ms > 100) {
-                        xc_latency_ms[i] = 100;
-                    } else if (target_latency_ms > xc_freq_up_delay) {
-                        xc_latency_ms[i] = target_latency_ms;
-                    } else {
-                        xc_latency_ms[i] = xc_freq_up_delay;
-                    }
-                }
-            }
-            // Init Governor
-            target_sc_level = 0;
-            target_bc_level = 0;
-            target_xc_level = 0;
-            now_sc_level = 0;
-            now_bc_level = 0;
-            now_xc_level = 0;
-            sprintf(now_mode, "%s", mode);
-        }
-        // Get CPU Usage
+
         fp = fopen("/proc/stat", "r");
         if (fp) {
-            fgets(buf, sizeof(buf), fp);
-            for (i = 0; i <= core_num; i++) {
-                fgets(buf, sizeof(buf), fp);
-                if (strstr(buf, "cpu")) {
-                    sscanf(buf, "cpu%d %lld %lld %lld %lld %lld %lld %lld", &cur_cpu_core, &user, &nice, &sys, &idle, &iowait, &irq, &softirq);
-                    all = user + nice + sys + idle + iowait + irq + softirq;
-                    used = all - idle - iowait;
-                    if ((all - last_all[cur_cpu_core]) > 0 && last_all[cur_cpu_core] != 0) {
-                        nowa_cpu_usage = (float)(used - last_used[cur_cpu_core]) * 100 / (all - last_all[cur_cpu_core]);
-                        cpu_usage[cur_cpu_core] = (prev_cpu_usage[cur_cpu_core] + nowa_cpu_usage) / 2;
-                        prev_cpu_usage[cur_cpu_core] = nowa_cpu_usage;
-                    } else {
-                        cpu_usage[cur_cpu_core] = 0;
-                    }
-                    last_all[cur_cpu_core] = all;
-                    last_used[cur_cpu_core] = used;
+            while (fgets(statBuffer, sizeof(statBuffer), fp) != NULL) {
+                if (CheckRegex(statBuffer, "^cpu[0-9]")) {
+                    sscanf(statBuffer, "cpu%d %ld %ld %ld %ld %ld %ld %ld", &curCpuCore, &user, &nice, &sys, &idle, &iowait, &irq, &softirq);
+                    nowaSumtime = user + nice + sys + idle + iowait + irq + softirq;
+                    nowaRuntime = nowaSumtime - idle;
+                    cpuLoad[curCpuCore] = (nowaRuntime - prevRuntime[curCpuCore]) * 100 / (nowaSumtime - prevSumtime[curCpuCore]);
+                    prevRuntime[curCpuCore] = nowaRuntime;
+                    prevSumtime[curCpuCore] = nowaSumtime;
+                } else if (CheckRegex(statBuffer, "^intr")) {
+                    break;
                 }
             }
             fclose(fp);
         }
-        // Get Target Freq Level
-        sc_max_usage = 0;
-        bc_max_usage = 0;
-        xc_max_usage = 0;
-        for (i = 0; i <= core_num; i++) {
-            if (i < cluster1_cpu || cluster1_cpu == -1) {
-                if (cpu_usage[i] > sc_max_usage) {
-                    sc_max_usage = cpu_usage[i];
+
+        for (i = 0; i < cpuClusterNum; i++) {
+            clusterMaxLoad = 0;
+            for (j = govData[i].firstCpu; j <= govData[i].lastCpu; j++) {
+                if (cpuLoad[j] > clusterMaxLoad) {
+                    clusterMaxLoad = cpuLoad[j];
                 }
-            } else if (i < cluster2_cpu || cluster2_cpu == -1) {
-                if (cpu_usage[i] > bc_max_usage) {
-                    bc_max_usage = cpu_usage[i];
+            }
+
+            clusterDemand = clusterMaxLoad + (100 - clusterMaxLoad) * govBoost / 100;
+
+            prevCurFreqIdx[i] = nowaCurFreqIdx[i];
+            nowaCurFreqIdx[i] = roundNum((float)(govData[i].freqTableItemNum - 1) * clusterDemand / 100);
+
+            if (nowaCurFreqIdx[i] < prevCurFreqIdx[i]) {
+                if ((govRunTime - freqDownTime) < dynamicGovData.downRateDelay[i]) {
+                    nowaCurFreqIdx[i] = prevCurFreqIdx[i];
+                } else {
+                    freqDownTime = govRunTime;
+                }
+            } else if (nowaCurFreqIdx[i] > prevCurFreqIdx[i] && govData[i].freqTable[nowaCurFreqIdx[i]] > govData[i].expectFreq) {
+                unexpectedFreq = (govData[i].freqTable[nowaCurFreqIdx[i]] - govData[i].expectFreq);
+                delayRatio = unexpectedFreq / (govData[i].freqTable[govData[i].freqTableItemNum - 1] - govData[i].expectFreq);
+                upRateDelay = 20 + dynamicGovData.upRateLatency[i] * delayRatio;
+                if ((govRunTime - freqUpTime) < upRateDelay) {
+                    nowaCurFreqIdx[i] = prevCurFreqIdx[i];
+                } else {
+                    freqUpTime = govRunTime;
+                }
+            }
+        }
+
+        totalPower = 0;
+        for (i = 0; i < cpuClusterNum; i++) {
+            clusterPower[i] = govData[i].powerTable[nowaCurFreqIdx[i]] * (govData[i].lastCpu - govData[i].firstCpu + 1);
+            totalPower += clusterPower[i];
+        }
+        if (totalPower > dynamicGovData.powerLimit) {
+            pendingTotalCapRatio = 0;
+            for (i = 0; i < cpuClusterNum; i++) {
+                if (clusterPower[i] > (dynamicGovData.powerLimit * clusterCapRatio[i] / 100)) {
+                    overPowerLimit[i] = 1;
+                    pendingTotalCapRatio += clusterCapRatio[i];
+                } else {
+                    overPowerLimit[i] = 0;
+                }
+            }
+
+            pendingPower = dynamicGovData.powerLimit;
+            for (i = 0; i < cpuClusterNum; i++) {
+                pendingPower -= clusterPower[i] * (1 - overPowerLimit[i]);
+            }
+
+            for (i = 0; i < cpuClusterNum; i++) {
+                if (overPowerLimit[i] == 1) {
+                    nowaCurFreqIdx[i] = 0;
+                    for (j = (govData[i].freqTableItemNum - 1); j > 0; j--) {
+                        if ((govData[i].powerTable[j] * (govData[i].lastCpu - govData[i].firstCpu + 1)) <= (pendingPower * clusterCapRatio[i] / pendingTotalCapRatio)) {
+                            nowaCurFreqIdx[i] = j;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (i = 0; i < cpuClusterNum; i++) {
+            clusterMaxPower = dynamicGovData.powerLimit * clusterCapRatio[i] / 100;
+            clusterIdleMaxFreq[i] = govData[i].freqTable[0];
+            for (j = (govData[i].freqTableItemNum - 1); j > 0; j--) {
+                if (govData[i].powerTable[j] < (clusterMaxPower / (govData[i].lastCpu - govData[i].firstCpu + 1))) {
+                    clusterIdleMaxFreq[i] = govData[i].freqTable[j];
+                    break;
+                }
+            }
+
+            if (clusterIdleMaxFreq[i] > govData[i].expectFreq) {
+                clusterIdleMaxFreq[i] = govData[i].expectFreq;
+            }
+        }
+
+        for (i = 0; i < cpuClusterNum; i++) {
+            prevMinFreq[i] = nowaMinFreq[i];
+            prevMaxFreq[i] = nowaMaxFreq[i];
+
+            if (govBoost > 0) {
+                if (govData[i].freqTable[nowaCurFreqIdx[i]] < govData[i].basicFreq) {
+                    nowaMaxFreq[i] = clusterIdleMaxFreq[i];
+                    nowaMinFreq[i] = govData[i].basicFreq;
+                } else if (govData[i].freqTable[nowaCurFreqIdx[i]] < clusterIdleMaxFreq[i]) {
+                    nowaMaxFreq[i] = clusterIdleMaxFreq[i];
+                    nowaMinFreq[i] = govData[i].freqTable[nowaCurFreqIdx[i]];
+                } else {
+                    nowaMaxFreq[i] = govData[i].freqTable[nowaCurFreqIdx[i]];
+                    nowaMinFreq[i] = govData[i].freqTable[nowaCurFreqIdx[i]];
                 }
             } else {
-                if (cpu_usage[i] > xc_max_usage) {
-                    xc_max_usage = cpu_usage[i];
+                if (govData[i].freqTable[nowaCurFreqIdx[i]] < clusterIdleMaxFreq[i]) {
+                    nowaMaxFreq[i] = clusterIdleMaxFreq[i];
+                    nowaMinFreq[i] = govData[i].lowPowerFreq;
+                } else {
+                    nowaMaxFreq[i] = govData[i].freqTable[nowaCurFreqIdx[i]];
+                    nowaMinFreq[i] = govData[i].lowPowerFreq;
+                }
+            }
+
+            if (govData[i].enable) {
+                if (prevMinFreq[i] != nowaMinFreq[i] || prevMaxFreq[i] != nowaMaxFreq[i]) {
+                    if (curCpuFreqWriter == FREQ_WRITER_PPM) {
+                        WriteCpuFreqViaPPM(govData[i].policy, nowaMinFreq[i], nowaMaxFreq[i]);
+                    } else if (curCpuFreqWriter == FREQ_WRITER_EPIC) {
+                        WriteCpuFreqViaEpic(govData[i].policy, nowaMinFreq[i], nowaMaxFreq[i]);
+                    } else if (curCpuFreqWriter == FREQ_WRITER_GOV) {
+                        WriteCpuFreqViaGovernor(govData[i].firstCpu, nowaMinFreq[i], nowaMaxFreq[i]);
+                    }
+                }
+                if (prevMaxFreq[i] != nowaMaxFreq[i] && curCpuFreqWriter == FREQ_WRITER_GOV) {
+                    SetGovHispeed(govData[i].firstCpu, nowaMaxFreq[i]);
                 }
             }
         }
-        cpu_load = (float)xc_max_usage + (100 - xc_max_usage) * governor_boost / 100;
-        if (cpu_load > 100) {
-            cpu_load = 100;
-        }
-        if (now_xc_level == 0) {
-            now_xc_level = 1;
-        }
-        target_level = (float)now_xc_level * cpu_load / level_to_load(now_xc_level, xc_perf_margin);
-        if (target_level > 10) {
-            target_xc_level = 10;
-        } else if (target_level >= 1) {
-            target_xc_level = (int)target_level;
-        } else if (xc_max_usage > 5) {
-            target_xc_level = 1;
-        }
-        cpu_load = (float)bc_max_usage + (100 - bc_max_usage) * governor_boost / 100;
-        if (cpu_load > 100) {
-            cpu_load = 100;
-        }
-        if (now_bc_level == 0) {
-            now_bc_level = 1;
-        }
-        target_level = (float)now_bc_level * cpu_load / level_to_load(now_bc_level, bc_perf_margin);
-        if (target_level > 10) {
-            target_bc_level = 10;
-        } else if (target_level >= 1) {
-            target_bc_level = (int)target_level;
-        } else if (bc_max_usage > 5) {
-            target_bc_level = 1;
-        }
-        cpu_load = (float)sc_max_usage + (100 - sc_max_usage) * governor_boost / 100;
-        if (cpu_load > 100) {
-            cpu_load = 100;
-        }
-        if (now_sc_level == 0) {
-            now_sc_level = 1;
-        }
-        target_level = (float)now_sc_level * cpu_load / level_to_load(now_sc_level, sc_perf_margin);
-        if (target_level > 10) {
-            target_sc_level = 10;
-        } else if (target_level >= 1) {
-            target_sc_level = (int)target_level;
-        } else if (sc_max_usage > 5) {
-            target_sc_level = 1;
-        }
-        // CPU Power Limit
-        cpu_total_pwr = sc_pwr_mask[target_sc_level] * sc_core_num + bc_pwr_mask[target_bc_level] * bc_core_num + xc_pwr_mask[target_xc_level] * xc_core_num;
-        if (strcmp(boost, "null") != 0) {
-            if (cpu_total_pwr > boost_limit_pwr) {
-                cur_limit_pwr = boost_limit_pwr;
-                sc_limit_pwr = 0;
-                bc_limit_pwr = 0;
-                xc_limit_pwr = 0;
-                if ((sc_pwr_mask[target_sc_level] * sc_core_num) < (boost_limit_pwr * sc_pwr_ratio / 100)) {
-                    cur_limit_pwr = cur_limit_pwr - sc_pwr_mask[target_sc_level] * sc_core_num;
-                    sc_over_limit = 0;
-                } else {
-                    sc_over_limit = 1;
-                }
-                if ((bc_pwr_mask[target_bc_level] * bc_core_num) < (boost_limit_pwr * bc_pwr_ratio / 100)) {
-                    cur_limit_pwr = cur_limit_pwr - bc_pwr_mask[target_bc_level] * bc_core_num;
-                    bc_over_limit = 0;
-                } else {
-                    bc_over_limit = 1;
-                }
-                if ((xc_pwr_mask[target_xc_level] * xc_core_num) < (boost_limit_pwr * xc_pwr_ratio / 100)) {
-                    cur_limit_pwr = cur_limit_pwr - xc_pwr_mask[target_xc_level] * xc_core_num;
-                    xc_over_limit = 0;
-                } else {
-                    xc_over_limit = 1;
-                }
-                total_pwr_ratio = sc_pwr_ratio * sc_over_limit + bc_pwr_ratio * bc_over_limit + xc_pwr_ratio * xc_over_limit;
-                if (sc_over_limit == 1) {
-                    sc_limit_pwr = cur_limit_pwr * sc_pwr_ratio / total_pwr_ratio;
-                    prev_target_level = target_sc_level;
-                    target_sc_level = 0;
-                    for (i = prev_target_level; i >= 0; i--) {
-                        if ((sc_pwr_mask[i] * sc_core_num) <= sc_limit_pwr) {
-                            target_sc_level = i;
-                            break;
-                        }
-                    }
-                }
-                if (bc_over_limit == 1) {
-                    bc_limit_pwr = cur_limit_pwr * bc_pwr_ratio / total_pwr_ratio;
-                    prev_target_level = target_bc_level;
-                    target_bc_level = 0;
-                    for (i = prev_target_level; i >= 0; i--) {
-                        if ((bc_pwr_mask[i] * bc_core_num) <= bc_limit_pwr) {
-                            target_bc_level = i;
-                            break;
-                        }
-                    }
-                }
-                if (xc_over_limit == 1) {
-                    xc_limit_pwr = cur_limit_pwr * xc_pwr_ratio / total_pwr_ratio;
-                    prev_target_level = target_xc_level;
-                    target_xc_level = 0;
-                    for (i = prev_target_level; i >= 0; i--) {
-                        if ((xc_pwr_mask[i] * xc_core_num) <= xc_limit_pwr) {
-                            target_xc_level = i;
-                            break;
-                        }
-                    }
-                }
-            }
+
+        if (govBoost == 0) {
+            govRunTime += slowSampleTime;
+            usleep(slowSampleTime * 1000);
         } else {
-            if (cpu_total_pwr > comm_limit_pwr) {
-                cur_limit_pwr = comm_limit_pwr;
-                sc_limit_pwr = 0;
-                bc_limit_pwr = 0;
-                xc_limit_pwr = 0;
-                if ((sc_pwr_mask[target_sc_level] * sc_core_num) < (comm_limit_pwr * sc_pwr_ratio / 100)) {
-                    cur_limit_pwr = cur_limit_pwr - sc_pwr_mask[target_sc_level] * sc_core_num;
-                    sc_over_limit = 0;
-                } else {
-                    sc_over_limit = 1;
-                }
-                if ((bc_pwr_mask[target_bc_level] * bc_core_num) < (comm_limit_pwr * bc_pwr_ratio / 100)) {
-                    cur_limit_pwr = cur_limit_pwr - bc_pwr_mask[target_bc_level] * bc_core_num;
-                    bc_over_limit = 0;
-                } else {
-                    bc_over_limit = 1;
-                }
-                if ((xc_pwr_mask[target_xc_level] * xc_core_num) < (comm_limit_pwr * xc_pwr_ratio / 100)) {
-                    cur_limit_pwr = cur_limit_pwr - xc_pwr_mask[target_xc_level] * xc_core_num;
-                    xc_over_limit = 0;
-                } else {
-                    xc_over_limit = 1;
-                }
-                total_pwr_ratio = sc_pwr_ratio * sc_over_limit + bc_pwr_ratio * bc_over_limit + xc_pwr_ratio * xc_over_limit;
-                if (sc_over_limit == 1) {
-                    sc_limit_pwr = cur_limit_pwr * sc_pwr_ratio / total_pwr_ratio;
-                    prev_target_level = target_sc_level;
-                    target_sc_level = 0;
-                    for (i = prev_target_level; i >= 0; i--) {
-                        if ((sc_pwr_mask[i] * sc_core_num) <= sc_limit_pwr) {
-                            target_sc_level = i;
-                            break;
-                        }
-                    }
-                }
-                if (bc_over_limit == 1) {
-                    bc_limit_pwr = cur_limit_pwr * bc_pwr_ratio / total_pwr_ratio;
-                    prev_target_level = target_bc_level;
-                    target_bc_level = 0;
-                    for (i = prev_target_level; i >= 0; i--) {
-                        if ((bc_pwr_mask[i] * bc_core_num) <= bc_limit_pwr) {
-                            target_bc_level = i;
-                            break;
-                        }
-                    }
-                }
-                if (xc_over_limit == 1) {
-                    xc_limit_pwr = cur_limit_pwr * xc_pwr_ratio / total_pwr_ratio;
-                    prev_target_level = target_xc_level;
-                    target_xc_level = 0;
-                    for (i = prev_target_level; i >= 0; i--) {
-                        if ((xc_pwr_mask[i] * xc_core_num) <= xc_limit_pwr) {
-                            target_xc_level = i;
-                            break;
-                        }
-                    }
-                }
-            }
+            govRunTime += fastSampleTime;
+            usleep(fastSampleTime * 1000);
         }
-        // Get Current Latency MS.
-        if (strcmp(boost, "null") == 0) {
-            sc_cur_latency_ms = sc_latency_ms[target_sc_level];
-            bc_cur_latency_ms = bc_latency_ms[target_bc_level];
-            xc_cur_latency_ms = xc_latency_ms[target_xc_level];
-        } else {
-            sc_cur_latency_ms = 0;
-            bc_cur_latency_ms = 0;
-            xc_cur_latency_ms = 0;
-        }
-        // submit CPU Freq
-        if (target_xc_level < now_xc_level) {
-            if ((gov_runtime_ms - xc_freq_down_time) >= xc_freq_down_delay) {
-                pthread_create(&thread_info, NULL, (void*)write_xc_freq, (void*)(long)target_xc_level);
-                now_xc_level = target_xc_level;
-                xc_freq_down_time = gov_runtime_ms;
-            }
-        } else if (target_xc_level > now_xc_level) {
-            if ((gov_runtime_ms - xc_freq_up_time) >= xc_cur_latency_ms) {
-                pthread_create(&thread_info, NULL, (void*)write_xc_freq, (void*)(long)target_xc_level);
-                now_xc_level = target_xc_level;
-                xc_freq_up_time = gov_runtime_ms;
-            }
-        }
-        if (target_bc_level < now_bc_level) {
-            if ((gov_runtime_ms - bc_freq_down_time) >= bc_freq_down_delay) {
-                pthread_create(&thread_info, NULL, (void*)write_bc_freq, (void*)(long)target_bc_level);
-                now_bc_level = target_bc_level;
-                bc_freq_down_time = gov_runtime_ms;
-            }
-        } else if (target_bc_level > now_bc_level) {
-            if ((gov_runtime_ms - bc_freq_up_time) >= bc_cur_latency_ms) {
-                pthread_create(&thread_info, NULL, (void*)write_bc_freq, (void*)(long)target_bc_level);
-                now_bc_level = target_bc_level;
-                bc_freq_up_time = gov_runtime_ms;
-            }
-        }
-        if (target_sc_level < now_sc_level) {
-            if ((gov_runtime_ms - sc_freq_down_time) >= sc_freq_down_delay) {
-                pthread_create(&thread_info, NULL, (void*)write_sc_freq, (void*)(long)target_sc_level);
-                now_sc_level = target_sc_level;
-                sc_freq_down_time = gov_runtime_ms;
-            }
-        } else if (target_sc_level > now_sc_level) {
-            if ((gov_runtime_ms - sc_freq_up_time) >= sc_cur_latency_ms) {
-                pthread_create(&thread_info, NULL, (void*)write_sc_freq, (void*)(long)target_sc_level);
-                now_sc_level = target_sc_level;
-                sc_freq_up_time = gov_runtime_ms;
-            }
-        }
-        gov_runtime_ms += gov_sample_ms;
-        usleep(gov_sample_ms * 1000);
     }
+
     pthread_exit(0);
 }
-void boost_timer(void)
+
+void KernelGovernorOpt(void)
+{
+    int i, j;
+    char curCpuGovernor[16];
+
+    char targetLoads[1024];
+    int cpuTargetLoad = 0;
+
+    if (IsFileExist("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")) {
+        sscanf(ReadFile(NULL, "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"), "%s", curCpuGovernor);
+    } else {
+        WriteFile("W", "KernelGovernorOpt may not availiable on your device.");
+    }
+
+    for (i = 0; i < cpuClusterNum; i++) {
+        if (IsDirExist("/sys/devices/system/cpu/cpufreq/policy%d/%s", govData[i].firstCpu, curCpuGovernor)) {
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/rate_limit_us", govData[i].firstCpu, curCpuGovernor), "1000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/up_rate_limit_us", govData[i].firstCpu, curCpuGovernor), "1000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/down_rate_limit_us", govData[i].firstCpu, curCpuGovernor), "1000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/hispeed_load", govData[i].firstCpu, curCpuGovernor), "95");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/go_hispeed_load", govData[i].firstCpu, curCpuGovernor), "95");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/above_hispeed_delay", govData[i].firstCpu, curCpuGovernor), "0");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/boost", govData[i].firstCpu, curCpuGovernor), "0");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/boostpulse_duration", govData[i].firstCpu, curCpuGovernor), "0");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/io_is_busy", govData[i].firstCpu, curCpuGovernor), "0");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/timer_rate", govData[i].firstCpu, curCpuGovernor), "20000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/timer_slack", govData[i].firstCpu, curCpuGovernor), "40000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/min_sample_time", govData[i].firstCpu, curCpuGovernor), "20000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/pl", govData[i].firstCpu, curCpuGovernor), "0");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/rtg_boost_freq", govData[i].firstCpu, curCpuGovernor), "0");
+
+            sprintf(targetLoads, "80");
+            for (j = 1; j < govData[i].freqTableItemNum; j++) {
+                cpuTargetLoad = govData[i].freqTable[j - 1] * 90 / govData[i].freqTable[j];
+                sprintf(targetLoads, "%s %ld:%d", targetLoads, govData[i].freqTable[j], cpuTargetLoad);
+            }
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/target_loads", govData[i].firstCpu, curCpuGovernor), targetLoads);
+        }
+
+        if (IsDirExist("/sys/devices/system/cpu/cpu%d/cpufreq/%s", govData[i].firstCpu, curCpuGovernor)) {
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/rate_limit_us", govData[i].firstCpu, curCpuGovernor), "1000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/up_rate_limit_us", govData[i].firstCpu, curCpuGovernor), "1000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/down_rate_limit_us", govData[i].firstCpu, curCpuGovernor), "1000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/hispeed_load", govData[i].firstCpu, curCpuGovernor), "95");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/go_hispeed_load", govData[i].firstCpu, curCpuGovernor), "95");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/above_hispeed_delay", govData[i].firstCpu, curCpuGovernor), "0");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/boost", govData[i].firstCpu, curCpuGovernor), "0");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/boostpulse_duration", govData[i].firstCpu, curCpuGovernor), "0");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/io_is_busy", govData[i].firstCpu, curCpuGovernor), "0");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/timer_rate", govData[i].firstCpu, curCpuGovernor), "20000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/timer_slack", govData[i].firstCpu, curCpuGovernor), "40000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/min_sample_time", govData[i].firstCpu, curCpuGovernor), "20000");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/pl", govData[i].firstCpu, curCpuGovernor), "0");
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/rtg_boost_freq", govData[i].firstCpu, curCpuGovernor), "0");
+
+            sprintf(targetLoads, "80");
+            for (j = 1; j < govData[i].freqTableItemNum; j++) {
+                cpuTargetLoad = govData[i].freqTable[j - 1] * 90 / govData[i].freqTable[j];
+                sprintf(targetLoads, "%s %ld:%d", targetLoads, govData[i].freqTable[j], cpuTargetLoad);
+            }
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/target_loads", govData[i].firstCpu, curCpuGovernor), targetLoads);
+        }
+    }
+
+    if (IsDirExist("/sys/devices/system/cpu/cpufreq/%s", curCpuGovernor)) {
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/rate_limit_us", curCpuGovernor), "1000");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/up_rate_limit_us", curCpuGovernor), "1000");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/down_rate_limit_us", curCpuGovernor), "1000");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/hispeed_load", curCpuGovernor), "95");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/go_hispeed_load", curCpuGovernor), "95");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/above_hispeed_delay", curCpuGovernor), "0");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/boost", curCpuGovernor), "0");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/boostpulse_duration", curCpuGovernor), "0");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/io_is_busy", curCpuGovernor), "0");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/timer_rate", curCpuGovernor), "20000");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/timer_slack", curCpuGovernor), "40000");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/min_sample_time", curCpuGovernor), "20000");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/pl", curCpuGovernor), "0");
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/rtg_boost_freq", curCpuGovernor), "0");
+
+        sprintf(targetLoads, "80");
+        for (i = 1; i < govData[0].freqTableItemNum; i++) {
+            cpuTargetLoad = govData[0].freqTable[i - 1] * 90 / govData[0].freqTable[i];
+            sprintf(targetLoads, "%s %ld:%d", targetLoads, govData[0].freqTable[i], cpuTargetLoad);
+        }
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/target_loads", curCpuGovernor), "%s", targetLoads);
+    }
+}
+
+void InitPolicyData(int policy, int firstCpu, int lastCpu)
+{
+    int i;
+
+    cJSON* jsonBuffer = cJSON_Parse(configData);
+
+    char objectName[32];
+    sprintf(objectName, "policy%d_Config", policy);
+    cJSON* objectBuffer = cJSON_GetObjectItem(jsonBuffer, objectName);
+
+    cJSON* itemBuffer = NULL;
+
+    itemBuffer = cJSON_GetObjectItem(objectBuffer, "enable");
+    govData[policy].enable = itemBuffer->valueint;
+
+    govData[policy].policy = policy;
+    govData[policy].firstCpu = firstCpu;
+    govData[policy].lastCpu = lastCpu;
+
+    itemBuffer = cJSON_GetObjectItem(objectBuffer, "cpu_capacity");
+    govData[policy].cpuCapacity = itemBuffer->valueint;
+
+    char freqTablePath[128];
+    itemBuffer = cJSON_GetObjectItem(objectBuffer, "freqTablePath");
+    sscanf(itemBuffer->valuestring, "%s", freqTablePath);
+    if (!IsFileExist(freqTablePath)) {
+        WriteLog("E", "File \"%s\" doesn't exist.", freqTablePath);
+    }
+    char freqTableBuffer[1024];
+    char freqBuffer[16];
+    int idx;
+    int startIdx = 0;
+    int endIdx = 0;
+    ReadFile(freqTableBuffer, freqTablePath);
+    govData[policy].freqTableItemNum = 0;
+    for (idx = 1; idx < strlen(freqTableBuffer); idx++) {
+        if (freqTableBuffer[idx - 1] == ' ' && freqTableBuffer[idx] != ' ') {
+            startIdx = idx;
+        } else if (freqTableBuffer[idx - 1] != ' ' && freqTableBuffer[idx] == ' ' || freqTableBuffer[idx - 1] != ' ' && freqTableBuffer[idx] == '\n') {
+            endIdx = idx - 1;
+            memset(freqBuffer, 0, sizeof(freqBuffer));
+            for (i = 0; i <= (endIdx - startIdx); i++) {
+                freqBuffer[i] = freqTableBuffer[startIdx + i];
+            }
+            sscanf(freqBuffer, "%ld", &govData[policy].freqTable[govData[policy].freqTableItemNum]);
+            govData[policy].freqTableItemNum++;
+        }
+    }
+
+    long int tempFreq;
+    if (govData[policy].freqTable[govData[policy].freqTableItemNum - 1] < govData[policy].freqTable[0]) {
+        for (i = 0; i < (govData[policy].freqTableItemNum / 2); i++) {
+            tempFreq = govData[policy].freqTable[i];
+            govData[policy].freqTable[i] = govData[policy].freqTable[govData[policy].freqTableItemNum - 1 - i];
+            govData[policy].freqTable[govData[policy].freqTableItemNum - i - 1] = tempFreq;
+        }
+    }
+
+    long int cpuInfoMaxFreq;
+    sscanf(ReadFile(NULL, "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", firstCpu), "%ld", &cpuInfoMaxFreq);
+    if (cpuInfoMaxFreq > govData[policy].freqTable[govData[policy].freqTableItemNum - 1]) {
+        govData[policy].freqTable[govData[policy].freqTableItemNum] = cpuInfoMaxFreq;
+        govData[policy].freqTableItemNum++;
+    }
+
+    long int minDiffFreq = 10000000;
+    int targetFreqIdx = 0;
+    itemBuffer = cJSON_GetObjectItem(objectBuffer, "lowPowerFreq");
+    govData[policy].lowPowerFreq = (*itemBuffer).valueint * 1000;
+    for (i = 0; i < govData[policy].freqTableItemNum; i++) {
+        if (labs(govData[policy].freqTable[i] - govData[policy].lowPowerFreq) < minDiffFreq) {
+            minDiffFreq = labs(govData[policy].freqTable[i] - govData[policy].lowPowerFreq);
+            targetFreqIdx = i;
+        }
+    }
+    govData[policy].lowPowerFreq = govData[policy].freqTable[targetFreqIdx];
+
+    minDiffFreq = 10000000;
+    targetFreqIdx = 0;
+    itemBuffer = cJSON_GetObjectItem(objectBuffer, "basicFreq");
+    govData[policy].basicFreq = (*itemBuffer).valueint * 1000;
+    for (i = 0; i < govData[policy].freqTableItemNum; i++) {
+        if (labs(govData[policy].freqTable[i] - govData[policy].basicFreq) < minDiffFreq) {
+            minDiffFreq = labs(govData[policy].freqTable[i] - govData[policy].basicFreq);
+            targetFreqIdx = i;
+        }
+    }
+    govData[policy].basicFreq = govData[policy].freqTable[targetFreqIdx];
+
+    minDiffFreq = 10000000;
+    targetFreqIdx = 0;
+    itemBuffer = cJSON_GetObjectItem(objectBuffer, "expectFreq");
+    govData[policy].expectFreq = (*itemBuffer).valueint * 1000;
+    for (i = 0; i < govData[policy].freqTableItemNum; i++) {
+        if (labs(govData[policy].freqTable[i] - govData[policy].expectFreq) < minDiffFreq) {
+            minDiffFreq = labs(govData[policy].freqTable[i] - govData[policy].expectFreq);
+            targetFreqIdx = i;
+        }
+    }
+    govData[policy].expectFreq = govData[policy].freqTable[targetFreqIdx];
+
+    if (govData[policy].expectFreq < govData[policy].basicFreq || govData[policy].basicFreq < govData[policy].lowPowerFreq) {
+        WriteLog("E", "Policy config does not meet the requirements.");
+        exit(0);
+    }
+
+    itemBuffer = cJSON_GetObjectItem(objectBuffer, "modelFreq");
+    govData[policy].modelFreq = (*itemBuffer).valueint * 1000;
+    itemBuffer = cJSON_GetObjectItem(objectBuffer, "modelPower");
+    int modelPower = itemBuffer->valueint;
+    float powerConst = (float)modelPower / (govData[policy].modelFreq / 1000);
+    float lowPowerVoltStair = (float)(800 - 400) / ((govData[policy].expectFreq - govData[policy].freqTable[0]) / 1000);
+    float expectVoltStair = (float)(1000 - 800) / ((govData[policy].modelFreq - govData[policy].expectFreq) / 1000);
+    float unexpectVoltStair = (float)(1200 - 1000) / ((govData[policy].freqTable[govData[policy].freqTableItemNum - 1] - govData[policy].modelFreq) / 1000);
+    float cpuVolt = 0;
+    for (i = 0; i < govData[policy].freqTableItemNum; i++) {
+        if (govData[policy].freqTable[i] <= govData[policy].expectFreq) {
+            cpuVolt = 400 + (govData[policy].freqTable[i] - govData[policy].freqTable[0]) / 1000 * lowPowerVoltStair;
+        } else if (govData[policy].freqTable[i] <= (govData[policy].modelFreq * 1000)) {
+            cpuVolt = 800 + (govData[policy].freqTable[i] - govData[policy].expectFreq) / 1000 * expectVoltStair;
+        } else {
+            cpuVolt = 1000 + (govData[policy].freqTable[i] - govData[policy].modelFreq) / 1000 * unexpectVoltStair;
+        }
+        govData[policy].powerTable[i] = powerConst * ((long long int)(govData[policy].freqTable[i] / 1000) * (cpuVolt * cpuVolt)) / 1000000;
+    }
+
+    cJSON_Delete(jsonBuffer);
+}
+
+void InitCoCpuGovernor(void)
+{
+    cJSON* jsonBuffer = cJSON_Parse(configData);
+    cJSON* objectBuffer = cJSON_GetObjectItem(jsonBuffer, "cpuPolicy");
+
+    cJSON* itemBuffer = NULL;
+
+    int i, j;
+    int firstCpu = 0;
+    int lastCpu = 0;
+    int nowaPolicy = 0;
+    int prevPolicy = 0;
+    for (i = 0; i <= 9; i++) {
+        itemBuffer = cJSON_GetObjectItem(objectBuffer, StrMerge("cpu%d", i));
+        prevPolicy = nowaPolicy;
+        nowaPolicy = itemBuffer->valueint;
+        if (nowaPolicy != prevPolicy) {
+            lastCpu = i - 1;
+            InitPolicyData(prevPolicy, firstCpu, lastCpu);
+            firstCpu = i;
+        }
+        if (nowaPolicy == -1) {
+            cpuCoreNum = i;
+            cpuClusterNum = prevPolicy + 1;
+            break;
+        }
+    }
+
+    for (i = 0; i < cpuClusterNum; i++) {
+        WriteLog("I", "CPU Policy%d (%d-%d) PowerModel:", govData[i].policy, govData[i].firstCpu, govData[i].lastCpu);
+        for (j = 0; j < govData[i].freqTableItemNum; j++) {
+            WriteLog("I", "Idx=%d, Freq=%ld MHz, Power=%d mW.", j, govData[i].freqTable[j] / 1000, govData[i].powerTable[j]);
+        }
+    }
+
+    CheckCpuFreqWriter();
+
+    cJSON_Delete(jsonBuffer);
+}
+
+void BoostTimer(void)
 {
     pthread_detach(pthread_self());
     prctl(PR_SET_NAME, "BoostTimer");
-    while (boost_duration_ms > 0) {
-        boost_duration_ms--;
-        usleep(1000);
+
+    while (boostDurationTime > 0) {
+        usleep(dynamicGovData.boostDurationSleepTime * 1000);
+        boostDurationTime -= dynamicGovData.boostDurationSleepTime;
     }
-    governor_boost = no_boost.gov_boost;
-    sprintf(boost, "none");
+
+    boostDurationTime = 0;
+    govBoost = 0;
+
     pthread_exit(0);
 }
-void submit_hint(char hint[32])
+
+void TriggerBoost(int boostType)
 {
-    int prev_boost_duration_ms = boost_duration_ms;
-    if (strcmp(hint, "touch") == 0) {
-        if (strcmp(touch_hint.boost_type, "touch") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0) {
-                sprintf(boost, "%s", touch_hint.boost_type);
-                boost_duration_ms = touch_hint.boost_duration;
-            }
-        } else if (strcmp(touch_hint.boost_type, "swipe") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0 || strcmp(boost, "swipe") == 0) {
-                sprintf(boost, "%s", touch_hint.boost_type);
-                boost_duration_ms = touch_hint.boost_duration;
-            }
-        } else if (strcmp(touch_hint.boost_type, "gesture") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0 || strcmp(boost, "swipe") == 0 || strcmp(boost, "gesture") == 0) {
-                sprintf(boost, "%s", touch_hint.boost_type);
-                boost_duration_ms = touch_hint.boost_duration;
-            }
-        } else if (strcmp(touch_hint.boost_type, "heavyload") == 0) {
-            sprintf(boost, "%s", touch_hint.boost_type);
-            boost_duration_ms = touch_hint.boost_duration;
-        }
-    } else if (strcmp(hint, "swipe") == 0) {
-        if (strcmp(swipe_hint.boost_type, "touch") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0) {
-                sprintf(boost, "%s", swipe_hint.boost_type);
-                boost_duration_ms = swipe_hint.boost_duration;
-            }
-        } else if (strcmp(swipe_hint.boost_type, "swipe") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0 || strcmp(boost, "swipe") == 0) {
-                sprintf(boost, "%s", swipe_hint.boost_type);
-                boost_duration_ms = swipe_hint.boost_duration;
-            }
-        } else if (strcmp(swipe_hint.boost_type, "gesture") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0 || strcmp(boost, "swipe") == 0 || strcmp(boost, "gesture") == 0) {
-                sprintf(boost, "%s", swipe_hint.boost_type);
-                boost_duration_ms = swipe_hint.boost_duration;
-            }
-        } else if (strcmp(swipe_hint.boost_type, "heavyload") == 0) {
-            sprintf(boost, "%s", swipe_hint.boost_type);
-            boost_duration_ms = swipe_hint.boost_duration;
-        }
-    } else if (strcmp(hint, "gesture") == 0) {
-        if (strcmp(gesture_hint.boost_type, "touch") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0) {
-                sprintf(boost, "%s", gesture_hint.boost_type);
-                boost_duration_ms = gesture_hint.boost_duration;
-            }
-        } else if (strcmp(gesture_hint.boost_type, "swipe") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0 || strcmp(boost, "swipe") == 0) {
-                sprintf(boost, "%s", gesture_hint.boost_type);
-                boost_duration_ms = gesture_hint.boost_duration;
-            }
-        } else if (strcmp(gesture_hint.boost_type, "gesture") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0 || strcmp(boost, "swipe") == 0 || strcmp(boost, "gesture") == 0) {
-                sprintf(boost, "%s", gesture_hint.boost_type);
-                boost_duration_ms = gesture_hint.boost_duration;
-            }
-        } else if (strcmp(gesture_hint.boost_type, "heavyload") == 0) {
-            sprintf(boost, "%s", gesture_hint.boost_type);
-            boost_duration_ms = gesture_hint.boost_duration;
-        }
-    } else if (strcmp(hint, "topActivityChanged") == 0) {
-        if (strcmp(top_activity_changed.boost_type, "touch") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0) {
-                sprintf(boost, "%s", top_activity_changed.boost_type);
-                boost_duration_ms = top_activity_changed.boost_duration;
-            }
-        } else if (strcmp(top_activity_changed.boost_type, "swipe") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0 || strcmp(boost, "swipe") == 0) {
-                sprintf(boost, "%s", top_activity_changed.boost_type);
-                boost_duration_ms = top_activity_changed.boost_duration;
-            }
-        } else if (strcmp(top_activity_changed.boost_type, "gesture") == 0) {
-            if (strcmp(boost, "none") == 0 || strcmp(boost, "touch") == 0 || strcmp(boost, "swipe") == 0 || strcmp(boost, "gesture") == 0) {
-                sprintf(boost, "%s", top_activity_changed.boost_type);
-                boost_duration_ms = top_activity_changed.boost_duration;
-            }
-        } else if (strcmp(top_activity_changed.boost_type, "heavyload") == 0) {
-            sprintf(boost, "%s", top_activity_changed.boost_type);
-            boost_duration_ms = top_activity_changed.boost_duration;
-        }
-    }
-    if (prev_boost_duration_ms == 0) {
-        pthread_create(&thread_info, NULL, (void*)boost_timer, NULL);
-    }
-}
-void taskset_helper(long int pid)
-{
-    pthread_detach(pthread_self());
-    prctl(PR_SET_NAME, "TasksetHelper");
-    FILE* fp;
-    DIR* dir;
-    cpu_set_t efficiency_mask;
-    cpu_set_t multi_perf_mask;
-    cpu_set_t single_perf_mask;
-    cpu_set_t comm_mask;
-    cpu_set_t other_mask;
-    struct sched_param efficiency_prio;
-    struct sched_param comm_prio;
-    struct sched_param other_prio;
-    struct sched_param multi_perf_prio;
-    struct sched_param single_perf_prio;
-    struct dirent* entry;
-    char buf[256];
-    char tid_dir[128];
-    char tid_url[128];
-    char tid_name[32];
-    long long int prev_task_runtime[256] = { 0 };
-    long long int nowa_task_runtime = 0;
-    long int cur_task_runtime = 0;
-    long int max_task_runtime = 0;
-    int heavy_load_task = -1;
-    int tid, i;
-    int single_perf_tasks[256] = { 0 };
-    int single_perf_task_num = 0;
-    CPU_ZERO(&efficiency_mask);
-    for (i = normal_sched.efficiency_cpu_start; i <= normal_sched.efficiency_cpu_end; i++) {
-        CPU_SET(i, &efficiency_mask);
-    }
-    CPU_ZERO(&comm_mask);
-    for (i = normal_sched.common_cpu_start; i <= normal_sched.common_cpu_end; i++) {
-        CPU_SET(i, &comm_mask);
-    }
-    CPU_ZERO(&other_mask);
-    for (i = normal_sched.other_cpu_start; i <= normal_sched.other_cpu_end; i++) {
-        CPU_SET(i, &other_mask);
-    }
-    CPU_ZERO(&multi_perf_mask);
-    for (i = normal_sched.multi_perf_cpu_start; i <= normal_sched.multi_perf_cpu_end; i++) {
-        CPU_SET(i, &multi_perf_mask);
-    }
-    CPU_ZERO(&single_perf_mask);
-    for (i = normal_sched.single_perf_cpu_start; i <= normal_sched.single_perf_cpu_end; i++) {
-        CPU_SET(i, &single_perf_mask);
-    }
-    efficiency_prio.sched_priority = normal_sched.efficiency_sched_prio;
-    comm_prio.sched_priority = normal_sched.common_sched_prio;
-    other_prio.sched_priority = normal_sched.other_sched_prio;
-    multi_perf_prio.sched_priority = normal_sched.multi_perf_sched_prio;
-    single_perf_prio.sched_priority = normal_sched.single_perf_sched_prio;
-    sprintf(tid_dir, "/proc/%ld/task/", pid);
-    dir = opendir(tid_dir);
-    if (dir != NULL) {
-        single_perf_task_num = 0;
-        while ((entry = readdir(dir)) != NULL) {
-            sscanf((*entry).d_name, "%d", &tid);
-            sprintf(tid_url, "%s%d/comm", tid_dir, tid);
-            fp = fopen(tid_url, "r");
-            if (fp != NULL) {
-                memset(tid_name, 0, sizeof(tid_name));
-                fgets(tid_name, sizeof(tid_name), fp);
-                fclose(fp);
-                reset_task_nice(tid);
-                if (tid == pid) {
-                    sched_setaffinity(tid, sizeof(multi_perf_mask), &multi_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &multi_perf_prio);
-                } else if (check_regex(tid_name, "^(UnityMain|MainThread-UE4|GameThread|SDLThread|RenderThread|MINECRAFT|GLThread|Thread-)")) {
-                    single_perf_task_num++;
-                    single_perf_tasks[single_perf_task_num] = tid;
-                } else if (strstr(tid_name, "^(UnityMulti|UnityPreload|UnityChoreograp|UnityGfx|Worker Thread)")) {
-                    sched_setaffinity(tid, sizeof(multi_perf_mask), &multi_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &multi_perf_prio);
-                } else if (check_regex(tid_name, "^(LoadingThread|RHIThread|FrameThread|Job.Worker|CmpJob|TaskGraphNP|glp)")) {
-                    sched_setaffinity(tid, sizeof(multi_perf_mask), &multi_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &multi_perf_prio);
-                } else if (check_regex(tid_name, "^(JNISurfaceText|IJK_External|ForkJoinPool-|UiThread|AndroidUI|RenderEngine|[.]raster|Compositor)")) {
-                    sched_setaffinity(tid, sizeof(multi_perf_mask), &multi_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &multi_perf_prio);
-                } else if (check_regex(tid_name, "^([Gg]esture|.gifmaker|Binder|mali-|[Aa]sync|[Vv]sync|android.anim|android.ui|[Bb]lur|[Aa]nim|Chrome_|Viz)")) {
-                    sched_setaffinity(tid, sizeof(multi_perf_mask), &multi_perf_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &multi_perf_prio);
-                } else if (check_regex(tid_name, "^(Chrome_InProc|Chromium|Gecko|[Ww]eb[Vv]iew|[Jj]ava[Ss]cript|js|JS|android.fg|android.io)")) {
-                    sched_setaffinity(tid, sizeof(comm_mask), &comm_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &comm_prio);
-                } else if (check_regex(tid_name, "^(CrGpuMain|CrRendererMain|work_thread|NativeThread|[Dd]ownload|[Mm]ixer|[Aa]udio|[Vv]ideo)")) {
-                    sched_setaffinity(tid, sizeof(comm_mask), &comm_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &comm_prio);
-                } else if (check_regex(tid_name, "^(OkHttp|ThreadPool|PoolThread|glide-|pool-|launcher-|Fresco)")) {
-                    sched_setaffinity(tid, sizeof(comm_mask), &comm_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &comm_prio);
-                } else if (check_regex(tid_name, "^(SearchDaemon|Profile|ged-swd|GPU completion|FramePolicy|ScrollPolicy|HeapTaskDaemon|FinalizerDaemon)")) {
-                    sched_setaffinity(tid, sizeof(efficiency_mask), &efficiency_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &efficiency_prio);
-                } else if (check_regex(tid_name, "^(ReferenceQueue|Jit thread pool|Timer-|log|xcrash|Ysa|Xqa|Rx|APM|TVKDL-|tp-|cgi-|ODCP-|xlog_|[Bb]ugly|android.bg|SensorService)")) {
-                    sched_setaffinity(tid, sizeof(efficiency_mask), &efficiency_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &efficiency_prio);
-                } else if (check_regex(tid_name, "^(HealthService|[Bb]ackground|[Rr]eport|tt_pangle|xg_vip_service|default_matrix|FrameDecoder|FrameSeq|hwui)")) {
-                    sched_setaffinity(tid, sizeof(efficiency_mask), &efficiency_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &efficiency_prio);
-                } else {
-                    sched_setaffinity(tid, sizeof(other_mask), &other_mask);
-                    sched_setscheduler(tid, SCHED_NORMAL, &other_prio);
-                }
-            }
-        }
-        closedir(dir);
-    }
-    while (taskset_tid == pthread_self()) {
-        max_task_runtime = 0;
-        for (i = 1; i <= single_perf_task_num; i++) {
-            nowa_task_runtime = get_thread_runtime((int)pid, single_perf_tasks[i]);
-            cur_task_runtime = nowa_task_runtime - prev_task_runtime[i];
-            prev_task_runtime[i] = nowa_task_runtime;
-            if (cur_task_runtime > max_task_runtime) {
-                heavy_load_task = single_perf_tasks[i];
-                max_task_runtime = cur_task_runtime;
-            }
-        }
-        for (i = 1; i <= single_perf_task_num; i++) {
-            if (single_perf_tasks[i] != heavy_load_task) {
-                sched_setaffinity(single_perf_tasks[i], sizeof(multi_perf_mask), &multi_perf_mask);
-                sched_setscheduler(single_perf_tasks[i], SCHED_NORMAL, &multi_perf_prio);
-            } else {
-                sched_setaffinity(single_perf_tasks[i], sizeof(single_perf_mask), &single_perf_mask);
-                sched_setscheduler(single_perf_tasks[i], SCHED_NORMAL, &single_perf_prio);
-            }
-        }
-        sleep(1);
-    }
-    pthread_exit(0);
-}
-void get_standby_state()
-{
-    FILE* fp;
-    char buf[128];
-    int task_num = 0;
-    fp = fopen("/dev/cpuset/restricted/tasks", "r");
-    if (fp) {
-        while (fgets(buf, sizeof(buf), fp) != NULL) {
-            task_num++;
-            if (task_num > 10) {
-                break;
-            }
-        }
-        fclose(fp);
-    }
-    if (task_num > 10) {
-        if (SCREEN_OFF == 0) {
-            sprintf(boost, "none");
-            boost_duration_ms = 0;
-            taskset_tid = 0;
-            SCREEN_OFF = 1;
-            usleep(500000);
-            write_freq(0, 10, 0, 10, 0, 10);
-        }
-    } else {
-        if (SCREEN_OFF == 1) {
-            set_boost_affinity(get_task_pid("/system/bin/surfaceflinger"));
-            set_boost_affinity(get_task_pid("system_server"));
-            set_boost_affinity(get_task_pid("com.android.systemui"));
-            SCREEN_OFF = 0;
-            pthread_create(&thread_info, NULL, (void*)cpu_governor, NULL);
-            submit_hint("topActivityChanged");
+    int nowaBoostDurationTime = boostDurationTime;
+    if (dynamicGovData.govBoost[boostType] >= govBoost) {
+        govBoost = dynamicGovData.govBoost[boostType];
+        boostDurationTime = dynamicGovData.boostDurationTime[boostType];
+        if (nowaBoostDurationTime == 0) {
+            pthread_create(&threadsTid, NULL, (void*)BoostTimer, NULL);
         }
     }
 }
-void cgroup_listener(void)
-{
-    pthread_detach(pthread_self());
-    prctl(PR_SET_NAME, "CgroupListener");
-    struct inotify_event* watch_event;
-    char buf[1024];
-    char prev_pkg_name[256];
-    char nowa_pkg_name[256];
-    int prev_app_pid = -1;
-    int nowa_app_pid = -1;
-    int fd, ta_wd, fg_wd, bg_wd, re_wd;
-    fd = inotify_init();
-    if (fd < 0) {
-        write_log("[E] CgroupListener: Failed to init inotify.");
-        pthread_exit(0);
-    }
-    ta_wd = inotify_add_watch(fd, "/dev/cpuset/top-app/tasks", IN_MODIFY);
-    if (ta_wd < 0) {
-        write_log("[W] CgroupListener: Failed to open top-app cgroup.");
-    }
-    fg_wd = inotify_add_watch(fd, "/dev/cpuset/foreground/tasks", IN_MODIFY);
-    if (fg_wd < 0) {
-        write_log("[W] CgroupListener: Failed to open foreground cgroup.");
-    }
-    bg_wd = inotify_add_watch(fd, "/dev/cpuset/background/tasks", IN_MODIFY);
-    if (bg_wd < 0) {
-        write_log("[W] CgroupListener: Failed to open background cgroup.");
-    }
-    re_wd = inotify_add_watch(fd, "/dev/cpuset/restricted/tasks", IN_MODIFY);
-    if (re_wd < 0) {
-        write_log("[W] CgroupListener: Failed to open restricted cgroup.");
-    }
-    while (1) {
-        read(fd, buf, sizeof(buf));
-        watch_event = (struct inotify_event*)buf;
-        if ((*watch_event).mask == IN_MODIFY) {
-            if (SCREEN_OFF == 0) {
-                sprintf(prev_pkg_name, "%s", nowa_pkg_name);
-                prev_app_pid = nowa_app_pid;
-                sscanf(str_cut(get_top_activity(), 9), "%d:%s", &nowa_app_pid, nowa_pkg_name);
-                if (strstr(nowa_pkg_name, "systemui")) {
-                    // Ignore Android SystemUI.
-                    sprintf(nowa_pkg_name, "%s", prev_pkg_name);
-                }
-                if (strcmp(nowa_pkg_name, prev_pkg_name) != 0 || nowa_app_pid != prev_app_pid) {
-                    submit_hint("topAtivityChanged");
-                    set_boost_affinity(nowa_app_pid);
-                    usleep(top_activity_changed.boost_duration * 1000);
-                }
-                pthread_create(&taskset_tid, NULL, (void*)taskset_helper, (void*)(long)nowa_app_pid);
-            }
-            get_standby_state();
-        }
-        usleep(100000);
-    }
-    inotify_rm_watch(fd, ta_wd);
-    inotify_rm_watch(fd, fg_wd);
-    inotify_rm_watch(fd, bg_wd);
-    inotify_rm_watch(fd, re_wd);
-    close(fd);
-    pthread_exit(0);
-}
-void input_listener(long int ts_event)
+
+void InputListener(long int ts_event)
 {
     pthread_detach(pthread_self());
     prctl(PR_SET_NAME, "InputListener");
+
     struct input_event ts;
     struct input_absinfo ts_x_info;
     struct input_absinfo ts_y_info;
-    char touch_screen_url[128];
+    char touch_screen_path[128];
     int start_x = 0;
     int start_y = 0;
-    int end_x = 0;
-    int end_y = 0;
     int swipe_x = 0;
     int swipe_y = 0;
     int touch_x = 0;
     int touch_y = 0;
-    int swipe_range = 0;
-    int gesture_left = 0;
-    int gesture_right = 0;
-    int gesture_top = 0;
-    int gesture_bottom = 0;
     int touch_s = 0;
     int last_s = 0;
-    int ret;
-    sprintf(touch_screen_url, "/dev/input/event%ld", ts_event);
-    int fd = open(touch_screen_url, O_RDONLY);
-    if (fd < 0) {
-        write_log("[E] InputListener: Failed to open %s.", touch_screen_url);
+    int ret = -1;
+
+    sprintf(touch_screen_path, "/dev/input/event%ld", ts_event);
+
+    int fd = open(touch_screen_path, O_RDONLY);
+    if (!fd) {
+        WriteLog("W", "Failed to open \"%s\".", touch_screen_path);
         pthread_exit(0);
     }
+
     ioctl(fd, EVIOCGABS(ABS_MT_POSITION_X), &ts_x_info);
     ioctl(fd, EVIOCGABS(ABS_MT_POSITION_Y), &ts_y_info);
-    if (ts_y_info.maximum > MAX_INT || ts_x_info.maximum > MAX_INT) {
-        write_log("[E] InputListener: TouchScreen Position too large.");
+    if (ts_y_info.maximum > INT_MAX || ts_x_info.maximum > INT_MAX) {
+        WriteLog("W", "TouchScreen Position too large.");
         pthread_exit(0);
     } else {
-        write_log("[I] InputListener: listening %s, absinfo: x=%d~%d, y=%d~%d. ", touch_screen_url, ts_x_info.minimum, ts_x_info.maximum, ts_y_info.minimum, ts_y_info.maximum);
+        WriteLog("I", "Listening \"%s\", absinfo: x=%d-%d, y=%d-%d.", touch_screen_path, ts_x_info.minimum, ts_x_info.maximum, ts_y_info.minimum, ts_y_info.maximum);
     }
-    swipe_range = ts_x_info.maximum / 10;
-    gesture_left = swipe_range;
-    gesture_right = ts_x_info.maximum - swipe_range;
-    gesture_top = swipe_range;
-    gesture_bottom = ts_y_info.maximum - swipe_range;
+
+    int touch_screen_width = ts_x_info.maximum - ts_x_info.minimum + 1;
+    int touch_screen_height = ts_y_info.maximum - ts_y_info.minimum + 1;
+    int swipe_range = touch_screen_width / 20;
+    int gesture_range = touch_screen_width / 10;
+    if (touch_screen_height < touch_screen_width) {
+        swipe_range = touch_screen_height / 20;
+        gesture_range = touch_screen_height / 10;
+    }
+    int gesture_left = gesture_range;
+    int gesture_right = touch_screen_width - gesture_range;
+    int gesture_top = gesture_range;
+    int gesture_bottom = touch_screen_height - gesture_range;
+
     while (1) {
         ret = read(fd, &ts, sizeof(ts));
-        if (ret == -1) {
-            write_log("[W] InputListener: Failed to get touchScreen input.");
-            pthread_exit(0);
-        }
-        last_s = touch_s;
-        if (ts.code == ABS_MT_POSITION_X) {
-            touch_x = ts.value;
-        }
-        if (ts.code == ABS_MT_POSITION_Y) {
-            touch_y = ts.value;
-        }
-        if (ts.code == BTN_TOUCH) {
-            touch_s = ts.value;
-        }
-        if ((touch_s - last_s) == 1) {
-            start_x = touch_x;
-            start_y = touch_y;
-            submit_hint("touch");
-        } else if ((touch_s - last_s) == 0 && touch_s == 1) {
-            swipe_x = touch_x - start_x;
-            swipe_y = touch_y - start_y;
-            if (abs(swipe_y) > swipe_range || abs(swipe_x) > swipe_range) {
-                submit_hint("swipe");
+        if (ret > 0) {
+            last_s = touch_s;
+            if (ts.code == BTN_TOUCH) {
+                touch_s = ts.value;
+            } else if (ts.code == ABS_MT_POSITION_X) {
+                touch_x = ts.value;
+            } else if (ts.code == ABS_MT_POSITION_Y) {
+                touch_y = ts.value;
             }
-        } else if ((touch_s - last_s) == -1) {
-            end_x = touch_x;
-            end_y = touch_y;
-            swipe_x = end_x - start_x;
-            swipe_y = end_y - start_y;
-            if (start_x > gesture_right && abs(swipe_x) > swipe_range) {
-                submit_hint("gesture");
-            } else if (start_x < gesture_left && abs(swipe_x) > swipe_range) {
-                submit_hint("gesture");
-            } else if (start_y < gesture_top && abs(swipe_y) > swipe_range) {
-                submit_hint("gesture");
-            } else if (start_y > gesture_bottom && abs(swipe_y) > swipe_range) {
-                submit_hint("gesture");
-            } else {
-                submit_hint("touch");
+            if ((touch_s - last_s) == 1) {
+                start_x = touch_x;
+                start_y = touch_y;
+                TriggerBoost(BOOST_TOUCH);
+            } else if ((touch_s - last_s) == 0 && touch_s == 1) {
+                swipe_x = touch_x - start_x;
+                swipe_y = touch_y - start_y;
+                if (abs(swipe_y) > swipe_range || abs(swipe_x) > swipe_range) {
+                    TriggerBoost(BOOST_SWIPE);
+                }
+            } else if ((touch_s - last_s) == -1) {
+                swipe_x = touch_x - start_x;
+                swipe_y = touch_y - start_y;
+                if (start_x > gesture_right && abs(swipe_x) > gesture_range) {
+                    TriggerBoost(BOOST_GESTURE);
+                } else if (start_x < gesture_left && abs(swipe_x) > gesture_range) {
+                    TriggerBoost(BOOST_GESTURE);
+                } else if (start_y < gesture_top && abs(swipe_y) > gesture_range) {
+                    TriggerBoost(BOOST_GESTURE);
+                } else if (start_y > gesture_bottom && abs(swipe_y) > gesture_range) {
+                    TriggerBoost(BOOST_GESTURE);
+                } else {
+                    TriggerBoost(BOOST_TOUCH);
+                }
             }
+        } else {
+            touch_s = 0;
+            touch_x = 0;
+            touch_y = 0;
+            usleep(50000);
         }
     }
+
     close(fd);
 }
-void start_input_listener(void)
+
+void RunInputListener(void)
 {
-    char abs_bitmask[(ABS_MAX + 1) / 8] = { 0 };
-    char buf[64];
-    char input_url[64];
-    DIR* dir = NULL;
+    char abs_bitmask[(ABS_MAX + 1) / 8];
     struct dirent* entry;
-    int event;
+    int ts_event;
     int fd;
-    dir = opendir("/dev/input");
+
+    DIR* dir = opendir("/dev/input");
     if (dir != NULL) {
         while ((entry = readdir(dir)) != NULL) {
-            sprintf(input_url, "/dev/input/%s", (*entry).d_name);
-            fd = open(input_url, O_RDONLY);
-            if (fd > 0) {
+            fd = open(StrMerge("/dev/input/%s", (*entry).d_name), O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+            if (fd) {
                 memset(abs_bitmask, 0, sizeof(abs_bitmask));
                 ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
-                if (check_bit(ABS_MT_POSITION_X, abs_bitmask) && check_bit(ABS_MT_POSITION_Y, abs_bitmask)) {
-                    sscanf(input_url, "/dev/input/event%d", &event);
-                    pthread_create(&thread_info, NULL, (void*)input_listener, (void*)(long)event);
+                if (CHECK_BIT(ABS_MT_POSITION_X, abs_bitmask) && CHECK_BIT(ABS_MT_POSITION_Y, abs_bitmask)) {
+                    sscanf((*entry).d_name, "event%d", &ts_event);
+                    pthread_create(&threadsTid, NULL, (void*)InputListener, (void*)(long)ts_event);
                 }
                 close(fd);
             }
         }
+        closedir(dir);
     }
-    closedir(dir);
 }
-int freq_writer_test()
+
+int TasksetHelper_Enabled = 0;
+cpu_set_t MainThread_Mask;
+cpu_set_t GameSingleThread_Mask;
+cpu_set_t GameMultiThread_Mask;
+cpu_set_t RenderThread_Mask;
+cpu_set_t UIThread_Mask;
+cpu_set_t MediaThread_Mask;
+cpu_set_t WebviewThread_Mask;
+cpu_set_t ProcessThread_Mask;
+cpu_set_t NonRealTimeThread_Mask;
+cpu_set_t OtherThread_Mask;
+struct sched_param MainThread_Prio;
+struct sched_param GameSingleThread_Prio;
+struct sched_param GameMultiThread_Prio;
+struct sched_param RenderThread_Prio;
+struct sched_param UIThread_Prio;
+struct sched_param MediaThread_Prio;
+struct sched_param WebviewThread_Prio;
+struct sched_param ProcessThread_Prio;
+struct sched_param NonRealTimeThread_Prio;
+struct sched_param OtherThread_Prio;
+
+void InitTasksetHelper(void)
 {
-    /*  freqwriter: 1.qti_freq_writer 2.exynos_freq_writer 3.mtk_freq_writer
-              4.userspace_freq_writer 5.eas_freq_writer 6.hmp_freq_writer
-              Target: freq_switch_ms <= 10ms(100hz). */
-    long int current_freq0, current_freq1, current_freq2;
-    // Try QTI CpuFreqWriter
-    write_freq(10, 10, 10, 10, 10, 10);
-    usleep(10000);
-    qti_freq_writer(0, cluster0_freq_table[2]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq0);
-    qti_freq_writer(0, cluster0_freq_table[4]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq1);
-    qti_freq_writer(0, cluster0_freq_table[6]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq2);
-    if (current_freq0 == cluster0_freq_table[2] && current_freq1 == cluster0_freq_table[4] && current_freq2 == cluster0_freq_table[6]) {
-        freq_writer_type = 1;
-        write_log("[I] Using QTI CpuFreqWriter.");
-        return 0;
+    cJSON* jsonBuffer = cJSON_Parse(configData);
+    cJSON* objectBuffer = cJSON_GetObjectItem(jsonBuffer, "TasksetHelper_Config");
+
+    cJSON* folderBuffer = NULL;
+    cJSON* itemBuffer = NULL;
+
+    itemBuffer = cJSON_GetObjectItem(objectBuffer, "enable");
+    TasksetHelper_Enabled = itemBuffer->valueint;
+
+    char cpuMask[10];
+    char cpuName[1];
+    int i, cpuCore;
+
+    folderBuffer = cJSON_GetObjectItem(objectBuffer, "MainThread");
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "cpus");
+    sscanf(itemBuffer->valuestring, "%s", cpuMask);
+    CPU_ZERO(&MainThread_Mask);
+    for (i = 0; i < strlen(cpuMask); i++) {
+        cpuName[0] = cpuMask[i];
+        cpuCore = atoi(cpuName);
+        CPU_SET(cpuCore, &MainThread_Mask);
     }
-    // Try Exynos CpuFreqWriter
-    write_freq(10, 10, 10, 10, 10, 10);
-    usleep(10000);
-    exynos_freq_writer(0, cluster0_freq_table[2]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq0);
-    exynos_freq_writer(0, cluster0_freq_table[4]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq1);
-    exynos_freq_writer(0, cluster0_freq_table[6]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq2);
-    if (current_freq0 == cluster0_freq_table[2] && current_freq1 == cluster0_freq_table[4] && current_freq2 == cluster0_freq_table[6]) {
-        freq_writer_type = 2;
-        write_log("[I] Using Exynos CpuFreqWriter.");
-        return 0;
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "nice");
+    MainThread_Prio.sched_priority = 120 + itemBuffer->valueint;
+
+    folderBuffer = cJSON_GetObjectItem(objectBuffer, "GameSingleThread");
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "cpus");
+    sscanf(itemBuffer->valuestring, "%s", cpuMask);
+    CPU_ZERO(&GameSingleThread_Mask);
+    for (i = 0; i < strlen(cpuMask); i++) {
+        cpuName[0] = cpuMask[i];
+        cpuCore = atoi(cpuName);
+        CPU_SET(cpuCore, &GameSingleThread_Mask);
     }
-    // Try MTK CpuFreqWriter
-    write_freq(10, 10, 10, 10, 10, 10);
-    usleep(10000);
-    mtk_freq_writer(0, cluster0_freq_table[2]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq0);
-    mtk_freq_writer(0, cluster0_freq_table[4]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq1);
-    mtk_freq_writer(0, cluster0_freq_table[6]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq2);
-    if (current_freq0 == cluster0_freq_table[2] && current_freq1 == cluster0_freq_table[4] && current_freq2 == cluster0_freq_table[6]) {
-        freq_writer_type = 3;
-        write_log("[I] Using MTK CpuFreqWriter.");
-        return 0;
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "nice");
+    GameSingleThread_Prio.sched_priority = 120 + itemBuffer->valueint;
+
+    folderBuffer = cJSON_GetObjectItem(objectBuffer, "GameMultiThread");
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "cpus");
+    sscanf(itemBuffer->valuestring, "%s", cpuMask);
+    CPU_ZERO(&GameMultiThread_Mask);
+    for (i = 0; i < strlen(cpuMask); i++) {
+        cpuName[0] = cpuMask[i];
+        cpuCore = atoi(cpuName);
+        CPU_SET(cpuCore, &GameMultiThread_Mask);
     }
-    // Try EAS CpuFreqWriter
-    write_freq(10, 10, 10, 10, 10, 10);
-    usleep(10000);
-    eas_freq_writer(0, cluster0_freq_table[2]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq0);
-    eas_freq_writer(0, cluster0_freq_table[4]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq1);
-    eas_freq_writer(0, cluster0_freq_table[6]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq"), "%ld", &current_freq2);
-    if (current_freq0 == cluster0_freq_table[2] && current_freq1 == cluster0_freq_table[4] && current_freq2 == cluster0_freq_table[6]) {
-        freq_writer_type = 5;
-        write_log("[I] Using EAS CpuFreqWriter.");
-        return 0;
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "nice");
+    GameMultiThread_Prio.sched_priority = 120 + itemBuffer->valueint;
+
+    folderBuffer = cJSON_GetObjectItem(objectBuffer, "RenderThread");
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "cpus");
+    sscanf(itemBuffer->valuestring, "%s", cpuMask);
+    CPU_ZERO(&RenderThread_Mask);
+    for (i = 0; i < strlen(cpuMask); i++) {
+        cpuName[0] = cpuMask[i];
+        cpuCore = atoi(cpuName);
+        CPU_SET(cpuCore, &RenderThread_Mask);
     }
-    // Try HMP CpuFreqWriter
-    write_freq(10, 10, 10, 10, 10, 10);
-    usleep(10000);
-    hmp_freq_writer(0, cluster0_freq_table[2]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"), "%ld", &current_freq0);
-    hmp_freq_writer(0, cluster0_freq_table[4]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"), "%ld", &current_freq1);
-    hmp_freq_writer(0, cluster0_freq_table[6]);
-    usleep(10000);
-    sscanf(read_value("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"), "%ld", &current_freq2);
-    if (current_freq0 == cluster0_freq_table[2] && current_freq1 == cluster0_freq_table[4] && current_freq2 == cluster0_freq_table[6]) {
-        freq_writer_type = 6;
-        write_log("[I] Using HMP CpuFreqWriter.");
-        return 0;
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "nice");
+    RenderThread_Prio.sched_priority = 120 + itemBuffer->valueint;
+
+    folderBuffer = cJSON_GetObjectItem(objectBuffer, "UIThread");
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "cpus");
+    sscanf(itemBuffer->valuestring, "%s", cpuMask);
+    CPU_ZERO(&UIThread_Mask);
+    for (i = 0; i < strlen(cpuMask); i++) {
+        cpuName[0] = cpuMask[i];
+        cpuCore = atoi(cpuName);
+        CPU_SET(cpuCore, &UIThread_Mask);
     }
-    freq_writer_type = 6;
-    write_freq(0, 10, 0, 10, 0, 10);
-    write_log("[W] CpuFreqWriter may be unstable.");
-    write_log("[I] Using Default CpuFreqWriter.");
-    return 0;
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "nice");
+    UIThread_Prio.sched_priority = 120 + itemBuffer->valueint;
+
+    folderBuffer = cJSON_GetObjectItem(objectBuffer, "MediaThread");
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "cpus");
+    sscanf(itemBuffer->valuestring, "%s", cpuMask);
+    CPU_ZERO(&MediaThread_Mask);
+    for (i = 0; i < strlen(cpuMask); i++) {
+        cpuName[0] = cpuMask[i];
+        cpuCore = atoi(cpuName);
+        CPU_SET(cpuCore, &MediaThread_Mask);
+    }
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "nice");
+    MediaThread_Prio.sched_priority = 120 + itemBuffer->valueint;
+
+    folderBuffer = cJSON_GetObjectItem(objectBuffer, "WebviewThread");
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "cpus");
+    sscanf(itemBuffer->valuestring, "%s", cpuMask);
+    CPU_ZERO(&WebviewThread_Mask);
+    for (i = 0; i < strlen(cpuMask); i++) {
+        cpuName[0] = cpuMask[i];
+        cpuCore = atoi(cpuName);
+        CPU_SET(cpuCore, &WebviewThread_Mask);
+    }
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "nice");
+    WebviewThread_Prio.sched_priority = 120 + itemBuffer->valueint;
+
+    folderBuffer = cJSON_GetObjectItem(objectBuffer, "ProcessThread");
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "cpus");
+    sscanf(itemBuffer->valuestring, "%s", cpuMask);
+    CPU_ZERO(&ProcessThread_Mask);
+    for (i = 0; i < strlen(cpuMask); i++) {
+        cpuName[0] = cpuMask[i];
+        cpuCore = atoi(cpuName);
+        CPU_SET(cpuCore, &ProcessThread_Mask);
+    }
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "nice");
+    ProcessThread_Prio.sched_priority = 120 + itemBuffer->valueint;
+
+    folderBuffer = cJSON_GetObjectItem(objectBuffer, "NonRealTimeThread");
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "cpus");
+    sscanf(itemBuffer->valuestring, "%s", cpuMask);
+    CPU_ZERO(&NonRealTimeThread_Mask);
+    for (i = 0; i < strlen(cpuMask); i++) {
+        cpuName[0] = cpuMask[i];
+        cpuCore = atoi(cpuName);
+        CPU_SET(cpuCore, &NonRealTimeThread_Mask);
+    }
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "nice");
+    NonRealTimeThread_Prio.sched_priority = 120 + itemBuffer->valueint;
+
+    folderBuffer = cJSON_GetObjectItem(objectBuffer, "OtherThread");
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "cpus");
+    sscanf(itemBuffer->valuestring, "%s", cpuMask);
+    CPU_ZERO(&OtherThread_Mask);
+    for (i = 0; i < strlen(cpuMask); i++) {
+        cpuName[0] = cpuMask[i];
+        cpuCore = atoi(cpuName);
+        CPU_SET(cpuCore, &OtherThread_Mask);
+    }
+    itemBuffer = cJSON_GetObjectItem(folderBuffer, "nice");
+    OtherThread_Prio.sched_priority = 120 + itemBuffer->valueint;
+
+    cJSON_Delete(jsonBuffer);
 }
-int main(int argc, char* argv[])
+
+void TasksetHelper(void)
 {
-    FILE* fp;
-    char cur_mode[16];
-    char buf[1024];
-    struct inotify_event* watch_event;
-    int fd, wd;
+    pthread_detach(pthread_self());
+    prctl(PR_SET_NAME, "TasksetHelper");
+
+    char buf[8];
+    char threadName[32];
+    char packageName[128];
+    int pid, tid, taskType;
+
+    long int nowaThreadRuntime = 0;
+    long int prevThreadRuntime[128] = { 0 };
+    int threadRuntimeDiff[128] = { 0 };
+    int maxThreadRuntimeDiff = 0;
+    int singlePerfThreadsTidList[128] = { 0 };
+    int singlePerfThreadsPidList[128] = { 0 };
+    int singlePerfThreadsNum = 0;
+    int prevMaxUsageThreadTid = -1;
+    int nowaMaxUsageThreadTid = -1;
+
+    FILE* fp = fopen("/dev/cpuset/top-app/tasks", "r");
+    if (fp) {
+        while (fgets(buf, sizeof(buf), fp) != NULL) {
+            sscanf(buf, "%d", &tid);
+            pid = GetThreadPid(tid);
+            taskType = GetTaskType(pid);
+            if (taskType == TASK_FOREGROUND || taskType == TASK_VISIBLE) {
+                ReadFile(threadName, "/proc/%d/task/%d/comm", pid, tid);
+                if (CheckRegex(threadName, "^(UnityMain|MainThread|GameThread|SDLThread|MINECRAFT|GLThread|CoreThread)")) {
+                    if (singlePerfThreadsNum < 128) {
+                        singlePerfThreadsTidList[singlePerfThreadsNum] = tid;
+                        singlePerfThreadsPidList[singlePerfThreadsNum] = pid;
+                        singlePerfThreadsNum++;
+                    }
+                    sched_setscheduler(tid, SCHED_NORMAL, &GameSingleThread_Prio);
+                } else if (CheckRegex(threadName, "^(UnityMulti|UnityGfx|UnityPreload|UnityChoreograp|Worker Thread|Job.Worker|CmpJob|glp|glt|TaskGraph|LoadingThread|Program Thread|Es2Thread|RHIThread)")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &GameMultiThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &GameMultiThread_Prio);
+                } else if (CheckRegex(threadName, "^(RenderThread|RenderEngine)")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &RenderThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &RenderThread_Prio);
+                } else if (CheckRegex(threadName, "^(UiThread|[Vv]sync|[Bb]lur|[Aa]nim|JNISurfaceText|Msg.GLThread|mali-|GNaviMap-GL)|([.]raster|[.][Uu][Ii]|[Rr]ender|[Aa]nim|[Bb]lur)$")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &UIThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &UIThread_Prio);
+                } else if (CheckRegex(threadName, "^([Aa]udio|[Mm]ixer|[Vv]ideo|[Mm]edia|FMedia|Vlc|IjkMediaPlayer|IJK_External|GVoice|ExoPlayer|SuperPlayer|[Dd]ecode|[Cc]odec)|([Dd]ecode|[Cc]odec)$")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &MediaThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &MediaThread_Prio);
+                } else if (CheckRegex(threadName, "^(Chrome|Chromium|Gecko|[Ww]eb[Vv]iew|Compositor|CrGpuMain|CrRenderer|Viz)|([Ww]eb[Vv]iew)$")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &WebviewThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &WebviewThread_Prio);
+                } else if (CheckRegex(threadName, "^(ForkJoinPool-|[Gg]esture|.gifmaker|Binder|work_thread|OkHttp|ThreadPool|Busy-|[Mm]ap-|.navi.mainframe|Camera)|(.fg|.io)$")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &ProcessThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &ProcessThread_Prio);
+                } else if (CheckRegex(threadName, "^(launcher-|Fresco|ResolvePool|ExecutorDispatc|XYThread|RecallManager|Apollo-|[Rr]untime|ImageCache|DefaultDispatch)")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &ProcessThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &ProcessThread_Prio);
+                } else if (CheckRegex(threadName, "^(FAsync|[Aa]sync|mqt_|LoadingActivity|queued-work|[Jj]ava[Ss]cript|JS|[Nn]et[Ww]ork|[Dd]ownload)|([Dd]ownload|[Aa]sync)$")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &ProcessThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &ProcessThread_Prio);
+                } else if (CheckRegex(threadName, "^(ged-|GPU completion|SmartThread|MIHOYO_NETWORK|master_engine|MemoryInfra|AILocalThread|FrameThread|TXMap|FileObserver)")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &ProcessThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &ProcessThread_Prio);
+                } else if (CheckRegex(threadName, "^(glide-|pool-|FramePolicy|ScrollPolicy|Turing|hwui|WeexJsBridge|V8 DefaultWork|libweexjsb|Socket Thread|TXTextureThread|PoolThread)")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &ProcessThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &ProcessThread_Prio);
+                } else if (CheckRegex(threadName, "^(URL Classifier|PlaceStorage|Cache2 I/O|JavaBridge|WorkHandler|UNET|UNet|NativeThread|hippy.js|transThread|netmod|FMOD|APM|IL2CPP)")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &ProcessThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &ProcessThread_Prio);
+                } else if (CheckRegex(threadName, "^(HeapTaskDaemon|FinalizerDaemon|FinalizerWatch|Jit thread pool|Signal Catcher|crashhunter|xg_vip_service|default_matrix|matrix)")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &NonRealTimeThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &NonRealTimeThread_Prio);
+                } else if (CheckRegex(threadName, "^(ReferenceQueue|Timer-|log|xcrash|xlog|[Bb]ugly|[Bb]ackground|thread-ad|tt_pangle|[Rr]eport|Profile|SearchDaemon)|([Bb]ackground|.bg)$")) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &NonRealTimeThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &NonRealTimeThread_Prio);
+                } else if (CheckRegex(threadName, "^Thread-")) {
+                    if (strstr(ReadFile(NULL, "/proc/%d/cmdline", pid), "netease")) {
+                        if (singlePerfThreadsNum < 128) {
+                            singlePerfThreadsTidList[singlePerfThreadsNum] = tid;
+                            singlePerfThreadsPidList[singlePerfThreadsNum] = pid;
+                            singlePerfThreadsNum++;
+                        }
+                        sched_setscheduler(tid, SCHED_NORMAL, &GameSingleThread_Prio);
+                    } else {
+                        sched_setaffinity(tid, sizeof(cpu_set_t), &GameMultiThread_Mask);
+                        sched_setscheduler(tid, SCHED_NORMAL, &GameMultiThread_Prio);
+                    }
+                } else if (strcmp(threadName, ReadFile(NULL, "/proc/%d/comm", pid)) == 0) {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &MainThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &MainThread_Prio);
+                } else {
+                    sched_setaffinity(tid, sizeof(cpu_set_t), &OtherThread_Mask);
+                    sched_setscheduler(tid, SCHED_NORMAL, &OtherThread_Prio);
+                }
+            }
+        }
+        fclose(fp);
+    }
+
+    if (singlePerfThreadsNum < 2) {
+        if (singlePerfThreadsNum == 1) {
+            sched_setaffinity(singlePerfThreadsTidList[0], sizeof(cpu_set_t), &GameSingleThread_Mask);
+        }
+        pthread_exit(0);
+    }
+
     int i;
-    sprintf(path, "%s", argv[0]);
-    sprintf(argv[0], "CuDaemon");
-    for (i = strlen(path); i > 0; i--) {
-        if (path[i] == '/') {
-            path[i] = '\0';
+    for (i = 1; i < singlePerfThreadsNum; i++) {
+        sched_setaffinity(singlePerfThreadsTidList[i], sizeof(cpu_set_t), &GameMultiThread_Mask);
+    }
+    sched_setaffinity(singlePerfThreadsTidList[0], sizeof(cpu_set_t), &GameSingleThread_Mask);
+
+    prevMaxUsageThreadTid = singlePerfThreadsTidList[0];
+    nowaMaxUsageThreadTid = singlePerfThreadsTidList[0];
+
+    while (tasksetTid == pthread_self()) {
+        for (i = 0; i < singlePerfThreadsNum; i++) {
+            nowaThreadRuntime = GetThreadRuntime(singlePerfThreadsPidList[i], singlePerfThreadsTidList[i]);
+            threadRuntimeDiff[i] = nowaThreadRuntime - prevThreadRuntime[i];
+            prevThreadRuntime[i] = nowaThreadRuntime;
+        }
+
+        prevMaxUsageThreadTid = nowaMaxUsageThreadTid;
+        maxThreadRuntimeDiff = 0;
+        for (i = 0; i < singlePerfThreadsNum; i++) {
+            if (threadRuntimeDiff[i] > maxThreadRuntimeDiff) {
+                nowaMaxUsageThreadTid = singlePerfThreadsTidList[i];
+                maxThreadRuntimeDiff = threadRuntimeDiff[i];
+            }
+        }
+
+        if (nowaMaxUsageThreadTid != prevMaxUsageThreadTid) {
+            sched_setaffinity(prevMaxUsageThreadTid, sizeof(cpu_set_t), &GameMultiThread_Mask);
+            sched_setaffinity(nowaMaxUsageThreadTid, sizeof(cpu_set_t), &GameSingleThread_Mask);
+        }
+
+        usleep(500000);
+    }
+
+    pthread_exit(0);
+}
+
+void CgroupWatcher(void)
+{
+    pthread_detach(pthread_self());
+    prctl(PR_SET_NAME, "CgroupWatcher");
+
+    int i;
+
+    int nowaTopActivityPid = -1;
+    int prevTopActivityPid = -1;
+    char topActivityName[128];
+
+    int fd = inotify_init();
+    if (!fd) {
+        WriteLog("E", "Failed to init inotify.");
+        pthread_exit(0);
+    }
+    int ta_wd = inotify_add_watch(fd, "/dev/cpuset/top-app/tasks", IN_MODIFY);
+    if (!ta_wd) {
+        WriteLog("W", "Failed to watch top-app cgroup.");
+    }
+    int fg_wd = inotify_add_watch(fd, "/dev/cpuset/foreground/tasks", IN_MODIFY);
+    if (!fg_wd) {
+        WriteLog("W", "Failed to watch foreground cgroup.");
+    }
+    int bg_wd = inotify_add_watch(fd, "/dev/cpuset/background/tasks", IN_MODIFY);
+    if (!bg_wd) {
+        WriteLog("W", "Failed to watch background cgroup.");
+    }
+    int re_wd = inotify_add_watch(fd, "/dev/cpuset/restricted/tasks", IN_MODIFY);
+    if (!re_wd) {
+        WriteLog("W", "Failed to watch restricted cgroup.");
+    }
+
+    char inotify_buf[16];
+    struct inotify_event* watchEvent;
+
+    while (1) {
+        read(fd, inotify_buf, sizeof(inotify_buf));
+        watchEvent = (struct inotify_event*)inotify_buf;
+        if (watchEvent->mask == IN_MODIFY) {
+            if (screenState == SCREEN_ON) {
+                prevTopActivityPid = nowaTopActivityPid;
+                if (watchEvent->wd == ta_wd || watchEvent->wd == fg_wd) {
+                    sscanf(CutString(DumpTopActivityInfo(), 9), "%d:%s", &nowaTopActivityPid, topActivityName);
+                    if (strstr(topActivityName, "systemui")) {
+                        nowaTopActivityPid = prevTopActivityPid;
+                    }
+                }
+                if (prevTopActivityPid != nowaTopActivityPid) {
+                    TriggerBoost(BOOST_HEAVYLOAD);
+                }
+
+                if (TasksetHelper_Enabled) {
+                    if (watchEvent->wd == ta_wd || watchEvent->wd == fg_wd) {
+                        pthread_create(&tasksetTid, NULL, (void*)TasksetHelper, NULL);
+                    }
+                }
+
+                if ((screenState = GetScreenState()) == SCREEN_OFF) {
+                    tasksetTid = -1;
+                    usleep(100000);
+                    for (i = 0; i < cpuClusterNum; i++) {
+                        WriteCpuFreqViaMSM(govData[i].firstCpu, govData[i].freqTable[0], govData[i].freqTable[govData[i].freqTableItemNum - 1]);
+                        WriteCpuFreqViaPPM(govData[i].policy, govData[i].freqTable[0], govData[i].freqTable[govData[i].freqTableItemNum - 1]);
+                        WriteCpuFreqViaEpic(govData[i].policy, govData[i].freqTable[0], govData[i].freqTable[govData[i].freqTableItemNum - 1]);
+                        WriteCpuFreqViaGovernor(govData[i].firstCpu, govData[i].freqTable[0], govData[i].freqTable[govData[i].freqTableItemNum - 1]);
+                    }
+                }
+            } else {
+                if ((screenState = GetScreenState()) == SCREEN_ON) {
+                    KernelGovernorOpt();
+                    pthread_create(&threadsTid, NULL, (void*)CoCpuGovernor, NULL);
+                    TriggerBoost(BOOST_HEAVYLOAD);
+                }
+            }
+        }
+        usleep(20000);
+    }
+
+    if (ta_wd) {
+        inotify_rm_watch(fd, ta_wd);
+    }
+    if (fg_wd) {
+        inotify_rm_watch(fd, fg_wd);
+    }
+    if (bg_wd) {
+        inotify_rm_watch(fd, bg_wd);
+    }
+    if (re_wd) {
+        inotify_rm_watch(fd, re_wd);
+    }
+    close(fd);
+
+    pthread_exit(0);
+}
+
+void GetModeDynamicData(void)
+{
+    cJSON* jsonBuffer = cJSON_Parse(configData);
+    cJSON* objectBuffer = cJSON_GetObjectItem(jsonBuffer, "modeSwitcher");
+    cJSON* modeObjectBuffer = cJSON_GetObjectItem(objectBuffer, curMode);
+
+    cJSON* folderBuffer = NULL;
+    cJSON* secFolderBuffer = NULL;
+    cJSON* itemBuffer = NULL;
+
+    itemBuffer = cJSON_GetObjectItem(modeObjectBuffer, "powerLimit");
+    dynamicGovData.powerLimit = itemBuffer->valueint;
+
+    int i, j;
+    for (i = 0; i < cpuClusterNum; i++) {
+        folderBuffer = cJSON_GetObjectItem(modeObjectBuffer, StrMerge("policy%d", i));
+        itemBuffer = cJSON_GetObjectItem(folderBuffer, "upRateLatency");
+        dynamicGovData.upRateLatency[i] = itemBuffer->valueint;
+        itemBuffer = cJSON_GetObjectItem(folderBuffer, "downRateDelay");
+        dynamicGovData.downRateDelay[i] = itemBuffer->valueint;
+    }
+
+    folderBuffer = cJSON_GetObjectItem(modeObjectBuffer, "boostConfig");
+
+    dynamicGovData.govBoost[BOOST_NONE] = 0;
+    dynamicGovData.boostDurationTime[BOOST_NONE] = 0;
+
+    secFolderBuffer = cJSON_GetObjectItem(folderBuffer, "touch");
+    itemBuffer = cJSON_GetObjectItem(secFolderBuffer, "boost");
+    dynamicGovData.govBoost[BOOST_TOUCH] = itemBuffer->valueint;
+    itemBuffer = cJSON_GetObjectItem(secFolderBuffer, "durationTime");
+    dynamicGovData.boostDurationTime[BOOST_TOUCH] = itemBuffer->valueint;
+
+    secFolderBuffer = cJSON_GetObjectItem(folderBuffer, "swipe");
+    itemBuffer = cJSON_GetObjectItem(secFolderBuffer, "boost");
+    dynamicGovData.govBoost[BOOST_SWIPE] = itemBuffer->valueint;
+    itemBuffer = cJSON_GetObjectItem(secFolderBuffer, "durationTime");
+    dynamicGovData.boostDurationTime[BOOST_SWIPE] = itemBuffer->valueint;
+
+    secFolderBuffer = cJSON_GetObjectItem(folderBuffer, "gesture");
+    itemBuffer = cJSON_GetObjectItem(secFolderBuffer, "boost");
+    dynamicGovData.govBoost[BOOST_GESTURE] = itemBuffer->valueint;
+    itemBuffer = cJSON_GetObjectItem(secFolderBuffer, "durationTime");
+    dynamicGovData.boostDurationTime[BOOST_GESTURE] = itemBuffer->valueint;
+
+    secFolderBuffer = cJSON_GetObjectItem(folderBuffer, "heavyload");
+    itemBuffer = cJSON_GetObjectItem(secFolderBuffer, "boost");
+    dynamicGovData.govBoost[BOOST_HEAVYLOAD] = itemBuffer->valueint;
+    itemBuffer = cJSON_GetObjectItem(secFolderBuffer, "durationTime");
+    dynamicGovData.boostDurationTime[BOOST_HEAVYLOAD] = itemBuffer->valueint;
+
+    cJSON_Delete(jsonBuffer);
+
+    int minDurationTime = INT_MAX;
+    for (i = 0; i < 5; i++) {
+        if (dynamicGovData.boostDurationTime[i] < minDurationTime && dynamicGovData.boostDurationTime[i] != 0) {
+            minDurationTime = dynamicGovData.boostDurationTime[i];
+        }
+    }
+    for (i = minDurationTime; i > 0; i--) {
+        int matchNum = 0;
+        for (j = 0; j < 5; j++) {
+            if (dynamicGovData.boostDurationTime[j] % i == 0 || dynamicGovData.boostDurationTime[j] == 0) {
+                matchNum++;
+            }
+        }
+        if (matchNum == 5) {
+            dynamicGovData.boostDurationSleepTime = i;
             break;
         }
     }
+}
+
+int main(int argc, char* argv[])
+{
+    const char compileDate[12] = __DATE__;
+
+    sprintf(daemonPath, "%s", GetDirName(argv[0]));
+    sprintf(argv[0], "CuDaemon");
+
     if (argc < 2) {
         printf("Wrong input.\n");
         printf("Try CuDaemon --help\n");
         exit(0);
-    } else if (strstr(argv[1], "-R")) {
+    } else if (strcmp(argv[1], "-R") == 0) {
         if (argc == 5) {
-            sprintf(config_url, "%s", argv[2]);
-            sprintf(mode_url, "%s", argv[3]);
-            sprintf(log_url, "%s", argv[4]);
+            sprintf(configPath, "%s", argv[2]);
+            sprintf(modePath, "%s", argv[3]);
+            sprintf(logPath, "%s", argv[4]);
             printf("Daemon Running.\n");
             daemon(0, 0);
         } else {
@@ -2101,13 +1342,14 @@ int main(int argc, char* argv[])
             printf("Try CuDaemon --help\n");
             exit(0);
         }
-    } else if (strstr(argv[1], "-V")) {
+    } else if (strcmp(argv[1], "-V") == 0) {
         printf("CuprumTurbo Scheduler Daemon\n");
-        printf("Version: 12\n");
+        printf("Version: 13\n");
+        printf("ComplieDate: %s\n", compileDate);
         printf("Author: chenzyadb(chenzyyzd)\n");
         printf("Repo: https://github.com/chenzyyzd/CuprumTurbo-Scheduler\n");
         exit(0);
-    } else if (strstr(argv[1], "--help")) {
+    } else if (strcmp(argv[1], "--help") == 0) {
         printf("CuDaemon Helper\n");
         printf("Options:                      Usage:\n");
         printf("-R [config] [mode] [log]      Run CuprumTurbo Scheduler\n");
@@ -2119,76 +1361,88 @@ int main(int argc, char* argv[])
         printf("Try CuDaemon --help\n");
         exit(0);
     }
-    init_log();
-    write_log("[I] Initizalizing.");
-    if (access("/sys/devices/system/cpu/cpu7/cpufreq/scaling_cur_freq", 0) != -1) {
-        core_num = 7;
-    } else if (access("/sys/devices/system/cpu/cpu5/cpufreq/scaling_cur_freq", 0) != -1) {
-        core_num = 5;
-    } else if (access("/sys/devices/system/cpu/cpu3/cpufreq/scaling_cur_freq", 0) != -1) {
-        core_num = 3;
+
+    InitLogWriter();
+    WriteLog("I", "CuprumTurbo Scheduler V13 (%ld) by chenzyadb.", GetCompileDateCode(compileDate));
+
+    if (!IsFileExist(configPath)) {
+        WriteLog("E", "File \"%s\" doesn't exist.", configPath);
+        exit(0);
     }
-    get_cpu_clusters();
-    write_log("[I] cluster0=cpu%d, cluster1=cpu%d, cluster2=cpu%d. ", cluster0_cpu, cluster1_cpu, cluster2_cpu);
-    get_core_num();
-    get_config();
-    write_log("[I] CPU Cluster0 PowerModel:");
-    for (i = 0; i <= 10; i++) {
-        write_log("[I] Idx=%d, Freq=%ld MHz, Power=%d mW.", i, cluster0_freq_table[i] / 1000, sc_pwr_mask[i]);
+    if (!IsFileExist(modePath)) {
+        WriteLog("E", "File \"%s\" doesn't exist.", modePath);
+        exit(0);
     }
-    if (cluster1_cpu != -1) {
-        write_log("[I] CPU Cluster1 PowerModel:");
-        for (i = 0; i <= 10; i++) {
-            write_log("[I] Idx=%d, Freq=%ld MHz, Power=%d mW.", i, cluster1_freq_table[i] / 1000, bc_pwr_mask[i]);
-        }
+
+    WriteLog("I", "Scheduler Initizalizing.");
+
+    InitConfigReader();
+    InitCoCpuGovernor();
+    InitTasksetHelper();
+    GetModeDynamicData();
+    RunInputListener();
+    KernelGovernorOpt();
+
+    int i;
+    for (i = 0; i < cpuClusterNum; i++) {
+        WriteCpuFreqViaMSM(govData[i].firstCpu, govData[i].freqTable[0], govData[i].freqTable[govData[i].freqTableItemNum - 1]);
+        WriteCpuFreqViaPPM(govData[i].policy, govData[i].freqTable[0], govData[i].freqTable[govData[i].freqTableItemNum - 1]);
+        WriteCpuFreqViaEpic(govData[i].policy, govData[i].freqTable[0], govData[i].freqTable[govData[i].freqTableItemNum - 1]);
+        WriteCpuFreqViaGovernor(govData[i].firstCpu, govData[i].freqTable[0], govData[i].freqTable[govData[i].freqTableItemNum - 1]);
     }
-    if (cluster2_cpu != -1) {
-        write_log("[I] CPU Cluster2 PowerModel:");
-        for (i = 0; i <= 10; i++) {
-            write_log("[I] Idx=%d, Freq=%ld MHz, Power=%d mW.", i, cluster2_freq_table[i] / 1000, xc_pwr_mask[i]);
-        }
-    }
-    write_log("[I] cpu_type=%d+%d+%d, cpu_pwr_ratio=%d/%d/%d.", sc_core_num, bc_core_num, xc_core_num, sc_pwr_ratio,
-        bc_pwr_ratio, xc_pwr_ratio);
-    set_boost_affinity(get_task_pid("/system/bin/surfaceflinger"));
-    set_boost_affinity(get_task_pid("system_server"));
-    set_boost_affinity(get_task_pid("com.android.systemui"));
-    freq_writer_test();
-    start_input_listener();
-    pthread_create(&thread_info, NULL, (void*)cpu_governor, NULL);
-    pthread_create(&thread_info, NULL, (void*)cgroup_listener, NULL);
+
     usleep(500000);
-    write_log("[I] CuDaemon(pid=%d) is running. ", getpid());
+
+    pthread_create(&threadsTid, NULL, (void*)CgroupWatcher, NULL);
+    pthread_create(&threadsTid, NULL, (void*)CoCpuGovernor, NULL);
+
+    WriteLog("I", "Scheduler Running (daemon_pid = %d).", getpid());
+
     prctl(PR_SET_NAME, "ModeWatcher");
-    fd = inotify_init();
-    if (fd < 0) {
-        write_log("[E] CuDaemon: Failed to init inotify.");
+
+    char newMode[16];
+    sscanf(ReadFile(NULL, modePath), "%s", newMode);
+    if (strcmp(newMode, "powersave") == 0 || strcmp(newMode, "balance") == 0 || strcmp(newMode, "performance") == 0 || strcmp(newMode, "fast") == 0) {
+        WriteLog("I", "Mode switch detected: null -> \"%s\".", newMode);
+        sprintf(curMode, "%s", newMode);
+    } else {
+        WriteLog("I", "Mode switch detected: null -> \"balance\".");
+        sprintf(curMode, "balance");
+    }
+    GetModeDynamicData();
+
+    int fd = inotify_init();
+    if (!fd) {
+        WriteLog("E", "Failed to init inotify.");
         exit(0);
     }
-    wd = inotify_add_watch(fd, mode_url, IN_MODIFY);
-    if (wd < 0) {
-        write_log("[E] CuDaemon: Failed to open %s.", mode_url);
+    int wd = inotify_add_watch(fd, modePath, IN_MODIFY);
+    if (!wd) {
+        WriteLog("E", "Failed to watch \"%s\"", modePath);
         exit(0);
     }
-    sprintf(mode, "null");
-    sscanf(read_value(mode_url), "%s", cur_mode);
-    if (strcmp(cur_mode, mode) != 0) {
-        write_log("[I] mode switching %s -> %s.", mode, cur_mode);
-        sprintf(mode, "%s", cur_mode);
-    }
+
+    char inotify_buf[16];
+    struct inotify_event* watchEvent;
+
     while (1) {
-        read(fd, buf, sizeof(buf));
-        watch_event = (struct inotify_event*)buf;
-        if ((*watch_event).mask == IN_MODIFY) {
-            sscanf(read_value(mode_url), "%s", cur_mode);
-            if (strcmp(cur_mode, mode) != 0) {
-                write_log("[I] mode switching %s -> %s.", mode, cur_mode);
-                sprintf(mode, "%s", cur_mode);
+        read(fd, inotify_buf, sizeof(inotify_buf));
+        watchEvent = (struct inotify_event*)inotify_buf;
+        if (watchEvent->mask == IN_MODIFY) {
+            sscanf(ReadFile(NULL, modePath), "%s", newMode);
+            if (strcmp(newMode, curMode) != 0) {
+                if (strcmp(newMode, "powersave") == 0 || strcmp(newMode, "balance") == 0 || strcmp(newMode, "performance") == 0 || strcmp(newMode, "fast") == 0) {
+                    WriteLog("I", "Mode switch detected: \"%s\" -> \"%s\".", curMode, newMode);
+                    sprintf(curMode, "%s", newMode);
+                }
+                GetModeDynamicData();
             }
-            usleep(500000);
         }
+        usleep(500000);
     }
+
     inotify_rm_watch(fd, wd);
     close(fd);
+
     return 0;
 }
