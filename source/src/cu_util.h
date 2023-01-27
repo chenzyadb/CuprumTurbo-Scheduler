@@ -1,5 +1,4 @@
-#ifndef cu_util__h
-#define cu_util__h
+#pragma once
 
 #define CHECK_BIT(bit, array) (array[bit / 8] & (1 << (bit % 8)))
 
@@ -27,6 +26,5 @@ int GetThreadPid(const int tid);
 int GetTaskType(const int pid);
 int GetScreenState(void);
 long int GetCompileDateCode(const char *compileDate);
-int roundNum(const float num);
-
-#endif
+int RoundNum(const float num);
+int GetAndroidSDKVersion(void);

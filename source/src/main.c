@@ -320,7 +320,7 @@ void CoCpuGovernor(void)
             clusterDemand = clusterMaxLoad + (100 - clusterMaxLoad) * govBoost / 100;
 
             prevCurFreqIdx[i] = nowaCurFreqIdx[i];
-            nowaCurFreqIdx[i] = roundNum((float)(govData[i].freqTableItemNum - 1) * clusterDemand / 100);
+            nowaCurFreqIdx[i] = RoundNum((float)(govData[i].freqTableItemNum - 1) * clusterDemand / 100);
 
             if (nowaCurFreqIdx[i] < prevCurFreqIdx[i]) {
                 if ((govRunTime - freqDownTime) < dynamicGovData.downRateDelay[i]) {
@@ -1062,7 +1062,7 @@ void TasksetHelper(void)
                 } else if (CheckRegex(threadName, "^(ForkJoinPool-|[Gg]esture|.gifmaker|Binder|work_thread|OkHttp|ThreadPool|Busy-|[Mm]ap-|.navi.mainframe|Camera)|(.fg|.io)$")) {
                     sched_setaffinity(tid, sizeof(cpu_set_t), &ProcessThread_Mask);
                     sched_setscheduler(tid, SCHED_NORMAL, &ProcessThread_Prio);
-                } else if (CheckRegex(threadName, "^(launcher-|Fresco|ResolvePool|ExecutorDispatc|XYThread|RecallManager|Apollo-|[Rr]untime|ImageCache|DefaultDispatch)")) {
+                } else if (CheckRegex(threadName, "^(launcher-|Fresco|ResolvePool|ExecutorDispatc|XYThread|RecallManager|Apollo-|[Rr]untime|ImageCache|DefaultDispatch|pcdn_udp)")) {
                     sched_setaffinity(tid, sizeof(cpu_set_t), &ProcessThread_Mask);
                     sched_setscheduler(tid, SCHED_NORMAL, &ProcessThread_Prio);
                 } else if (CheckRegex(threadName, "^(FAsync|[Aa]sync|mqt_|LoadingActivity|queued-work|[Jj]ava[Ss]cript|JS|[Nn]et[Ww]ork|[Dd]ownload)|([Dd]ownload|[Aa]sync)$")) {
@@ -1166,21 +1166,41 @@ void CgroupWatcher(void)
         WriteLog("E", "Failed to init inotify.");
         pthread_exit(0);
     }
-    int ta_wd = inotify_add_watch(fd, "/dev/cpuset/top-app/tasks", IN_MODIFY);
-    if (!ta_wd) {
-        WriteLog("W", "Failed to watch top-app cgroup.");
-    }
-    int fg_wd = inotify_add_watch(fd, "/dev/cpuset/foreground/tasks", IN_MODIFY);
-    if (!fg_wd) {
-        WriteLog("W", "Failed to watch foreground cgroup.");
-    }
-    int bg_wd = inotify_add_watch(fd, "/dev/cpuset/background/tasks", IN_MODIFY);
-    if (!bg_wd) {
-        WriteLog("W", "Failed to watch background cgroup.");
-    }
-    int re_wd = inotify_add_watch(fd, "/dev/cpuset/restricted/tasks", IN_MODIFY);
-    if (!re_wd) {
-        WriteLog("W", "Failed to watch restricted cgroup.");
+    int ta_wd, fg_wd, bg_wd, re_wd;
+    if (GetAndroidSDKVersion() < 33) {
+        ta_wd = inotify_add_watch(fd, "/dev/cpuset/top-app/tasks", IN_MODIFY);
+        if (!ta_wd) {
+            WriteLog("W", "Failed to watch top-app cgroup.");
+        }
+        fg_wd = inotify_add_watch(fd, "/dev/cpuset/foreground/tasks", IN_MODIFY);
+        if (!fg_wd) {
+            WriteLog("W", "Failed to watch foreground cgroup.");
+        }
+        bg_wd = inotify_add_watch(fd, "/dev/cpuset/background/tasks", IN_MODIFY);
+        if (!bg_wd) {
+            WriteLog("W", "Failed to watch background cgroup.");
+        }
+        re_wd = inotify_add_watch(fd, "/dev/cpuset/restricted/tasks", IN_MODIFY);
+        if (!re_wd) {
+            WriteLog("W", "Failed to watch restricted cgroup.");
+        }
+    } else {
+        ta_wd = inotify_add_watch(fd, "/dev/cpuset/top-app/cgroup.procs", IN_MODIFY);
+        if (!ta_wd) {
+            WriteLog("W", "Failed to watch top-app cgroup.");
+        }
+        fg_wd = inotify_add_watch(fd, "/dev/cpuset/foreground/cgroup.procs", IN_MODIFY);
+        if (!fg_wd) {
+            WriteLog("W", "Failed to watch foreground cgroup.");
+        }
+        bg_wd = inotify_add_watch(fd, "/dev/cpuset/background/cgroup.procs", IN_MODIFY);
+        if (!bg_wd) {
+            WriteLog("W", "Failed to watch background cgroup.");
+        }
+        re_wd = inotify_add_watch(fd, "/dev/cpuset/restricted/cgroup.procs", IN_MODIFY);
+        if (!re_wd) {
+            WriteLog("W", "Failed to watch restricted cgroup.");
+        }
     }
 
     char inotify_buf[16];

@@ -386,7 +386,7 @@ long int GetCompileDateCode(const char* compileDate)
     return (long int)year * 10000 + month * 100 + day;
 }
 
-int roundNum(const float num)
+int RoundNum(const float num)
 {
     int ret = 0;
 
@@ -398,4 +398,18 @@ int roundNum(const float num)
     }
 
     return ret;
+}
+
+int GetAndroidSDKVersion(void) {
+    int AndroidSDKVersion = -1;
+
+    FILE* fp = popen("/system/bin/getprop \"ro.build.version.sdk\"", "r");
+    if (fp) {
+        char buffer[128];
+        fgets(buffer, sizeof(buffer), fp);
+        sscanf(buffer, "%d", &AndroidSDKVersion);
+        pclose(fp);
+    }
+
+    return AndroidSDKVersion;
 }
