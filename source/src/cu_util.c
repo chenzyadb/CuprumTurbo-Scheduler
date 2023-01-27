@@ -390,7 +390,7 @@ int RoundNum(const float num)
 {
     int ret = 0;
 
-    int dec = (int)num * 10 % 10;
+    int dec = (int)(num * 10) % 10;
     if (dec >= 5) {
         ret = (int)num + 1;
     } else {
