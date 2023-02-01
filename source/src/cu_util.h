@@ -1,5 +1,15 @@
 #pragma once
 
+#include <sys/prctl.h>
+#include <sys/stat.h>
+#include <limits.h>
+#include <regex.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #define CHECK_BIT(bit, array) (array[bit / 8] & (1 << (bit % 8)))
 
 #define SCREEN_ON 1
@@ -11,8 +21,13 @@
 #define TASK_SYSTEM 3
 #define TASK_OTHER -1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int WriteFile(const char* filePath, const char* format, ...);
 char* ReadFile(char* ret, const char* format, ...);
+char* ReadFileEx(const char* format, ...);
 int CheckRegex(const char* str, const char* regex);
 char* GetDirName(const char* filePath);
 char* DumpTopActivityInfo(void);
@@ -24,7 +39,13 @@ int IsDirExist(const char* format, ...);
 int IsFileExist(const char* format, ...);
 int GetThreadPid(const int tid);
 int GetTaskType(const int pid);
+char* GetTaskName(int pid);
 int GetScreenState(void);
-long int GetCompileDateCode(const char *compileDate);
+long int GetCompileDateCode(const char* compileDate);
 int RoundNum(const float num);
+void SetThreadName(const char* name);
 int GetAndroidSDKVersion(void);
+
+#ifdef __cplusplus
+}
+#endif

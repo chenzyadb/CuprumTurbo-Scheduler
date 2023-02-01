@@ -1,31 +1,10 @@
-#define __USE_GNU
-#include <dirent.h>
-#include <limits.h>
-#include <linux/input.h>
-#include <math.h>
-#include <pthread.h>
-#include <regex.h>
-#include <sched.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/inotify.h>
-#include <sys/prctl.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <unistd.h>
-
 #include "cu_util.h"
 
 int WriteFile(const char* filePath, const char* format, ...)
 {
     int ret = -1;
 
-    char buffer[1024];
+    char buffer[4096];
     va_list arg;
     va_start(arg, format);
     vsprintf(buffer, format, arg);
@@ -52,7 +31,7 @@ char* ReadFile(char* ret, const char* format, ...)
     vsprintf(filePath, format, arg);
     va_end(arg);
 
-    static char buffer[1024];
+    static char buffer[4096];
     memset(buffer, 0, sizeof(buffer));
 
     int fd = open(filePath, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
@@ -62,16 +41,45 @@ char* ReadFile(char* ret, const char* format, ...)
     }
     if (fd) {
         int len = read(fd, buffer, sizeof(buffer));
-        if (len == 0) {
-            buffer[0] = '\0';
-        } else {
+        if (len >= 0) {
             buffer[len] = '\0';
+        } else {
+            buffer[0] = '\0';
         }
         close(fd);
     }
 
     if (ret) {
         strcpy(ret, buffer);
+    }
+
+    return buffer;
+}
+
+char* ReadFileEx(const char* format, ...)
+{
+    char filePath[256];
+    va_list arg;
+    va_start(arg, format);
+    vsprintf(filePath, format, arg);
+    va_end(arg);
+
+    static char buffer[16 * 1024];
+    memset(buffer, 0, sizeof(buffer));
+
+    FILE* fp = fopen(filePath, "r");
+    if (!fp) {
+        chmod(filePath, 0444);
+        fp = fopen(filePath, "r");
+    }
+    if (fp) {
+        int len = fread(buffer, sizeof(char), sizeof(buffer), fp);
+        if (len >= 0) {
+            buffer[len] = '\0';
+        } else {
+            buffer[0] = '\0';
+        }
+        fclose(fp);
     }
 
     return buffer;
@@ -324,6 +332,28 @@ int GetTaskType(const int pid)
     return taskType;
 }
 
+char* GetTaskName(int pid)
+{
+    static char taskName[128];
+    memset(taskName, 0, sizeof(taskName));
+
+    char cmdlinePath[128];
+    sprintf(cmdlinePath, "/proc/%d/cmdline", pid);
+    
+    int fd = open(cmdlinePath, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    if (fd) {
+        int len = read(fd, taskName, sizeof(taskName));
+        if (len >= 0) {
+            taskName[len] = '\0';
+        } else {
+            taskName[0] = '\0';
+        }
+        close(fd);
+    }
+
+    return taskName;
+}
+
 int GetScreenState(void)
 {
     int state = SCREEN_ON;
@@ -390,7 +420,7 @@ int RoundNum(const float num)
 {
     int ret = 0;
 
-    int dec = (int)num * 10 % 10;
+    int dec = (int)(num * 10) % 10;
     if (dec >= 5) {
         ret = (int)num + 1;
     } else {
@@ -398,6 +428,10 @@ int RoundNum(const float num)
     }
 
     return ret;
+}
+
+void SetThreadName(const char* name) {
+    prctl(PR_SET_NAME, name);
 }
 
 int GetAndroidSDKVersion(void) {
@@ -413,3 +447,4 @@ int GetAndroidSDKVersion(void) {
 
     return AndroidSDKVersion;
 }
+
