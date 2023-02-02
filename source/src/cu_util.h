@@ -39,7 +39,7 @@ int IsDirExist(const char* format, ...);
 int IsFileExist(const char* format, ...);
 int GetThreadPid(const int tid);
 int GetTaskType(const int pid);
-char* GetTaskName(int pid);
+char* GetTaskName(const int pid);
 int GetScreenState(void);
 long int GetCompileDateCode(const char* compileDate);
 int RoundNum(const float num);
