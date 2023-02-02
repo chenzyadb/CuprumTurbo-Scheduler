@@ -153,8 +153,8 @@ struct Dynamic_CoCpuGovernor_Data {
 
 void WriteCpuFreqViaMSM(int cpuCore, long int minFreq, long int maxFreq)
 {
-    WriteFile("/sys/module/msm_performance/parameters/cpu_min_freq", "%d:%ld\n", cpuCore, minFreq);
     WriteFile("/sys/module/msm_performance/parameters/cpu_max_freq", "%d:%ld\n", cpuCore, maxFreq);
+    WriteFile("/sys/module/msm_performance/parameters/cpu_min_freq", "%d:%ld\n", cpuCore, minFreq);
 }
 
 void WriteCpuFreqViaPPM(int targetCluster, long int minFreq, long int maxFreq)
@@ -188,14 +188,14 @@ void WriteCpuFreqViaPPM(int targetCluster, long int minFreq, long int maxFreq)
 
 void WriteCpuFreqViaEpic(int cluster, long int minFreq, long int maxFreq)
 {
+    WriteFile(StrMerge("/dev/cluster%d_freq_max", cluster), "%ld\n", maxFreq);
     WriteFile(StrMerge("/dev/cluster%d_freq_min", cluster), "%ld\n", minFreq);
-    WriteFile(StrMerge("/dev/cluster%d_freq_min", cluster), "%ld\n", maxFreq);
 }
 
 void WriteCpuFreqViaGovernor(int cpuCore, long int minFreq, long int maxFreq)
 {
-    WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", cpuCore), "%ld\n", minFreq);
     WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq", cpuCore), "%ld\n", maxFreq);
+    WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", cpuCore), "%ld\n", minFreq);
 }
 
 void CheckCpuFreqWriter(void)
@@ -559,7 +559,7 @@ void InitPolicyData(int policy, int firstCpu, int lastCpu)
     if (!IsFileExist(freqTablePath)) {
         WriteLog("E", "File \"%s\" doesn't exist.", freqTablePath);
     }
-    char freqTableBuffer[1024];
+    char freqTableBuffer[4096];
     char freqBuffer[16];
     int idx;
     int startIdx = 0;
