@@ -11,11 +11,11 @@ int WriteFile(const char* filePath, const char* format, ...)
     va_end(arg);
 
     int fd = open(filePath, O_WRONLY | O_NONBLOCK | O_CLOEXEC);
-    if (!fd) {
+    if (fd <= 0) {
         chmod(filePath, 0666);
         fd = open(filePath, O_WRONLY | O_NONBLOCK | O_CLOEXEC);
     }
-    if (fd) {
+    if (fd > 0) {
         ret = write(fd, buffer, strlen(buffer));
         close(fd);
     }
@@ -35,11 +35,11 @@ char* ReadFile(char* ret, const char* format, ...)
     memset(buffer, 0, sizeof(buffer));
 
     int fd = open(filePath, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    if (!fd) {
+    if (fd <= 0) {
         chmod(filePath, 0444);
         fd = open(filePath, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     }
-    if (fd) {
+    if (fd > 0) {
         int len = read(fd, buffer, sizeof(buffer));
         if (len >= 0) {
             buffer[len] = '\0';
@@ -204,7 +204,7 @@ long int GetThreadRuntime(const int pid, const int tid)
     sprintf(statPath, "/proc/%d/task/%d/stat", pid, tid);
 
     int fd = open(statPath, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    if (fd) {
+    if (fd > 0) {
         read(fd, buf, sizeof(buf));
         sscanf(buf, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %ld %ld %ld %ld %*d %*d %*d %*d %*u %*lu %*ld", &utime, &stime, &cutime, &cstime);
         close(fd);
@@ -279,7 +279,7 @@ int GetThreadPid(const int tid)
     sprintf(statusPath, "/proc/%d/status", tid);
 
     int fd = open(statusPath, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    if (fd) {
+    if (fd > 0) {
         char lineStr[128];
         int len = read(fd, buffer, sizeof(buffer));
         int start_p = 0;
@@ -312,7 +312,7 @@ int GetTaskType(const int pid)
     sprintf(oomAdjPath, "/proc/%d/oom_adj", pid);
 
     int fd = open(oomAdjPath, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    if (fd) {
+    if (fd > 0) {
         read(fd, buffer, sizeof(buffer));
         sscanf(buffer, "%d", &oomAdj);
 
@@ -332,7 +332,7 @@ int GetTaskType(const int pid)
     return taskType;
 }
 
-char* GetTaskName(int pid)
+char* GetTaskName(const int pid)
 {
     static char taskName[128];
     memset(taskName, 0, sizeof(taskName));
@@ -341,7 +341,7 @@ char* GetTaskName(int pid)
     sprintf(cmdlinePath, "/proc/%d/cmdline", pid);
     
     int fd = open(cmdlinePath, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    if (fd) {
+    if (fd > 0) {
         int len = read(fd, taskName, sizeof(taskName));
         if (len >= 0) {
             taskName[len] = '\0';
@@ -362,7 +362,7 @@ int GetScreenState(void)
     int restrictedTaskNum = 0;
 
     int fd = open("/dev/cpuset/restricted/tasks", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    if (fd) {
+    if (fd > 0) {
         int len = read(fd, buffer, sizeof(buffer));
         int i;
         for (i = 0; i < len; i++) {

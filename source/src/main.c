@@ -92,7 +92,7 @@ void WriteLog(const char* logLevel, const char* format, ...)
 void InitConfigReader(void)
 {
     int fd = open(configPath, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    if (!fd) {
+    if (fd <= 0) {
         WriteLog("E", "Can't read config file.");
         exit(0);
     }
@@ -732,7 +732,7 @@ void InputListener(long int ts_event)
     sprintf(touch_screen_path, "/dev/input/event%ld", ts_event);
 
     int fd = open(touch_screen_path, O_RDONLY);
-    if (!fd) {
+    if (fd <= 0) {
         WriteLog("W", "Failed to open \"%s\".", touch_screen_path);
         pthread_exit(0);
     }
@@ -817,7 +817,7 @@ void RunInputListener(void)
     if (dir != NULL) {
         while ((entry = readdir(dir)) != NULL) {
             fd = open(StrMerge("/dev/input/%s", (*entry).d_name), O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-            if (fd) {
+            if (fd > 0) {
                 memset(abs_bitmask, 0, sizeof(abs_bitmask));
                 ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(abs_bitmask)), abs_bitmask);
                 if (CHECK_BIT(ABS_MT_POSITION_X, abs_bitmask) && CHECK_BIT(ABS_MT_POSITION_Y, abs_bitmask)) {
@@ -1144,43 +1144,43 @@ void CgroupWatcher(void)
     char topActivityName[128];
 
     int fd = inotify_init();
-    if (!fd) {
+    if (fd <= 0) {
         WriteLog("E", "Failed to init inotify.");
         pthread_exit(0);
     }
     int ta_wd, fg_wd, bg_wd, re_wd;
     if (GetAndroidSDKVersion() < 33) {
         ta_wd = inotify_add_watch(fd, "/dev/cpuset/top-app/tasks", IN_MODIFY);
-        if (!ta_wd) {
+        if (ta_wd <= 0) {
             WriteLog("W", "Failed to watch top-app cgroup.");
         }
         fg_wd = inotify_add_watch(fd, "/dev/cpuset/foreground/tasks", IN_MODIFY);
-        if (!fg_wd) {
+        if (fg_wd <= 0) {
             WriteLog("W", "Failed to watch foreground cgroup.");
         }
         bg_wd = inotify_add_watch(fd, "/dev/cpuset/background/tasks", IN_MODIFY);
-        if (!bg_wd) {
+        if (bg_wd <= 0) {
             WriteLog("W", "Failed to watch background cgroup.");
         }
         re_wd = inotify_add_watch(fd, "/dev/cpuset/restricted/tasks", IN_MODIFY);
-        if (!re_wd) {
+        if (re_wd <= 0) {
             WriteLog("W", "Failed to watch restricted cgroup.");
         }
     } else {
         ta_wd = inotify_add_watch(fd, "/dev/cpuset/top-app/cgroup.procs", IN_MODIFY);
-        if (!ta_wd) {
+        if (ta_wd <= 0) {
             WriteLog("W", "Failed to watch top-app cgroup.");
         }
         fg_wd = inotify_add_watch(fd, "/dev/cpuset/foreground/cgroup.procs", IN_MODIFY);
-        if (!fg_wd) {
+        if (fg_wd <= 0) {
             WriteLog("W", "Failed to watch foreground cgroup.");
         }
         bg_wd = inotify_add_watch(fd, "/dev/cpuset/background/cgroup.procs", IN_MODIFY);
-        if (!bg_wd) {
+        if (bg_wd <= 0) {
             WriteLog("W", "Failed to watch background cgroup.");
         }
         re_wd = inotify_add_watch(fd, "/dev/cpuset/restricted/cgroup.procs", IN_MODIFY);
-        if (!re_wd) {
+        if (re_wd <= 0) {
             WriteLog("W", "Failed to watch restricted cgroup.");
         }
     }
@@ -1229,19 +1229,6 @@ void CgroupWatcher(void)
             }
         }
         usleep(20000);
-    }
-
-    if (ta_wd) {
-        inotify_rm_watch(fd, ta_wd);
-    }
-    if (fg_wd) {
-        inotify_rm_watch(fd, fg_wd);
-    }
-    if (bg_wd) {
-        inotify_rm_watch(fd, bg_wd);
-    }
-    if (re_wd) {
-        inotify_rm_watch(fd, re_wd);
     }
     close(fd);
 
@@ -1414,7 +1401,7 @@ int main(int argc, char* argv[])
     GetModeDynamicData();
 
     int fd = inotify_init();
-    if (!fd) {
+    if (fd <= 0) {
         WriteLog("E", "Failed to init inotify.");
         exit(0);
     }
