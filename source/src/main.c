@@ -153,8 +153,8 @@ struct Dynamic_CoCpuGovernor_Data {
 
 void WriteCpuFreqViaMSM(int cpuCore, long int minFreq, long int maxFreq)
 {
-    WriteFile("/sys/module/msm_performance/parameters/cpu_min_freq", "%d:%ld\n", cpuCore, minFreq);
     WriteFile("/sys/module/msm_performance/parameters/cpu_max_freq", "%d:%ld\n", cpuCore, maxFreq);
+    WriteFile("/sys/module/msm_performance/parameters/cpu_min_freq", "%d:%ld\n", cpuCore, minFreq);
 }
 
 void WriteCpuFreqViaPPM(int targetCluster, long int minFreq, long int maxFreq)
@@ -188,14 +188,14 @@ void WriteCpuFreqViaPPM(int targetCluster, long int minFreq, long int maxFreq)
 
 void WriteCpuFreqViaEpic(int cluster, long int minFreq, long int maxFreq)
 {
+    WriteFile(StrMerge("/dev/cluster%d_freq_max", cluster), "%ld\n", maxFreq);
     WriteFile(StrMerge("/dev/cluster%d_freq_min", cluster), "%ld\n", minFreq);
-    WriteFile(StrMerge("/dev/cluster%d_freq_min", cluster), "%ld\n", maxFreq);
 }
 
 void WriteCpuFreqViaGovernor(int cpuCore, long int minFreq, long int maxFreq)
 {
-    WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", cpuCore), "%ld\n", minFreq);
     WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_max_freq", cpuCore), "%ld\n", maxFreq);
+    WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/scaling_min_freq", cpuCore), "%ld\n", minFreq);
 }
 
 void CheckCpuFreqWriter(void)
@@ -472,13 +472,7 @@ void KernelGovernorOpt(void)
             WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/min_sample_time", govData[i].firstCpu, curCpuGovernor), "20000");
             WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/pl", govData[i].firstCpu, curCpuGovernor), "0");
             WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/rtg_boost_freq", govData[i].firstCpu, curCpuGovernor), "0");
-
-            sprintf(targetLoads, "80");
-            for (j = 1; j < govData[i].freqTableItemNum; j++) {
-                cpuTargetLoad = govData[i].freqTable[j - 1] * 90 / govData[i].freqTable[j];
-                sprintf(targetLoads, "%s %ld:%d", targetLoads, govData[i].freqTable[j], cpuTargetLoad);
-            }
-            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/target_loads", govData[i].firstCpu, curCpuGovernor), targetLoads);
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/policy%d/%s/target_loads", govData[i].firstCpu, curCpuGovernor), "80");
         }
 
         if (IsDirExist("/sys/devices/system/cpu/cpu%d/cpufreq/%s", govData[i].firstCpu, curCpuGovernor)) {
@@ -496,13 +490,7 @@ void KernelGovernorOpt(void)
             WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/min_sample_time", govData[i].firstCpu, curCpuGovernor), "20000");
             WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/pl", govData[i].firstCpu, curCpuGovernor), "0");
             WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/rtg_boost_freq", govData[i].firstCpu, curCpuGovernor), "0");
-
-            sprintf(targetLoads, "80");
-            for (j = 1; j < govData[i].freqTableItemNum; j++) {
-                cpuTargetLoad = govData[i].freqTable[j - 1] * 90 / govData[i].freqTable[j];
-                sprintf(targetLoads, "%s %ld:%d", targetLoads, govData[i].freqTable[j], cpuTargetLoad);
-            }
-            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/target_loads", govData[i].firstCpu, curCpuGovernor), targetLoads);
+            WriteFile(StrMerge("/sys/devices/system/cpu/cpu%d/cpufreq/%s/target_loads", govData[i].firstCpu, curCpuGovernor), "80");
         }
     }
 
@@ -521,13 +509,7 @@ void KernelGovernorOpt(void)
         WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/min_sample_time", curCpuGovernor), "20000");
         WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/pl", curCpuGovernor), "0");
         WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/rtg_boost_freq", curCpuGovernor), "0");
-
-        sprintf(targetLoads, "80");
-        for (i = 1; i < govData[0].freqTableItemNum; i++) {
-            cpuTargetLoad = govData[0].freqTable[i - 1] * 90 / govData[0].freqTable[i];
-            sprintf(targetLoads, "%s %ld:%d", targetLoads, govData[0].freqTable[i], cpuTargetLoad);
-        }
-        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/target_loads", curCpuGovernor), "%s", targetLoads);
+        WriteFile(StrMerge("/sys/devices/system/cpu/cpufreq/%s/target_loads", curCpuGovernor), "80");
     }
 }
 
@@ -559,7 +541,7 @@ void InitPolicyData(int policy, int firstCpu, int lastCpu)
     if (!IsFileExist(freqTablePath)) {
         WriteLog("E", "File \"%s\" doesn't exist.", freqTablePath);
     }
-    char freqTableBuffer[1024];
+    char freqTableBuffer[4096];
     char freqBuffer[16];
     int idx;
     int startIdx = 0;
@@ -596,7 +578,7 @@ void InitPolicyData(int policy, int firstCpu, int lastCpu)
         govData[policy].freqTableItemNum++;
     }
 
-    long int minDiffFreq = 10000000;
+    long int minDiffFreq = INT_MAX;
     int targetFreqIdx = 0;
     itemBuffer = cJSON_GetObjectItem(objectBuffer, "lowPowerFreq");
     govData[policy].lowPowerFreq = (*itemBuffer).valueint * 1000;
@@ -608,7 +590,7 @@ void InitPolicyData(int policy, int firstCpu, int lastCpu)
     }
     govData[policy].lowPowerFreq = govData[policy].freqTable[targetFreqIdx];
 
-    minDiffFreq = 10000000;
+    minDiffFreq = INT_MAX;
     targetFreqIdx = 0;
     itemBuffer = cJSON_GetObjectItem(objectBuffer, "basicFreq");
     govData[policy].basicFreq = (*itemBuffer).valueint * 1000;
@@ -620,7 +602,7 @@ void InitPolicyData(int policy, int firstCpu, int lastCpu)
     }
     govData[policy].basicFreq = govData[policy].freqTable[targetFreqIdx];
 
-    minDiffFreq = 10000000;
+    minDiffFreq = INT_MAX;
     targetFreqIdx = 0;
     itemBuffer = cJSON_GetObjectItem(objectBuffer, "expectFreq");
     govData[policy].expectFreq = (*itemBuffer).valueint * 1000;
@@ -644,7 +626,7 @@ void InitPolicyData(int policy, int firstCpu, int lastCpu)
     float powerConst = (float)modelPower / (govData[policy].modelFreq / 1000);
     float lowPowerVoltStair = (float)(800 - 400) / ((govData[policy].expectFreq - govData[policy].freqTable[0]) / 1000);
     float expectVoltStair = (float)(1000 - 800) / ((govData[policy].modelFreq - govData[policy].expectFreq) / 1000);
-    float unexpectVoltStair = (float)(1200 - 1000) / ((govData[policy].freqTable[govData[policy].freqTableItemNum - 1] - govData[policy].modelFreq) / 1000);
+    float unexpectVoltStair = 0.5f;
     float cpuVolt = 0;
     for (i = 0; i < govData[policy].freqTableItemNum; i++) {
         if (govData[policy].freqTable[i] <= govData[policy].expectFreq) {
