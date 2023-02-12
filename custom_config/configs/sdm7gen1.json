@@ -1,228 +1,222 @@
 {
-	"name": "Snapdragon7Gen1",
-	"author": "chenzyadb",
-	"configVersion": 3,
-	"cpuPolicy": {
-		"cpu0": 0,
-		"cpu1": 0,
-		"cpu2": 0,
-		"cpu3": 0,
-		"cpu4": 1,
-		"cpu5": 1,
-		"cpu6": 1,
-		"cpu7": 2,
-		"cpu8": -1,
-		"cpu9": -1
-	},
-	"policy0_Config": {
-		"enable": 1,
-		"freqTablePath": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
-		"cpu_capacity": 309,
-		"lowPowerFreq": 600,
-		"basicFreq": 1000,
-		"expectFreq": 1400,
-		"modelFreq": 1800,
-		"modelPower": 320
-	},
-	"policy1_Config": {
-		"enable": 1,
-		"freqTablePath": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_available_frequencies",
-		"cpu_capacity": 1006,
-		"lowPowerFreq": 700,
-		"basicFreq": 1000,
-		"expectFreq": 1800,
-		"modelFreq": 2360,
-		"modelPower": 1820
-	},
-	"policy2_Config": {
-		"enable": 1,
-		"freqTablePath": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_available_frequencies",
-		"cpu_capacity": 1024,
-		"lowPowerFreq": 800,
-		"basicFreq": 1000,
-		"expectFreq": 2000,
-		"modelFreq": 2400,
-		"modelPower": 1900
-	},
-	"CoCpuGovernor_Config": {
-		"fastSampleTime": 20,
-		"slowSampleTime": 40
-	},
-	"TasksetHelper_Config": {
-		"enable": 1,
-		"MainThread": {
-			"cpus": "4567",
-			"nice": -12
-		},
-		"GameSingleThread": {
-			"cpus": "7",
-			"nice": -20
-		},
-		"GameMultiThread": {
-			"cpus": "456",
-			"nice": -20
-		},
-		"RenderThread": {
-			"cpus": "7",
-			"nice": -20
-		},
-		"UIThread": {
-			"cpus": "456",
-			"nice": -12
-		},
-		"MediaThread": {
-			"cpus": "012345",
-			"nice": -16
-		},
-		"WebViewThread": {
-			"cpus": "456",
-			"nice": -12
-		},
-		"ProcessThread": {
-			"cpus": "456",
-			"nice": -10
-		},
-		"NonRealTimeThread": {
-			"cpus": "0123",
-			"nice": 10
-		},
-		"OtherThread": {
-			"cpus": "0123456",
-			"nice": 0
-		}
-	},
-	"modeSwitcher": {
-		"powersave": {
-			"powerLimit": 2000,
-			"policy0": {
-				"upRateLatency": 120,
-				"downRateDelay": 40
-			},
-			"policy1": {
-				"upRateLatency": 120,
-				"downRateDelay": 40
-			},
-			"policy2": {
-				"upRateLatency": 120,
-				"downRateDelay": 40
-			},
-			"boostConfig": {
-				"touch": {
-					"boost": 0,
-					"durationTime": 1000
-				},
-				"swipe": {
-					"boost": 5,
-					"durationTime": 200
-				},
-				"gesture": {
-					"boost": 10,
-					"durationTime": 500
-				},
-				"heavyload": {
-					"boost": 10,
-					"durationTime": 2000
-				}
-			}
-		},
-		"balance": {
-			"powerLimit": 3500,
-			"policy0": {
-				"upRateLatency": 100,
-				"downRateDelay": 80
-			},
-			"policy1": {
-				"upRateLatency": 100,
-				"downRateDelay": 80
-			},
-			"policy2": {
-				"upRateLatency": 100,
-				"downRateDelay": 80
-			},
-			"boostConfig": {
-				"touch": {
-					"boost": 5,
-					"durationTime": 1000
-				},
-				"swipe": {
-					"boost": 10,
-					"durationTime": 200
-				},
-				"gesture": {
-					"boost": 15,
-					"durationTime": 500
-				},
-				"heavyload": {
-					"boost": 20,
-					"durationTime": 2000
-				}
-			}
-		},
-		"performance": {
-			"powerLimit": 5000,
-			"policy0": {
-				"upRateLatency": 80,
-				"downRateDelay": 120
-			},
-			"policy1": {
-				"upRateLatency": 80,
-				"downRateDelay": 120
-			},
-			"policy2": {
-				"upRateLatency": 80,
-				"downRateDelay": 120
-			},
-			"boostConfig": {
-				"touch": {
-					"boost": 10,
-					"durationTime": 1000
-				},
-				"swipe": {
-					"boost": 15,
-					"durationTime": 200
-				},
-				"gesture": {
-					"boost": 20,
-					"durationTime": 500
-				},
-				"heavyload": {
-					"boost": 30,
-					"durationTime": 2000
-				}
-			}
-		},
-		"fast": {
-			"powerLimit": 10000,
-			"policy0": {
-				"upRateLatency": 60,
-				"downRateDelay": 160
-			},
-			"policy1": {
-				"upRateLatency": 60,
-				"downRateDelay": 160
-			},
-			"policy2": {
-				"upRateLatency": 60,
-				"downRateDelay": 160
-			},
-			"boostConfig": {
-				"touch": {
-					"boost": 10,
-					"durationTime": 1000
-				},
-				"swipe": {
-					"boost": 20,
-					"durationTime": 200
-				},
-				"gesture": {
-					"boost": 30,
-					"durationTime": 500
-				},
-				"heavyload": {
-					"boost": 40,
-					"durationTime": 2000
-				}
-			}
-		}
-	}
+  "name": "Snapdragon7Gen1",
+  "author": "chenzyadb",
+  "configVersion": 4,
+  "debug": false,
+  "CpuGovernor": {
+    "enable": true,
+    "slowSampleTime": 40,
+    "fastSampleTime": 20,
+    "policy": {
+      "policyNum": 3,
+      "policy0": {
+        "cpus": "0-3",
+        "freqTablePath": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
+        "cpuCapacity": 306,
+        "lowPowerFreq": 600,
+        "basicFreq": 1000,
+        "expectFreq": 1400,
+        "modelFreq": 1800,
+        "modelPower": 600
+      },
+      "policy1": {
+        "cpus": "4-6",
+        "freqTablePath": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_available_frequencies",
+        "cpuCapacity": 921,
+        "lowPowerFreq": 700,
+        "basicFreq": 1000,
+        "expectFreq": 1700,
+        "modelFreq": 2360,
+        "modelPower": 1820
+      },
+      "policy2": {
+        "cpus": "7-7",
+        "freqTablePath": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_available_frequencies",
+        "cpuCapacity": 1024,
+        "lowPowerFreq": 800,
+        "basicFreq": 1000,
+        "expectFreq": 2100,
+        "modelFreq": 2400,
+        "modelPower": 1900
+      }
+    },
+    "powersave": {
+      "powerLimit": 2000,
+      "policy0": {
+        "upRateLatency": 120,
+        "perfMargin": 10
+      },
+      "policy1": {
+        "upRateLatency": 120,
+        "perfMargin": 10
+      },
+      "policy2": {
+        "upRateLatency": 120,
+        "perfMargin": 10
+      },
+      "freqBurst": {
+        "touch": {
+          "boost": 0,
+          "durationTime": 0
+        },
+        "swipe": {
+          "boost": 10,
+          "durationTime": 500
+        },
+        "gesture": {
+          "boost": 20,
+          "durationTime": 500
+        },
+        "heavyload": {
+          "boost": 20,
+          "durationTime": 2000
+        }
+      }
+    },
+    "balance": {
+      "powerLimit": 3500,
+      "policy0": {
+        "upRateLatency": 100,
+        "perfMargin": 20
+      },
+      "policy1": {
+        "upRateLatency": 100,
+        "perfMargin": 20
+      },
+      "policy2": {
+        "upRateLatency": 100,
+        "perfMargin": 20
+      },
+      "freqBurst": {
+        "touch": {
+          "boost": 5,
+          "durationTime": 1000
+        },
+        "swipe": {
+          "boost": 10,
+          "durationTime": 500
+        },
+        "gesture": {
+          "boost": 20,
+          "durationTime": 500
+        },
+        "heavyload": {
+          "boost": 20,
+          "durationTime": 2000
+        }
+      }
+    },
+    "performance": {
+      "powerLimit": 5000,
+      "policy0": {
+        "upRateLatency": 80,
+        "perfMargin": 25
+      },
+      "policy1": {
+        "upRateLatency": 80,
+        "perfMargin": 25
+      },
+      "policy2": {
+        "upRateLatency": 80,
+        "perfMargin": 25
+      },
+      "freqBurst": {
+        "touch": {
+          "boost": 10,
+          "durationTime": 1000
+        },
+        "swipe": {
+          "boost": 20,
+          "durationTime": 500
+        },
+        "gesture": {
+          "boost": 30,
+          "durationTime": 500
+        },
+        "heavyload": {
+          "boost": 30,
+          "durationTime": 2000
+        }
+      }
+    },
+    "fast": {
+      "powerLimit": 10000,
+      "policy0": {
+        "upRateLatency": 60,
+        "perfMargin": 30
+      },
+      "policy1": {
+        "upRateLatency": 60,
+        "perfMargin": 30
+      },
+      "policy2": {
+        "upRateLatency": 60,
+        "perfMargin": 30
+      },
+      "freqBurst": {
+        "touch": {
+          "boost": 20,
+          "durationTime": 1000
+        },
+        "swipe": {
+          "boost": 30,
+          "durationTime": 500
+        },
+        "gesture": {
+          "boost": 40,
+          "durationTime": 500
+        },
+        "heavyload": {
+          "boost": 40,
+          "durationTime": 2000
+        }
+      }
+    }
+  },
+  "ThreadSchedOpt": {
+    "enable": true,
+    "MainThread": {
+      "cpus": "4567",
+      "nice": -12
+    },
+    "GameSingleThread": {
+      "cpus": "7",
+      "nice": -16
+    },
+    "GameMultiThread": {
+      "cpus": "456",
+      "nice": -16
+    },
+    "RenderThread": {
+      "cpus": "7",
+      "nice": -20
+    },
+    "UIThread": {
+      "cpus": "4567",
+      "nice": -12
+    },
+    "MediaThread": {
+      "cpus": "012345",
+      "nice": -16
+    },
+    "WebViewThread": {
+      "cpus": "456",
+      "nice": -12
+    },
+    "ProcessThread": {
+      "cpus": "456",
+      "nice": -8
+    },
+    "NonRealTimeThread": {
+      "cpus": "0123",
+      "nice": 0
+    },
+    "OtherThread": {
+      "cpus": "0123456",
+      "nice": -4
+    }
+  },
+  "MtkGpuGovernor": {
+    "enable": false
+  }
 }
