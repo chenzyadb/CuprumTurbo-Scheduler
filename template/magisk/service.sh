@@ -21,6 +21,7 @@ function get_max_freq() {
 
 function write_value() {
 	if [ -e "$2" ] ; then
+		chmod 0666 "$2" 2>/dev/null;
 		echo "$1" > "$2" 2>/dev/null;
 	fi
 }
@@ -36,7 +37,7 @@ function lock_value() {
 
 function unlock_value() {
 	if [ -e "$2" ] ; then
-	    chown root:root "$2" 2>/dev/null;
+		chown root:root "$2" 2>/dev/null;
 		chmod 0666 "$2" 2>/dev/null;
 		echo "$1" > "$2" 2>/dev/null;
 	fi
@@ -98,7 +99,7 @@ stop vendor.perfservice 2>/dev/null
 stop perfd 2>/dev/null
 
 #Disable Tencent HardCoder
-setprop persist.sys.hardcoder.name "" 2>/dev/null
+setprop persist.sys.hardcoder.name ""
 
 #Disable MTK PPM Perf Controller
 lock_value "1" /proc/ppm/enabled
@@ -234,8 +235,8 @@ for sched_type in walt kernel ; do
 	#sched_lib_name will cause TasksetHelper to lose effect.
 	lock_value "" "/proc/sys/${sched_type}/sched_lib_name"
 	if [ -d /sys/devices/system/cpu/cpufreq/policy7/ ] ; then
-		lock_value "40 30" "/proc/sys/${sched_type}/sched_downmigrate"
-		lock_value "80 90" "/proc/sys/${sched_type}/sched_upmigrate"
+		lock_value "40 40" "/proc/sys/${sched_type}/sched_downmigrate"
+		lock_value "80 80" "/proc/sys/${sched_type}/sched_upmigrate"
 	else
 		lock_value "40" "/proc/sys/${sched_type}/sched_downmigrate"
 		lock_value "80" "/proc/sys/${sched_type}/sched_upmigrate"
@@ -376,44 +377,36 @@ change_task_cpuset "surfaceflinger" "top-app"
 change_task_cpuset "system_server" "top-app"
 change_task_cpuset "android.hardware.graphics.composer" "top-app"
 change_task_cpuset "vendor.qti.hardware.display.composer-service" "top-app"
-change_task_cpuset "netd" "foreground"
 
-#Reduce big-core awake (system-background:cpu0-3)
+#Reduce big-core awake
 change_task_cpuset "logd" "system-background"
 change_task_cpuset "lmkd" "system-background"
 change_task_cpuset "mdnsd" "system-background"
 
-#Reset Kernel CPU Governor
-if [ -n "$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors | grep 'walt')" ] ; then
-	CPU_GOV="walt"
-elif [ -n "$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors | grep 'schedutil')" ] ; then
-	CPU_GOV="schedutil"
-elif [ -n "$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors | grep 'sched')" ] ; then
-	CPU_GOV="sched"
-elif [ -n "$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors | grep 'interactive')" ] ; then
-	CPU_GOV="interactive"
-else
-	CPU_GOV="ondemand"
-fi
-for i in $(seq 0 ${core_num}) ; do
-	lock_value "$CPU_GOV" "/sys/devices/system/cpu/cpu${i}/cpufreq/scaling_governor"
-	lock_value "$CPU_GOV" "/sys/devices/system/cpu/cpufreq/policy${i}/scaling_governor"
-done
-
-#Fix OpenKirin/GSI GPU Problems.
+#Fix Kirin GPU Problems.
 write_value "mali_ondemand" "/sys/class/devfreq/gpufreq/governor"
 write_value "0" "/sys/class/devfreq/gpufreq/animation_boost"
 write_value "0" "/sys/class/devfreq/gpufreq/cl_boost"
 write_value "1" "/sys/class/devfreq/gpufreq/vsync"
 write_value "80" "/sys/class/devfreq/gpufreq/upthreshold"
 write_value "20" "/sys/class/devfreq/gpufreq/downdifferential"
-for GPU_DIR in /sys/class/devfreq/*gpu* ; do 
+gpu_max_freq=$(get_max_freq "/sys/class/devfreq/gpufreq/available_frequencies")
+gpu_min_freq=$(get_min_freq "/sys/class/devfreq/gpufreq/available_frequencies")
+write_value "$gpu_max_freq" "/sys/class/devfreq/gpufreq/max_freq"
+write_value "$gpu_min_freq" "/sys/class/devfreq/gpufreq/min_freq"
+
+#Fix Dimensity GPU Problems.
+write_value "0" "/sys/kernel/ged/hal/dcs_mode"
+for GPU_DIR in /sys/class/devfreq/*mali* ; do 
+	write_value "simple_ondemand" "${GPU_DIR}/governor"
 	gpu_max_freq=$(get_max_freq "${GPU_DIR}/available_frequencies")
 	gpu_min_freq=$(get_min_freq "${GPU_DIR}/available_frequencies")
 	write_value "$gpu_max_freq" "${GPU_DIR}/max_freq"
 	write_value "$gpu_min_freq" "${GPU_DIR}/min_freq"
 done
-for GPU_DIR in /sys/class/devfreq/*mali* ; do 
+
+#Fix Unisoc GPU Problems.
+for GPU_DIR in /sys/class/devfreq/*gpu* ; do 
 	gpu_max_freq=$(get_max_freq "${GPU_DIR}/available_frequencies")
 	gpu_min_freq=$(get_min_freq "${GPU_DIR}/available_frequencies")
 	write_value "$gpu_max_freq" "${GPU_DIR}/max_freq"

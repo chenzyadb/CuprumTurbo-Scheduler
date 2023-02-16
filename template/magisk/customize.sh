@@ -1,4 +1,4 @@
-ui_print "- CuprumTurbo Scheduler V13"
+ui_print "- CuprumTurbo Scheduler"
 ui_print "- Installing..."
 
 unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH >&2
