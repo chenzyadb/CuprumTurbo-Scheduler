@@ -25,7 +25,7 @@
         "cpuCapacity": 871,
         "lowPowerFreq": 700,
         "basicFreq": 1000,
-        "expectFreq": 1700,
+        "expectFreq": 1860,
         "modelFreq": 2420,
         "modelPower": 1520
       },
@@ -35,7 +35,7 @@
         "cpuCapacity": 1024,
         "lowPowerFreq": 800,
         "basicFreq": 1000,
-        "expectFreq": 2100,
+        "expectFreq": 2160,
         "modelFreq": 2840,
         "modelPower": 1980
       }
