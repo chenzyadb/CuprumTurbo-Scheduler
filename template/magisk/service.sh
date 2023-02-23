@@ -3,9 +3,9 @@ function get_min_freq() {
 	first_freq=$(cat "$1" | tr " " "\n" | head -1)
 	last_freq=$(cat "$1" | tr " " "\n" | tail -1)
 	if [ $first_freq -lt $last_freq ] ; then
-		echo $first_freq
+		echo "${first_freq}"
 	else
-		echo $last_freq
+		echo "${last_freq}"
 	fi
 }
 
@@ -13,9 +13,9 @@ function get_max_freq() {
 	first_freq=$(cat "$1" | tr " " "\n" | head -1)
 	last_freq=$(cat "$1" | tr " " "\n" | tail -1)
 	if [ $first_freq -gt $last_freq ] ; then
-		echo $first_freq
+		echo "${first_freq}"
 	else
-		echo $last_freq
+		echo "${last_freq}"
 	fi
 }
 
@@ -45,11 +45,11 @@ function unlock_value() {
 
 function multi_lock_value() {
 	for file in $2 ; do
-		if [ -e "$file" ] ; then
-			chown root:root "$file" 2>/dev/null;
-			chmod 0666 "$file" 2>/dev/null;
-			echo "$1" > "$file" 2>/dev/null;
-			chmod 0444 "$file" 2>/dev/null;
+		if [ -e "${file}" ] ; then
+			chown root:root "${file}" 2>/dev/null;
+			chmod 0666 "${file}" 2>/dev/null;
+			echo "$1" > "${file}" 2>/dev/null;
+			chmod 0444 "${file}" 2>/dev/null;
 		fi
 	done
 }
@@ -62,22 +62,36 @@ function unlock() {
 }
 
 function block() {
-    if [ -e "$2" ] ; then
+	if [ -e "$2" ] ; then
 		chmod 0000 "$2" 2>/dev/null;
 	fi
 }
 
 function multi_block() {
-    for file in $1 ; do
-        if [ -e "$file" ] ; then
-		    chmod 0000 "$file" 2>/dev/null;
-	    fi
-    done
+	for file in $1 ; do
+		if [ -e "${file}" ] ; then
+			chmod 0000 "${file}" 2>/dev/null;
+		fi
+	done
 }
 
 function change_task_cpuset() {
-	for task_pid in $(ps -Ao pid,args | grep "$1" | awk '{print $1}') ; do
-		echo "$task_pid" > "/dev/cpuset/$2/tasks" 2>/dev/null;
+	task_name=$1
+	cgroup=$2
+	for task_pid in $(ps -Ao pid,args | grep "${task_name}" | awk '{print $1}') ; do
+		echo "${task_pid}" > "/dev/cpuset/${cgroup}/cgroup.procs" 2>/dev/null;
+	done
+}
+
+function change_task_sched() {
+	task_name=$1
+	cgroup=$2
+	for task_pid in $(ps -Ao pid,args | grep "${task_name}" | awk '{print $1}') ; do
+		if [ -d /dev/stune ] ; then
+			echo "${task_pid}" > "/dev/stune/${cgroup}/cgroup.procs" 2>/dev/null;
+		elif [-d /dev/cpuctl ] ; then
+			echo "${task_pid}" > "/dev/cpuctl/${cgroup}/cgroup.procs" 2>/dev/null;
+		fi
 	done
 }
 
@@ -105,7 +119,7 @@ setprop persist.sys.hardcoder.name ""
 lock_value "1" /proc/ppm/enabled
 if [ -e /proc/ppm/policy_status ] ; then 
 	for ppm_policy in $(seq 0 10) ; do
-		write_value "$ppm_policy 1" "/proc/ppm/policy_status"
+		write_value "${ppm_policy} 1" "/proc/ppm/policy_status"
 	done
 	disable_policy_list="
 	   PPM_POLICY_PTPOD
@@ -119,7 +133,7 @@ if [ -e /proc/ppm/policy_status ] ; then
 	   PPM_POLICY_SYS_BOOST
 	   PPM_POLICY_HICA"
 	for policy in $disable_policy_list ; do
-		IDX_INFO=$(cat /proc/ppm/policy_status | grep "$policy") 
+		IDX_INFO=$(cat /proc/ppm/policy_status | grep "${policy}")
 		IDX_NUM=$(echo ${IDX_INFO:1:1})
 		write_value "${IDX_NUM} 0" "/proc/ppm/policy_status"
 	done
@@ -370,18 +384,7 @@ elif [ -d /sys/devices/system/cpu/cpufreq/policy6 ] ; then
 	fi
 fi
 multi_lock_value "0" "/sys/devices/system/cpu/cpu*/core_ctl/enable"   
-multi_lock_value "0" "/sys/devices/system/cpu/cpu*/core_ctl/core_ctl_boost"  
-
-#Change important system task cpuset
-change_task_cpuset "surfaceflinger" "top-app"
-change_task_cpuset "system_server" "top-app"
-change_task_cpuset "android.hardware.graphics.composer" "top-app"
-change_task_cpuset "vendor.qti.hardware.display.composer-service" "top-app"
-
-#Reduce big-core awake
-change_task_cpuset "logd" "system-background"
-change_task_cpuset "lmkd" "system-background"
-change_task_cpuset "mdnsd" "system-background"
+multi_lock_value "0" "/sys/devices/system/cpu/cpu*/core_ctl/core_ctl_boost"
 
 #Fix Kirin GPU Problems.
 write_value "mali_ondemand" "/sys/class/devfreq/gpufreq/governor"
@@ -392,8 +395,8 @@ write_value "80" "/sys/class/devfreq/gpufreq/upthreshold"
 write_value "20" "/sys/class/devfreq/gpufreq/downdifferential"
 gpu_max_freq=$(get_max_freq "/sys/class/devfreq/gpufreq/available_frequencies")
 gpu_min_freq=$(get_min_freq "/sys/class/devfreq/gpufreq/available_frequencies")
-write_value "$gpu_max_freq" "/sys/class/devfreq/gpufreq/max_freq"
-write_value "$gpu_min_freq" "/sys/class/devfreq/gpufreq/min_freq"
+write_value "${gpu_max_freq}" "/sys/class/devfreq/gpufreq/max_freq"
+write_value "${gpu_min_freq}" "/sys/class/devfreq/gpufreq/min_freq"
 
 #Fix Dimensity GPU Problems.
 write_value "0" "/sys/kernel/ged/hal/dcs_mode"
@@ -401,17 +404,49 @@ for GPU_DIR in /sys/class/devfreq/*mali* ; do
 	write_value "simple_ondemand" "${GPU_DIR}/governor"
 	gpu_max_freq=$(get_max_freq "${GPU_DIR}/available_frequencies")
 	gpu_min_freq=$(get_min_freq "${GPU_DIR}/available_frequencies")
-	write_value "$gpu_max_freq" "${GPU_DIR}/max_freq"
-	write_value "$gpu_min_freq" "${GPU_DIR}/min_freq"
+	write_value "${gpu_max_freq}" "${GPU_DIR}/max_freq"
+	write_value "${gpu_min_freq}" "${GPU_DIR}/min_freq"
 done
 
 #Fix Unisoc GPU Problems.
 for GPU_DIR in /sys/class/devfreq/*gpu* ; do 
 	gpu_max_freq=$(get_max_freq "${GPU_DIR}/available_frequencies")
 	gpu_min_freq=$(get_min_freq "${GPU_DIR}/available_frequencies")
-	write_value "$gpu_max_freq" "${GPU_DIR}/max_freq"
-	write_value "$gpu_min_freq" "${GPU_DIR}/min_freq"
+	write_value "${gpu_max_freq}" "${GPU_DIR}/max_freq"
+	write_value "${gpu_min_freq}" "${GPU_DIR}/min_freq"
 done
+
+#Important system task opt
+change_task_cpuset "surfaceflinger" "top-app"
+change_task_sched "surfaceflinger" "top-app"
+change_task_cpuset "system_server" "top-app"
+change_task_sched "system_server" "top-app"
+change_task_cpuset "android.hardware.graphics.composer" "top-app"
+change_task_sched "android.hardware.graphics.composer" "top-app"
+change_task_cpuset "vendor.qti.hardware.display.composer-service" "top-app"
+change_task_sched "vendor.qti.hardware.display.composer-service" "top-app"
+
+#Reduce big-core awake
+change_task_cpuset "logd" "system-background"
+change_task_sched "logd" "background"
+change_task_cpuset "lmkd" "system-background"
+change_task_sched "lmkd" "background"
+change_task_cpuset "mdnsd" "system-background"
+change_task_sched "mdnsd" "background"
+change_task_cpuset "tombstoned" "system-background"
+change_task_sched "tombstoned" "background"
+change_task_cpuset "traced" "system-background"
+change_task_sched "traced" "background"
+
+#MIUI SurfaceFlinger Opt
+if [ -d /sys/devices/system/cpu/cpufreq/policy6 ] ; then
+	setprop persist.sys.miui.sf_cores "6-7"
+	setprop persist.sys.miui_animator_sched.bigcores "6-7"
+elif [ -d /sys/devices/system/cpu/cpufreq/policy4 ] ; then
+	setprop persist.sys.miui.sf_cores "4-7"
+	setprop persist.sys.miui_animator_sched.bigcores "4-7"
+fi
+
 
 while [ ! -e /sdcard/.test_file ] ; do
 	true > /sdcard/.test_file

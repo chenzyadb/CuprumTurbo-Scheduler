@@ -176,7 +176,7 @@
   "ThreadSchedOpt": {
     "enable": true,
     "MainThread": {
-      "cpus": "4567",
+      "cpus": "456",
       "nice": -12
     },
     "GameSingleThread": {
@@ -192,7 +192,7 @@
       "nice": -20
     },
     "UIThread": {
-      "cpus": "4567",
+      "cpus": "456",
       "nice": -12
     },
     "MediaThread": {
