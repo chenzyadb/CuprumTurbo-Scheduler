@@ -150,7 +150,7 @@
   "ThreadSchedOpt": {
     "enable": true,
     "MainThread": {
-      "cpus": "4567",
+      "cpus": "456",
       "nice": -12
     },
     "GameSingleThread": {
@@ -166,7 +166,7 @@
       "nice": -20
     },
     "UIThread": {
-      "cpus": "4567",
+      "cpus": "456",
       "nice": -12
     },
     "MediaThread": {
@@ -197,22 +197,22 @@
     "powersave": {
       "maxFreq": 600,
       "perfMargin": 10,
-      "upRateLatency": 100
+      "upRateLatency": 60
     },
     "balance": {
       "maxFreq": 700,
       "perfMargin": 20,
-      "upRateLatency": 80
+      "upRateLatency": 40
     },
     "performance": {
       "maxFreq": 800,
       "perfMargin": 25,
-      "upRateLatency": 60
+      "upRateLatency": 20
     },
     "fast": {
       "maxFreq": 900,
       "perfMargin": 30,
-      "upRateLatency": 40
+      "upRateLatency": 0
     }
   }
 }
