@@ -89,7 +89,7 @@ function change_task_sched() {
 	for task_pid in $(ps -Ao pid,args | grep "${task_name}" | awk '{print $1}') ; do
 		if [ -d /dev/stune ] ; then
 			echo "${task_pid}" > "/dev/stune/${cgroup}/cgroup.procs" 2>/dev/null;
-		elif [-d /dev/cpuctl ] ; then
+		elif [ -d /dev/cpuctl ] ; then
 			echo "${task_pid}" > "/dev/cpuctl/${cgroup}/cgroup.procs" 2>/dev/null;
 		fi
 	done
