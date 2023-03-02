@@ -1,41 +1,37 @@
 {
   "name": "Dimensity9000/9000+",
   "author": "chenzyadb",
-  "configVersion": 4,
+  "configVersion": 5,
   "debug": false,
   "CpuGovernor": {
     "enable": true,
     "slowSampleTime": 40,
     "fastSampleTime": 20,
     "policy": {
-      "policyNum": 3,
       "policy0": {
-        "cpus": "0-3",
-        "freqTablePath": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
-        "cpuCapacity": 284,
+        "cpuCore": "0-3",
+        "perfScale": 100,
         "lowPowerFreq": 600,
         "basicFreq": 1000,
-        "expectFreq": 1500,
+        "expectFreq": 1400,
         "modelFreq": 2000,
         "modelPower": 500
       },
       "policy1": {
-        "cpus": "4-6",
-        "freqTablePath": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_available_frequencies",
-        "cpuCapacity": 819,
+        "cpuCore": "4-6",
+        "perfScale": 240,
         "lowPowerFreq": 700,
         "basicFreq": 1000,
-        "expectFreq": 1900,
+        "expectFreq": 1700,
         "modelFreq": 2850,
         "modelPower": 2240
       },
       "policy2": {
-        "cpus": "7-7",
-        "freqTablePath": "/sys/devices/system/cpu/cpu7/cpufreq/scaling_available_frequencies",
-        "cpuCapacity": 1024,
+        "cpuCore": "7-7",
+        "perfScale": 285,
         "lowPowerFreq": 1300,
         "basicFreq": 1500,
-        "expectFreq": 2200,
+        "expectFreq": 2100,
         "modelFreq": 3050,
         "modelPower": 3400
       }
@@ -223,22 +219,26 @@
     "powersave": {
       "maxFreq": 600,
       "perfMargin": 10,
-      "upRateLatency": 60
+      "upRateLatency": 80,
+      "touchBoost": false
     },
     "balance": {
       "maxFreq": 700,
       "perfMargin": 20,
-      "upRateLatency": 40
+      "upRateLatency": 80,
+      "touchBoost": true
     },
     "performance": {
       "maxFreq": 800,
       "perfMargin": 25,
-      "upRateLatency": 20
+      "upRateLatency": 60,
+      "touchBoost": true
     },
     "fast": {
       "maxFreq": 900,
       "perfMargin": 30,
-      "upRateLatency": 0
+      "upRateLatency": 40,
+      "touchBoost": true
     }
   }
 }

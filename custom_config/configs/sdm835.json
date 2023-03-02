@@ -1,18 +1,16 @@
 {
   "name": "Snapdragon835",
   "author": "chenzyadb",
-  "configVersion": 4,
+  "configVersion": 5,
   "debug": false,
   "CpuGovernor": {
     "enable": true,
     "slowSampleTime": 40,
     "fastSampleTime": 20,
     "policy": {
-      "policyNum": 2,
       "policy0": {
-        "cpus": "0-3",
-        "freqTablePath": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies",
-        "cpuCapacity": 409,
+        "cpuCore": "0-3",
+        "perfScale": 100,
         "lowPowerFreq": 500,
         "basicFreq": 1000,
         "expectFreq": 1300,
@@ -20,9 +18,8 @@
         "modelPower": 360
       },
       "policy1": {
-        "cpus": "4-7",
-        "freqTablePath": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_available_frequencies",
-        "cpuCapacity": 1024,
+        "cpuCore": "4-7",
+        "perfScale": 200,
         "lowPowerFreq": 700,
         "basicFreq": 1000,
         "expectFreq": 2000,

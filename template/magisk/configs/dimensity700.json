@@ -1,30 +1,27 @@
 {
   "name": "Dimensity700/720/800U/810",
   "author": "chenzyadb",
-  "configVersion": 4,
+  "configVersion": 5,
   "debug": false,
   "CpuGovernor": {
     "enable": true,
     "slowSampleTime": 40,
     "fastSampleTime": 20,
     "policy": {
-      "policyNum": 2,
       "policy0": {
-        "cpus": "0-5",
-        "freqTablePath": "/proc/ppm/dump_cluster_0_dvfs_table",
-        "cpuCapacity": 452,
+        "cpuCore": "0-5",
+        "perfScale": 100,
         "lowPowerFreq": 500,
-        "basicFreq": 900,
+        "basicFreq": 1000,
         "expectFreq": 1500,
         "modelFreq": 2000,
         "modelPower": 320
       },
       "policy1": {
-        "cpus": "6-7",
-        "freqTablePath": "/proc/ppm/dump_cluster_1_dvfs_table",
-        "cpuCapacity": 1024,
+        "cpuCore": "6-7",
+        "perfScale": 220,
         "lowPowerFreq": 700,
-        "basicFreq": 1100,
+        "basicFreq": 1000,
         "expectFreq": 1800,
         "modelFreq": 2200,
         "modelPower": 1100
@@ -197,22 +194,26 @@
     "powersave": {
       "maxFreq": 700,
       "perfMargin": 10,
-      "upRateLatency": 60
+      "upRateLatency": 80,
+      "touchBoost": false
     },
     "balance": {
       "maxFreq": 800,
       "perfMargin": 20,
-      "upRateLatency": 40
+      "upRateLatency": 80,
+      "touchBoost": true
     },
     "performance": {
       "maxFreq": 900,
       "perfMargin": 25,
-      "upRateLatency": 20
+      "upRateLatency": 60,
+      "touchBoost": true
     },
     "fast": {
-      "maxFreq": 950,
+      "maxFreq": 1000,
       "perfMargin": 30,
-      "upRateLatency": 0
+      "upRateLatency": 40,
+      "touchBoost": true
     }
   }
 }
