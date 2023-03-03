@@ -30,7 +30,7 @@ CPU的动态功耗与CPU频率和负载均有关联，并不是CPU频率越低�
 |字段            |类型   |定义                                    |
 |:---------------|:------|:---------------------------------------|
 |cpuCore         |string |策略组中包含的CPU(格式:%d-%d)           |
-|perfScale       |int    |CPU同频算力比值                         |
+|perfScale       |int    |CPU相对同频算力值                        |
 |lowPowerFreq    |int    |CPU功耗最低频率(单位:MHz)               |
 |basicFreq       |int    |能保持一定流畅度的最低CPU频率(单位:MHz) |
 |expectFreq      |int    |CPU能效比最高频率(单位:MHz)             |
