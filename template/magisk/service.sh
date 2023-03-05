@@ -165,8 +165,8 @@ lock_value "0" "/proc/hps/enabled"
 lock_value "0" "/proc/perfmgr/boost_ctrl/cpu_ctrl/cfp_enable"
 lock_value "0" "/proc/perfmgr/boost_ctrl/cpu_ctrl/cfp_up_loading"
 lock_value "0" "/proc/perfmgr/boost_ctrl/cpu_ctrl/cfp_down_loading"
-lock_value "0" "/sys/module/fbt_cpu/parameters/boost_affinity"
-lock_value "0" "/sys/module/mtk_fpsgo/parameters/boost_affinity"
+lock_value "0" "/sys/module/fbt_cpu/parameters/boost_affinity*"
+lock_value "0" "/sys/module/mtk_fpsgo/parameters/boost_affinity*"
 lock_value "0" "/sys/module/mtk_fpsgo/parameters/cfp_onoff"
 lock_value "0" "/sys/module/mtk_fpsgo/parameters/cfp_up_loading"
 lock_value "0" "/sys/module/mtk_fpsgo/parameters/cfp_down_loading"
@@ -418,35 +418,25 @@ done
 
 #Important system task opt
 change_task_cpuset "surfaceflinger" "top-app"
-change_task_sched "surfaceflinger" "top-app"
+change_task_sched "surfaceflinger" ""
 change_task_cpuset "system_server" "top-app"
-change_task_sched "system_server" "top-app"
+change_task_sched "system_server" ""
 change_task_cpuset "android.hardware.graphics.composer" "top-app"
-change_task_sched "android.hardware.graphics.composer" "top-app"
+change_task_sched "android.hardware.graphics.composer" ""
 change_task_cpuset "vendor.qti.hardware.display.composer-service" "top-app"
-change_task_sched "vendor.qti.hardware.display.composer-service" "top-app"
+change_task_sched "vendor.qti.hardware.display.composer-service" ""
 
 #Reduce big-core awake
 change_task_cpuset "logd" "system-background"
-change_task_sched "logd" "background"
+change_task_sched "logd" ""
 change_task_cpuset "lmkd" "system-background"
-change_task_sched "lmkd" "background"
+change_task_sched "lmkd" ""
 change_task_cpuset "mdnsd" "system-background"
-change_task_sched "mdnsd" "background"
+change_task_sched "mdnsd" ""
 change_task_cpuset "tombstoned" "system-background"
-change_task_sched "tombstoned" "background"
+change_task_sched "tombstoned" ""
 change_task_cpuset "traced" "system-background"
-change_task_sched "traced" "background"
-
-#MIUI SurfaceFlinger Opt
-if [ -d /sys/devices/system/cpu/cpufreq/policy6 ] ; then
-	setprop persist.sys.miui.sf_cores "6-7"
-	setprop persist.sys.miui_animator_sched.bigcores "6-7"
-elif [ -d /sys/devices/system/cpu/cpufreq/policy4 ] ; then
-	setprop persist.sys.miui.sf_cores "4-7"
-	setprop persist.sys.miui_animator_sched.bigcores "4-7"
-fi
-
+change_task_sched "traced" ""
 
 while [ ! -e /sdcard/.test_file ] ; do
 	true > /sdcard/.test_file
