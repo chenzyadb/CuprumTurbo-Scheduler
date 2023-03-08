@@ -30,15 +30,15 @@ CPU的动态功耗与CPU频率和负载均有关联，并不是CPU频率越低�
 |字段            |类型   |定义                                    |
 |:---------------|:------|:---------------------------------------|
 |cpuCore         |string |策略组中包含的CPU(格式:%d-%d)           |
-|perfScale       |int    |CPU相对同频算力值                        |
+|perfScale       |int    |CPU相对同频算力值                       |
 |lowPowerFreq    |int    |CPU功耗最低频率(单位:MHz)               |
 |basicFreq       |int    |能保持一定流畅度的最低CPU频率(单位:MHz) |
 |expectFreq      |int    |CPU能效比最高频率(单位:MHz)             |
 |modelFreq       |int    |用于生成CPU功耗模型的CPU频率(单位:MHz)  |
-|modelPower      |int    |处于modelFreq时CPU的静态功耗(单位:mW)   |
+|modelPower      |int    |处于modelFreq时CPU的满载功耗(单位:mW)   |
 #### 模式参数  
 CPU混合调频器支持为不同调度模式设置不同参数以实现按模式进行性能调控.  
-CPU整体功耗限制会影响CPU频率和性能上限，混合调频器计算的是静态功耗，不会受CPU负载影响.  
+CPU整体功耗限制会影响CPU频率和性能上限，混合调频器计算的是满载功耗，不会随CPU负载变化而改变.  
 升频延迟和性能冗余会影响CPU频率提升是否积极，延迟越低冗余越高CPU频率提升越积极，性能越好，耗电越严重.  
 |字段            |类型   |定义                      |
 |:---------------|:------|:-------------------------|
