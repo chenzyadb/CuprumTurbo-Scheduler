@@ -205,7 +205,7 @@
       "nice": -16
     },
     "GameMultiThread": {
-      "cpus": "3456",
+      "cpus": "56",
       "nice": -16
     },
     "RenderThread": {
