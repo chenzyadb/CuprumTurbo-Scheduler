@@ -11,18 +11,18 @@
       "policy0": {
         "cpuCore": "0-1",
         "perfScale": 100,
-        "lowPowerFreq": 600,
-        "basicFreq": 1000,
-        "expectFreq": 1400,
+        "lowPowerFreq": 500,
+        "basicFreq": 900,
+        "expectFreq": 1200,
         "modelFreq": 1600,
-        "modelPower": 1500
+        "modelPower": 900
       },
       "policy1": {
         "cpuCore": "2-3",
         "perfScale": 110,
-        "lowPowerFreq": 800,
-        "basicFreq": 1000,
-        "expectFreq": 1800,
+        "lowPowerFreq": 700,
+        "basicFreq": 1100,
+        "expectFreq": 1500,
         "modelFreq": 2150,
         "modelPower": 2480
       }

@@ -22,7 +22,7 @@
         "perfScale": 100,
         "lowPowerFreq": 700,
         "basicFreq": 1200,
-        "expectFreq": 2000,
+        "expectFreq": 1900,
         "modelFreq": 2300,
         "modelPower": 400
       }

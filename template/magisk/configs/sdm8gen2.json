@@ -12,7 +12,7 @@
         "cpuCore": "0-2",
         "perfScale": 100,
         "lowPowerFreq": 600,
-        "basicFreq": 1000,
+        "basicFreq": 900,
         "expectFreq": 1400,
         "modelFreq": 2020,
         "modelPower": 520
@@ -39,14 +39,14 @@
         "cpus": "7-7",
         "perfScale": 310,
         "lowPowerFreq": 800,
-        "basicFreq": 1000,
+        "basicFreq": 1100,
         "expectFreq": 2100,
         "modelFreq": 3190,
         "modelPower": 3880
       }
     },
     "powersave": {
-      "powerLimit": 2000,
+      "powerLimit": 2500,
       "policy0": {
         "upRateLatency": 120,
         "perfMargin": 10
@@ -83,7 +83,7 @@
       }
     },
     "balance": {
-      "powerLimit": 3500,
+      "powerLimit": 4000,
       "policy0": {
         "upRateLatency": 100,
         "perfMargin": 20
@@ -120,7 +120,7 @@
       }
     },
     "performance": {
-      "powerLimit": 5000,
+      "powerLimit": 6000,
       "policy0": {
         "upRateLatency": 80,
         "perfMargin": 25

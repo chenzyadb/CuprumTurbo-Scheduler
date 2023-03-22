@@ -14,17 +14,17 @@
         "lowPowerFreq": 500,
         "basicFreq": 1000,
         "expectFreq": 1300,
-        "modelFreq": 1810,
+        "modelFreq": 1800,
         "modelPower": 400
       },
       "policy1": {
         "cpuCore": "4-7",
         "perfScale": 185,
-        "lowPowerFreq": 700,
-        "basicFreq": 1100,
+        "lowPowerFreq": 800,
+        "basicFreq": 1200,
         "expectFreq": 2000,
-        "modelFreq": 2300,
-        "modelPower": 1800
+        "modelFreq": 2520,
+        "modelPower": 2040
       }
     },
     "powersave": {

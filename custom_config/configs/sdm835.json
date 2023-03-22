@@ -12,10 +12,10 @@
         "cpuCore": "0-3",
         "perfScale": 100,
         "lowPowerFreq": 500,
-        "basicFreq": 1000,
-        "expectFreq": 1300,
+        "basicFreq": 900,
+        "expectFreq": 1400,
         "modelFreq": 1900,
-        "modelPower": 360
+        "modelPower": 400
       },
       "policy1": {
         "cpuCore": "4-7",
