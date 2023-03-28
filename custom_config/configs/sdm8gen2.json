@@ -36,7 +36,7 @@
         "modelPower": 1880
       },
       "policy3": {
-        "cpus": "7-7",
+        "cpuCore": "7-7",
         "perfScale": 310,
         "lowPowerFreq": 800,
         "basicFreq": 1100,
