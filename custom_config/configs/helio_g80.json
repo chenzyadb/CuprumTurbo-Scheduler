@@ -1,7 +1,7 @@
 {
   "name": "Helio_G80/G85/P65/P90",
   "author": "chenzyadb",
-  "configVersion": 5,
+  "configVersion": 6,
   "debug": false,
   "CpuGovernor": {
     "enable": true,
@@ -9,20 +9,20 @@
     "fastSampleTime": 20,
     "policy": {
       "policy0": {
-        "cpuCore": "0-5",
+        "cpuCore": [0, 1, 2, 3, 4, 5],
         "perfScale": 100,
         "lowPowerFreq": 500,
-        "basicFreq": 900,
-        "expectFreq": 1400,
+        "baseFreq": 900,
+        "optimalFreq": 1400,
         "modelFreq": 1800,
         "modelPower": 360
       },
       "policy1": {
-        "cpuCore": "6-7",
+        "cpuCore": [6, 7],
         "perfScale": 180,
         "lowPowerFreq": 700,
-        "basicFreq": 1100,
-        "expectFreq": 1800,
+        "baseFreq": 1100,
+        "optimalFreq": 1800,
         "modelFreq": 2000,
         "modelPower": 1380
       }
@@ -145,52 +145,53 @@
     }
   },
   "ThreadSchedOpt": {
-    "enable": true,
-    "MainThread": {
-      "cpus": "67",
-      "nice": -12
-    },
-    "GameSingleThread": {
-      "cpus": "7",
-      "nice": -16
-    },
-    "GameMultiThread": {
-      "cpus": "0123456",
-      "nice": -16
-    },
-    "RenderThread": {
-      "cpus": "7",
-      "nice": -20
-    },
-    "UIThread": {
-      "cpus": "67",
-      "nice": -12
-    },
-    "MediaThread": {
-      "cpus": "0123456",
-      "nice": -16
-    },
-    "WebViewThread": {
-      "cpus": "67",
-      "nice": -12
-    },
-    "ProcessThread": {
-      "cpus": "0123456",
-      "nice": -8
-    },
-    "NonRealTimeThread": {
-      "cpus": "0123",
-      "nice": 0
-    },
-    "OtherThread": {
-      "cpus": "0123456",
-      "nice": -4
-    }
-  },
+		"enable": true,
+		"MainThread": {
+			"cpus": [6, 7],
+			"nice": -12
+		},
+		"GameSingleThread": {
+			"cpus": [7],
+			"nice": -16
+		},
+		"GameMultiThread": {
+			"cpus": [0, 1, 2, 3, 4, 5, 6],
+			"nice": -16
+		},
+		"RenderThread": {
+			"cpus": [7],
+			"nice": -20
+		},
+		"UIThread": {
+			"cpus": [6, 7],
+			"nice": -12
+		},
+		"MediaThread": {
+			"cpus": [0, 1, 2, 3, 4, 5, 6],
+			"nice": -16
+		},
+		"WebViewThread": {
+			"cpus": [6, 7],
+			"nice": -12
+		},
+		"ProcessThread": {
+			"cpus": [0, 1, 2, 3, 4, 5, 6],
+			"nice": -8
+		},
+		"NonRealTimeThread": {
+			"cpus": [0, 1, 2, 3],
+			"nice": 0
+		},
+		"OtherThread": {
+			"cpus": [0, 1, 2, 3, 4, 5, 6],
+			"nice": -8
+		}
+	},
   "MtkGpuGovernor": {
     "enable": true,
     "slowSampleTime": 40,
     "fastSampleTime": 20,
+    "preferredFreq": [],
     "powersave": {
       "maxFreq": 700,
       "perfMargin": 10,

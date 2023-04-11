@@ -1,7 +1,7 @@
 {
   "name": "Tegra_X1",
   "author": "chenzyadb",
-  "configVersion": 5,
+  "configVersion": 6,
   "debug": false,
   "CpuGovernor": {
     "enable": true,
@@ -9,11 +9,11 @@
     "fastSampleTime": 20,
     "policy": {
       "policy0": {
-        "cpuCore": "0-3",
+        "cpuCore": [0, 1, 2, 3],
         "perfScale": 100,
         "lowPowerFreq": 300,
-        "basicFreq": 1000,
-        "expectFreq": 1700,
+        "baseFreq": 1000,
+        "optimalFreq": 1700,
         "modelFreq": 2010,
         "modelPower": 2500
       }
@@ -122,44 +122,44 @@
   "ThreadSchedOpt": {
     "enable": true,
     "MainThread": {
-      "cpus": "23",
+      "cpus": [2, 3],
       "nice": -12
     },
     "GameSingleThread": {
-      "cpus": "3",
+      "cpus": [3],
       "nice": -16
     },
     "GameMultiThread": {
-      "cpus": "012",
+      "cpus": [0, 1, 2],
       "nice": -16
     },
     "RenderThread": {
-      "cpus": "3",
+      "cpus": [3],
       "nice": -20
     },
     "UIThread": {
-      "cpus": "23",
+      "cpus": [2, 3],
       "nice": -12
     },
     "MediaThread": {
-      "cpus": "01",
+      "cpus": [0, 1],
       "nice": -16
     },
     "WebViewThread": {
-      "cpus": "23",
+      "cpus": [2, 3],
       "nice": -12
     },
     "ProcessThread": {
-      "cpus": "012",
+      "cpus": [0, 1, 2],
       "nice": -8
     },
     "NonRealTimeThread": {
-      "cpus": "0",
+      "cpus": [0, 1],
       "nice": 0
     },
     "OtherThread": {
-      "cpus": "012",
-      "nice": -4
+      "cpus": [0, 1, 2],
+      "nice": -8
     }
   },
   "MtkGpuGovernor": {

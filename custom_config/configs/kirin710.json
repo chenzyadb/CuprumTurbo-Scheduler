@@ -1,7 +1,7 @@
 {
   "name": "Kirin710",
   "author": "chenzyadb",
-  "configVersion": 5,
+  "configVersion": 6,
   "debug": false,
   "CpuGovernor": {
     "enable": true,
@@ -9,20 +9,20 @@
     "fastSampleTime": 20,
     "policy": {
       "policy0": {
-        "cpuCore": "0-3",
+        "cpuCore": [0, 1, 2, 3],
         "perfScale": 100,
         "lowPowerFreq": 500,
-        "basicFreq": 1000,
-        "expectFreq": 1300,
+        "baseFreq": 1000,
+        "optimalFreq": 1300,
         "modelFreq": 1700,
         "modelPower": 300
       },
       "policy1": {
-        "cpuCore": "4-7",
+        "cpuCore": [4, 5, 6, 7],
         "perfScale": 200,
         "lowPowerFreq": 700,
-        "basicFreq": 1200,
-        "expectFreq": 2000,
+        "baseFreq": 1200,
+        "optimalFreq": 2000,
         "modelFreq": 2200,
         "modelPower": 1300
       }
@@ -147,44 +147,44 @@
   "ThreadSchedOpt": {
     "enable": true,
     "MainThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -12
     },
     "GameSingleThread": {
-      "cpus": "7",
+      "cpus": [7],
       "nice": -16
     },
     "GameMultiThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -16
     },
     "RenderThread": {
-      "cpus": "7",
+      "cpus": [7],
       "nice": -20
     },
     "UIThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -12
     },
     "MediaThread": {
-      "cpus": "012345",
+      "cpus": [0, 1, 2, 3, 4, 5],
       "nice": -16
     },
     "WebViewThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -12
     },
     "ProcessThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -8
     },
     "NonRealTimeThread": {
-      "cpus": "0123",
+      "cpus": [0, 1, 2, 3],
       "nice": 0
     },
     "OtherThread": {
-      "cpus": "0123456",
-      "nice": -4
+      "cpus": [0, 1, 2, 3, 4, 5, 6],
+      "nice": -8
     }
   },
   "MtkGpuGovernor": {

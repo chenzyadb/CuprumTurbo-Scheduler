@@ -1,7 +1,7 @@
 {
   "name": "Snapdragon8Gen1",
   "author": "chenzyadb",
-  "configVersion": 5,
+  "configVersion": 6,
   "debug": false,
   "CpuGovernor": {
     "enable": true,
@@ -9,35 +9,35 @@
     "fastSampleTime": 20,
     "policy": {
       "policy0": {
-        "cpuCore": "0-3",
+        "cpuCore": [0, 1, 2, 3],
         "perfScale": 100,
         "lowPowerFreq": 600,
-        "basicFreq": 900,
-        "expectFreq": 1400,
+        "baseFreq": 900,
+        "optimalFreq": 1400,
         "modelFreq": 1800,
         "modelPower": 600
       },
       "policy1": {
-        "cpuCore": "4-6",
+        "cpuCore": [4, 5, 6],
         "perfScale": 240,
         "lowPowerFreq": 700,
-        "basicFreq": 1000,
-        "expectFreq": 1800,
+        "baseFreq": 1000,
+        "optimalFreq": 1800,
         "modelFreq": 2500,
         "modelPower": 2060
       },
       "policy2": {
-        "cpuCore": "7-7",
+        "cpuCore": [7],
         "perfScale": 285,
         "lowPowerFreq": 800,
-        "basicFreq": 1100,
-        "expectFreq": 2200,
+        "baseFreq": 1100,
+        "optimalFreq": 2200,
         "modelFreq": 3000,
         "modelPower": 3890
       }
     },
     "powersave": {
-      "powerLimit": 2000,
+      "powerLimit": 2500,
       "policy0": {
         "upRateLatency": 120,
         "perfMargin": 10
@@ -70,7 +70,7 @@
       }
     },
     "balance": {
-      "powerLimit": 3500,
+      "powerLimit": 4000,
       "policy0": {
         "upRateLatency": 100,
         "perfMargin": 20
@@ -103,7 +103,7 @@
       }
     },
     "performance": {
-      "powerLimit": 5000,
+      "powerLimit": 6000,
       "policy0": {
         "upRateLatency": 80,
         "perfMargin": 25
@@ -136,7 +136,7 @@
       }
     },
     "fast": {
-      "powerLimit": 10000,
+      "powerLimit": 12000,
       "policy0": {
         "upRateLatency": 60,
         "perfMargin": 30
@@ -172,44 +172,44 @@
   "ThreadSchedOpt": {
     "enable": true,
     "MainThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -12
     },
     "GameSingleThread": {
-      "cpus": "7",
+      "cpus": [7],
       "nice": -16
     },
     "GameMultiThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -16
     },
     "RenderThread": {
-      "cpus": "7",
+      "cpus": [7],
       "nice": -20
     },
     "UIThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -12
     },
     "MediaThread": {
-      "cpus": "012345",
+      "cpus": [0, 1, 2, 3, 4, 5],
       "nice": -16
     },
     "WebViewThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -12
     },
     "ProcessThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -8
     },
     "NonRealTimeThread": {
-      "cpus": "0123",
+      "cpus": [0, 1, 2, 3],
       "nice": 0
     },
     "OtherThread": {
-      "cpus": "0123456",
-      "nice": -4
+      "cpus": [0, 1, 2, 3, 4, 5, 6],
+      "nice": -8
     }
   },
   "MtkGpuGovernor": {

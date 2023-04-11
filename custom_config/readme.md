@@ -1,9 +1,9 @@
-## CuprumTurbo V14 自定义配置开发文档  
-CuprumTurbo V14支持用户对调度配置进行自定义，通过修改调度参数可以满足用户对性能调控的多元化需求.  
+## CuprumTurbo V15 自定义配置开发文档  
+CuprumTurbo V15支持用户对调度配置进行自定义，通过修改调度参数可以满足用户对性能调控的多元化需求.  
 在进行自定义前请务必仔细阅读此文档以了解调度的工作原理，避免调参有误导致无法达到预定目标.  
 ### Json信息  
 在这里你可以定义配置文件的名称和作者信息；请注意不要修改配置文件版本，此字段将会用于验证调度与该配置是否兼容.  
-configVersion 对应的APP版本: `1: V7.0.x; 2: V7.1.x; 3: V7.2.x; 4: V7.3.x; 5: V7.4.x`  
+configVersion 对应的APP版本: `1: V7.0.x; 2: V7.1.x; 3: V7.2.x; 4: V7.3.x; 5: V7.4.x; 6: V7.5.x`  
 |字段            |类型   |定义               |
 |:---------------|:------|:------------------|
 |name            |string |配置文件的名称     |
@@ -27,15 +27,15 @@ CPU数量上限为10个，策略组最大数量为10个，每个策略组最多�
 CPU的动态功耗与CPU频率和负载均有关联，并不是CPU频率越低实际功耗就越低.  
 `basicFreq`关系到CPU混合调频器判定CPU负载是否处于较高值，不应设置得过低，否则会导致混合调频器无法正常工作.  
 当`lowPowerFreq <= expectFreq <= modelFreq`条件不成立时，调度将无法正常初始化.  
-|字段            |类型   |定义                                    |
-|:---------------|:------|:---------------------------------------|
-|cpuCore         |string |策略组中包含的CPU(格式:%d-%d)           |
-|perfScale       |int    |CPU相对同频算力值                       |
-|lowPowerFreq    |int    |CPU功耗最低频率(单位:MHz)               |
-|basicFreq       |int    |能保持一定流畅度的最低CPU频率(单位:MHz) |
-|expectFreq      |int    |CPU能效比最高频率(单位:MHz)             |
-|modelFreq       |int    |用于生成CPU功耗模型的CPU频率(单位:MHz)  |
-|modelPower      |int    |处于modelFreq时CPU的满载功耗(单位:mW)   |
+|字段            |类型    |定义                                    |
+|:--------------|:-------|:---------------------------------------|
+|cpuCore        |ArrayInt|策略组中包含的CPU                        |
+|perfScale      |int     |CPU相对同频算力值                        |
+|lowPowerFreq   |int     |CPU功耗最低频率(单位:MHz)                |
+|baseFreq       |int     |能保持一定流畅度的最低CPU频率(单位:MHz)     |
+|optimalFreq    |int     |CPU能效比最高频率(单位:MHz)               |
+|modelFreq      |int     |用于生成CPU功耗模型的CPU频率(单位:MHz)     |
+|modelPower     |int     |处于modelFreq时CPU的满载功耗(单位:mW)     |
 #### 模式参数  
 CPU混合调频器支持为不同调度模式设置不同参数以实现按模式进行性能调控.  
 CPU整体功耗限制会影响CPU频率和性能上限，混合调频器计算的是满载功耗，不会随CPU负载变化而改变.  
@@ -72,19 +72,21 @@ CPU核心由单个数字表示，如`0-3,6-7`核心可写为"012367"，`4-7`核�
 |字段           |类型    |定义                              |
 |:--------------|:-------|:---------------------------------|
 |enable         |bool    |是否启用此模块                    |
-|cpus           |string  |此分组的cpu亲和性设定             |
+|cpus           |ArrayInt|此分组的cpu亲和性设定             |
 |nice           |int     |此分组的调度优先级(范围:-20~19)   |
 ### MtkGpuGovernor - 联发科GPU调频器  
 联发科默认的GPU调频器并没有提供接口可以调控性能冗余和GPU频率上限，这个简易的GPU调频器可以满足对联发科GPU频率的简单调控.  
 由于联发科默认的GPU频率表频点数量过多，此调频器将只会选取部分GPU频率，具体信息请查看调度日志.  
-当GPU负载为0时将按照slowSampleTime间隔读取GPU负载，当负载非0时按照fastSampleTime间隔读取GPU负载.  
+当GPU负载为0时将按照`slowSampleTime`间隔读取GPU负载，当负载非0时按照`fastSampleTime`间隔读取GPU负载.  
 与CpuGovernor相同，升频延迟和性能冗余将会影响GPU频率提升是否积极，延迟越低冗余越高GPU频率提升越积极.  
+`preferredFreq`为偏好的GPU频率,调度生成GPU频率表时将优先考虑这些GPU频率.  
 触摸升频可以帮助GPU调频器在部分场景下迅速提升频率以改善卡顿问题.  
 |字段            |类型    |定义                      |
 |:---------------|:-------|:-------------------------|
 |enable          |bool    |是否启用此模块            |
 |slowSampleTime  |int     |慢速采样间隔时间(单位:ms) |
 |fastSampleTime  |int     |快速采样间隔时间(单位:ms) |
+|preferredFreq   |ArrayInt|偏好GPU频率(单位:MHz)    |
 |maxFreq         |int     |GPU频率上限(单位:MHz)     |
 |upRateLatency   |int     |GPU频率提升延迟(单位:ms)  |
 |perfMargin      |int     |GPU性能冗余(范围:0-100)   |

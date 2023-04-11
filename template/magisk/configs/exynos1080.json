@@ -1,7 +1,7 @@
 {
   "name": "Exynos1080",
   "author": "chenzyadb",
-  "configVersion": 5,
+  "configVersion": 6,
   "debug": false,
   "CpuGovernor": {
     "enable": true,
@@ -9,29 +9,29 @@
     "fastSampleTime": 20,
     "policy": {
       "policy0": {
-        "cpuCore": "0-3",
+        "cpuCore": [0, 1, 2, 3],
         "perfScale": 100,
         "lowPowerFreq": 600,
-        "basicFreq": 900,
-        "expectFreq": 1400,
+        "baseFreq": 900,
+        "optimalFreq": 1400,
         "modelFreq": 2000,
         "modelPower": 360
       },
       "policy1": {
-        "cpuCore": "4-6",
+        "cpuCore": [4, 5, 6],
         "perfScale": 260,
         "lowPowerFreq": 700,
-        "basicFreq": 1000,
-        "expectFreq": 1900,
+        "baseFreq": 1000,
+        "optimalFreq": 1900,
         "modelFreq": 2600,
         "modelPower": 2400
       },
       "policy2": {
-        "cpuCore": "7-7",
+        "cpuCore": [7],
         "perfScale": 260,
         "lowPowerFreq": 800,
-        "basicFreq": 1100,
-        "expectFreq": 2200,
+        "baseFreq": 1100,
+        "optimalFreq": 2200,
         "modelFreq": 2800,
         "modelPower": 2860
       }
@@ -172,44 +172,44 @@
   "ThreadSchedOpt": {
     "enable": true,
     "MainThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -12
     },
     "GameSingleThread": {
-      "cpus": "7",
+      "cpus": [7],
       "nice": -16
     },
     "GameMultiThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -16
     },
     "RenderThread": {
-      "cpus": "7",
+      "cpus": [7],
       "nice": -20
     },
     "UIThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -12
     },
     "MediaThread": {
-      "cpus": "012345",
+      "cpus": [0, 1, 2, 3, 4, 5],
       "nice": -16
     },
     "WebViewThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -12
     },
     "ProcessThread": {
-      "cpus": "456",
+      "cpus": [4, 5, 6],
       "nice": -8
     },
     "NonRealTimeThread": {
-      "cpus": "0123",
+      "cpus": [0, 1, 2, 3],
       "nice": 0
     },
     "OtherThread": {
-      "cpus": "0123456",
-      "nice": -4
+      "cpus": [0, 1, 2, 3, 4, 5, 6],
+      "nice": -8
     }
   },
   "MtkGpuGovernor": {

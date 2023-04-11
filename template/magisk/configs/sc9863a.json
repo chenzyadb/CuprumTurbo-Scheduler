@@ -1,7 +1,7 @@
 {
   "name": "Unisoc_SC9863A",
   "author": "chenzyadb",
-  "configVersion": 5,
+  "configVersion": 6,
   "debug": false,
   "CpuGovernor": {
     "enable": true,
@@ -9,20 +9,20 @@
     "fastSampleTime": 20,
     "policy": {
       "policy0": {
-        "cpuCore": "0-3",
+        "cpuCore": [0, 1, 2, 3],
         "perfScale": 100,
         "lowPowerFreq": 800,
-        "basicFreq": 1000,
-        "expectFreq": 1200,
+        "baseFreq": 1000,
+        "optimalFreq": 1200,
         "modelFreq": 1200,
         "modelPower": 240
       },
       "policy1": {
-        "cpuCore": "4-7",
+        "cpuCore": [4, 5, 6, 7],
         "perfScale": 100,
         "lowPowerFreq": 800,
-        "basicFreq": 1000,
-        "expectFreq": 1400,
+        "baseFreq": 1000,
+        "optimalFreq": 1400,
         "modelFreq": 1600,
         "modelPower": 400
       }
@@ -147,44 +147,44 @@
   "ThreadSchedOpt": {
     "enable": true,
     "MainThread": {
-      "cpus": "4567",
+      "cpus": [4, 5, 6, 7],
       "nice": -12
     },
     "GameSingleThread": {
-      "cpus": "4567",
+      "cpus": [4, 5, 6, 7],
       "nice": -16
     },
     "GameMultiThread": {
-      "cpus": "01234567",
+      "cpus": [4, 5, 6, 7],
       "nice": -16
     },
     "RenderThread": {
-      "cpus": "4567",
+      "cpus": [4, 5, 6, 7],
       "nice": -20
     },
     "UIThread": {
-      "cpus": "4567",
+      "cpus": [4, 5, 6, 7],
       "nice": -12
     },
     "MediaThread": {
-      "cpus": "012345",
+      "cpus": [0, 1, 2, 3, 4, 5],
       "nice": -16
     },
     "WebViewThread": {
-      "cpus": "4567",
+      "cpus": [4, 5, 6, 7],
       "nice": -12
     },
     "ProcessThread": {
-      "cpus": "0123456",
+      "cpus": [0, 1, 2, 3, 4, 5, 6, 7],
       "nice": -8
     },
     "NonRealTimeThread": {
-      "cpus": "0123",
+      "cpus": [0, 1, 2, 3],
       "nice": 0
     },
     "OtherThread": {
-      "cpus": "01234567",
-      "nice": -4
+      "cpus": [0, 1, 2, 3, 4, 5, 6, 7],
+      "nice": -8
     }
   },
   "MtkGpuGovernor": {
