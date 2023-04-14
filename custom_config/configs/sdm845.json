@@ -2,7 +2,7 @@
   "name": "Snapdragon845",
   "author": "chenzyadb",
   "configVersion": 6,
-  "debug": true,
+  "debug": false,
   "CpuGovernor": {
     "enable": true,
     "slowSampleTime": 40,
