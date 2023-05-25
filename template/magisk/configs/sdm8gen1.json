@@ -31,7 +31,7 @@
         "perfScale": 285,
         "lowPowerFreq": 800,
         "baseFreq": 1100,
-        "optimalFreq": 2200,
+        "optimalFreq": 2000,
         "modelFreq": 3000,
         "modelPower": 3890
       }
@@ -173,7 +173,7 @@
     "enable": true,
     "MainThread": {
       "cpus": [4, 5, 6],
-      "nice": -12
+      "nice": -10
     },
     "GameSingleThread": {
       "cpus": [7],
@@ -185,11 +185,11 @@
     },
     "RenderThread": {
       "cpus": [7],
-      "nice": -20
+      "nice": -16
     },
     "UIThread": {
       "cpus": [4, 5, 6],
-      "nice": -12
+      "nice": -10
     },
     "MediaThread": {
       "cpus": [0, 1, 2, 3, 4, 5],
@@ -197,7 +197,7 @@
     },
     "WebViewThread": {
       "cpus": [4, 5, 6],
-      "nice": -12
+      "nice": -10
     },
     "ProcessThread": {
       "cpus": [4, 5, 6],
@@ -205,11 +205,11 @@
     },
     "NonRealTimeThread": {
       "cpus": [0, 1, 2, 3],
-      "nice": 0
+      "nice": 10
     },
     "OtherThread": {
       "cpus": [0, 1, 2, 3, 4, 5, 6],
-      "nice": -8
+      "nice": 0
     }
   },
   "MtkGpuGovernor": {

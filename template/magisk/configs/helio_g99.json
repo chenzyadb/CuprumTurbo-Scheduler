@@ -148,7 +148,7 @@
     "enable": true,
     "MainThread": {
       "cpus": "67",
-      "nice": -12
+      "nice": -10
     },
     "GameSingleThread": {
       "cpus": "7",
@@ -160,11 +160,11 @@
     },
     "RenderThread": {
       "cpus": "7",
-      "nice": -20
+      "nice": -16
     },
     "UIThread": {
       "cpus": "67",
-      "nice": -12
+      "nice": -10
     },
     "MediaThread": {
       "cpus": "0123456",
@@ -172,7 +172,7 @@
     },
     "WebViewThread": {
       "cpus": "67",
-      "nice": -12
+      "nice": -10
     },
     "ProcessThread": {
       "cpus": "0123456",
@@ -180,11 +180,11 @@
     },
     "NonRealTimeThread": {
       "cpus": "0123",
-      "nice": 0
+      "nice": 10
     },
     "OtherThread": {
       "cpus": "0123456",
-      "nice": -4
+      "nice": 0
     }
   },
   "MtkGpuGovernor": {

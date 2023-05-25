@@ -1,5 +1,5 @@
 {
-  "name": "Dimensity1100/1200/1300",
+  "name": "Dimensity1100/1200/1300/8020/8050",
   "author": "chenzyadb",
   "configVersion": 6,
   "debug": false,
@@ -22,7 +22,7 @@
         "perfScale": 295,
         "lowPowerFreq": 700,
         "baseFreq": 1000,
-        "optimalFreq": 1700,
+        "optimalFreq": 1900,
         "modelFreq": 2600,
         "modelPower": 1750
       },
@@ -173,7 +173,7 @@
     "enable": true,
     "MainThread": {
       "cpus": [4, 5, 6],
-      "nice": -12
+      "nice": -10
     },
     "GameSingleThread": {
       "cpus": [7],
@@ -185,11 +185,11 @@
     },
     "RenderThread": {
       "cpus": [7],
-      "nice": -20
+      "nice": -16
     },
     "UIThread": {
       "cpus": [4, 5, 6],
-      "nice": -12
+      "nice": -10
     },
     "MediaThread": {
       "cpus": [0, 1, 2, 3, 4, 5],
@@ -197,7 +197,7 @@
     },
     "WebViewThread": {
       "cpus": [4, 5, 6],
-      "nice": -12
+      "nice": -10
     },
     "ProcessThread": {
       "cpus": [4, 5, 6],
@@ -205,11 +205,11 @@
     },
     "NonRealTimeThread": {
       "cpus": [0, 1, 2, 3],
-      "nice": 0
+      "nice": 10
     },
     "OtherThread": {
       "cpus": [0, 1, 2, 3, 4, 5, 6],
-      "nice": -8
+      "nice": 0
     }
   },
   "MtkGpuGovernor": {
