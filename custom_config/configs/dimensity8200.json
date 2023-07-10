@@ -13,7 +13,7 @@
         "lowPowerFreq": 600,
         "optimalFreq": 1400,
         "modelFreq": 2000,
-        "modelPower": 300
+        "modelPower": 320
       },
       {
         "coreNum": 3,
@@ -21,7 +21,7 @@
         "lowPowerFreq": 700,
         "optimalFreq": 2000,
         "modelFreq": 3000,
-        "modelPower": 2500
+        "modelPower": 2000
       },
       {
         "coreNum": 1,
@@ -29,7 +29,7 @@
         "lowPowerFreq": 800,
         "optimalFreq": 2200,
         "modelFreq": 3100,
-        "modelPower": 2600
+        "modelPower": 2200
       }
     ],
     "modes": {
