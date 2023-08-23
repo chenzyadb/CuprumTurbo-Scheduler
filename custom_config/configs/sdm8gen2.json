@@ -209,7 +209,7 @@
         "nice": -16
       },
       "WebViewThread": {
-        "cpus": [5, 6, 7],
+        "cpus": [3, 4, 5, 6, 7],
         "nice": -10
       },
       "ProcessThread": {
