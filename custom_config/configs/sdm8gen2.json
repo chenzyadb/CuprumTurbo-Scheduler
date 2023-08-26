@@ -10,7 +10,7 @@
         {
           "coreNum": 3,
           "perfScale": 100,
-          "lowPowerFreq": 600,
+          "lowPowerFreq": 500,
           "optimalFreq": 1400,
           "modelFreq": 2020,
           "modelPower": 520
@@ -18,7 +18,7 @@
         {
           "coreNum": 4,
           "perfScale": 250,
-          "lowPowerFreq": 700,
+          "lowPowerFreq": 600,
           "optimalFreq": 1700,
           "modelFreq": 2800,
           "modelPower": 1620
@@ -26,8 +26,8 @@
         {
           "coreNum": 1,
           "perfScale": 310,
-          "lowPowerFreq": 800,
-          "optimalFreq": 2000,
+          "lowPowerFreq": 700,
+          "optimalFreq": 2100,
           "modelFreq": 3190,
           "modelPower": 3880
         }

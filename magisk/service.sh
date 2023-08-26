@@ -173,6 +173,11 @@ if [ -d /proc/perfmgr/boost_ctrl/eas_ctrl/ ] ; then
 	done
 fi
 
+all_cpus=$(cat /dev/cpuset/cpus)
+for cpuset_cpus in /dev/cpuset/*/cpus ; do
+  write_value "${all_cpus}" "${cpuset_cpus}"
+done
+
 lock_value "1" "/sys/devices/system/cpu/cpu*/online"
 lock_value "1" "/sys/devices/system/cpu/cpu*/core_ctl/enable"   
 if [ -d /sys/devices/system/cpu/cpufreq/policy2 ] ; then
