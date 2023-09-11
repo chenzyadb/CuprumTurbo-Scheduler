@@ -1,5 +1,5 @@
 {
-    "name": "Helio_P35/P22/P22T/G25/G35",
+    "name": "Snapdragon4Gen2",
     "author": "chenzyadb",
     "configVersion": 7,
     "CpuGovernor": {
@@ -8,20 +8,20 @@
       "fastSampleTime": 20,
       "policies": [
         {
-          "coreNum": 4,
+          "coreNum": 6,
           "perfScale": 100,
-          "lowPowerFreq": 500,
+          "lowPowerFreq": 600,
           "optimalFreq": 1400,
-          "modelFreq": 1700,
-          "modelPower": 260
+          "modelFreq": 2000,
+          "modelPower": 340
         },
         {
-          "coreNum": 4,
-          "perfScale": 200,
+          "coreNum": 2,
+          "perfScale": 240,
           "lowPowerFreq": 700,
-          "optimalFreq": 2300,
-          "modelFreq": 2300,
-          "modelPower": 400
+          "optimalFreq": 2000,
+          "modelFreq": 2200,
+          "modelPower": 1400
         }
       ],
       "modes": {
@@ -29,7 +29,7 @@
           "powerLimit": 3000,
           "perfMargin": [10, 10],
           "upRateLimitMs": [80, 80],
-          "smoothFreq": [900, 1100],
+          "smoothFreq": [800, 1100],
           "freqBurst": {
             "tap": {
               "unlimitPower": false,
@@ -67,7 +67,7 @@
           "powerLimit": 4000,
           "perfMargin": [20, 20],
           "upRateLimitMs": [60, 60],
-          "smoothFreq": [1000, 1400],
+          "smoothFreq": [900, 1200],
           "freqBurst": {
             "tap": {
               "unlimitPower": false,
@@ -109,7 +109,7 @@
           "powerLimit": 5000,
           "perfMargin": [30, 30],
           "upRateLimitMs": [40, 40],
-          "smoothFreq": [1000, 1400],
+          "smoothFreq": [900, 1200],
           "freqBurst": {
             "tap": {
               "unlimitPower": false,
@@ -151,7 +151,7 @@
           "powerLimit": 10000,
           "perfMargin": [30, 30],
           "upRateLimitMs": [0, 0],
-          "smoothFreq": [1000, 1400],
+          "smoothFreq": [900, 1200],
           "freqBurst": {
             "tap": {
               "unlimitPower": true,
@@ -181,7 +181,7 @@
     "ThreadSchedOpt": {
       "enable": true,
       "MainThread": {
-        "cpus": [4, 5, 6],
+        "cpus": [6, 7],
         "nice": -10
       },
       "GameSingleThread": {
@@ -189,11 +189,11 @@
         "nice": -16
       },
       "GameMultiThread": {
-        "cpus": [4, 5, 6],
+        "cpus": [0, 1, 2, 3, 4, 5, 6],
         "nice": -16
       },
       "UIThread": {
-        "cpus": [4, 5, 6],
+        "cpus": [6, 7],
         "nice": -10
       },
       "MediaThread": {
@@ -201,11 +201,11 @@
         "nice": -16
       },
       "WebViewThread": {
-        "cpus": [4, 5, 6, 7],
+        "cpus": [6, 7],
         "nice": -10
       },
       "ProcessThread": {
-        "cpus": [4, 5, 6],
+        "cpus": [0, 1, 2, 3, 4, 5, 6],
         "nice": -8
       },
       "NonRealTimeThread": {
@@ -218,28 +218,7 @@
       }
     },
     "MtkGpuGovernor": {
-      "enable": true,
-      "slowSampleTime": 40,
-      "fastSampleTime": 20,
-      "preferredFreq": [],
-      "modes": {
-        "powersave": {
-          "maxFreq": 700,
-          "perfMargin": 10
-        },
-        "balance": {
-          "maxFreq": 700,
-          "perfMargin": 20
-        },
-        "performance": {
-          "maxFreq": 700,
-          "perfMargin": 30
-        },
-        "fast": {
-          "maxFreq": 700,
-          "perfMargin": 40
-        }
-      }
+      "enable": false
     },
     "FileWriter": {
       "enable": true,
@@ -259,7 +238,7 @@
           },
           {
             "path": "/dev/cpuset/foreground/cpus",
-            "text": "0-6"
+            "text": "0-7"
           },
           {
             "path": "/dev/cpuset/top-app/cpus",

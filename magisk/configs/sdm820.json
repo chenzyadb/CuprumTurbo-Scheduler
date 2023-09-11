@@ -11,7 +11,7 @@
         "coreNum": 2,
         "perfScale": 100,
         "lowPowerFreq": 500,
-        "optimalFreq": 1200,
+        "optimalFreq": 1600,
         "modelFreq": 1600,
         "modelPower": 1100
       },
@@ -19,7 +19,7 @@
         "coreNum": 2,
         "perfScale": 110,
         "lowPowerFreq": 600,
-        "optimalFreq": 1600,
+        "optimalFreq": 1800,
         "modelFreq": 2150,
         "modelPower": 2480
       }
@@ -28,8 +28,8 @@
       "powersave": {
         "powerLimit": 3000,
         "perfMargin": [10, 10],
-        "upRateLimitMs": [160, 160],
-        "smoothFreq": [800, 1000],
+        "upRateLimitMs": [80, 80],
+        "smoothFreq": [900, 1100],
         "freqBurst": {
           "tap": {
             "unlimitPower": false,
@@ -66,8 +66,8 @@
       "balance": {
         "powerLimit": 4000,
         "perfMargin": [20, 20],
-        "upRateLimitMs": [120, 120],
-        "smoothFreq": [900, 1200],
+        "upRateLimitMs": [60, 60],
+        "smoothFreq": [1000, 1300],
         "freqBurst": {
           "tap": {
             "unlimitPower": false,
@@ -108,8 +108,8 @@
       "performance": {
         "powerLimit": 5000,
         "perfMargin": [30, 30],
-        "upRateLimitMs": [80, 80],
-        "smoothFreq": [900, 1200],
+        "upRateLimitMs": [40, 40],
+        "smoothFreq": [1000, 1300],
         "freqBurst": {
           "tap": {
             "unlimitPower": false,
@@ -150,8 +150,8 @@
       "fast": {
         "powerLimit": 10000,
         "perfMargin": [30, 30],
-        "upRateLimitMs": [40, 40],
-        "smoothFreq": [900, 1200],
+        "upRateLimitMs": [0, 0],
+        "smoothFreq": [1000, 1300],
         "freqBurst": {
           "tap": {
             "unlimitPower": true,
