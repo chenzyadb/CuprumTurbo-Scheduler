@@ -182,9 +182,9 @@
 						"boost": 30,
 						"durationTime": 2000
 			  		}
-				}
-			},
-			"heatControl": []
+				},
+				"heatControl": []
+			}
 		}
 	},
 	"ThreadSchedOpt": {
