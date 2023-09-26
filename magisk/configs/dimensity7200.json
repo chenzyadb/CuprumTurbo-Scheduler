@@ -1,5 +1,5 @@
 {
-    "name": "Dimensity900/920/930/1080/7050",
+    "name": "Dimensity7200",
     "author": "chenzyadb",
     "configVersion": 7,
     "CpuGovernor": {
@@ -12,16 +12,16 @@
           "perfScale": 100,
           "lowPowerFreq": 600,
           "optimalFreq": 1400,
-          "modelFreq": 1800,
-          "modelPower": 320
+          "modelFreq": 2000,
+          "modelPower": 500
         },
         {
           "coreNum": 2,
-          "perfScale": 260,
+          "perfScale": 250,
           "lowPowerFreq": 700,
-          "optimalFreq": 1900,
-          "modelFreq": 2400,
-          "modelPower": 1560
+          "optimalFreq": 2000,
+          "modelFreq": 2800,
+          "modelPower": 1800
         }
       ],
       "modes": {
@@ -29,7 +29,7 @@
           "powerLimit": 3000,
           "perfMargin": [10, 10],
           "upRateLimitMs": [80, 80],
-          "smoothFreq": [800, 1100],
+          "smoothFreq": [800, 1000],
           "freqBurst": {
             "tap": {
               "unlimitPower": false,
@@ -236,7 +236,7 @@
           "perfMargin": 30
         },
         "fast": {
-          "maxFreq": 1100,
+          "maxFreq": 1000,
           "perfMargin": 40
         }
       }

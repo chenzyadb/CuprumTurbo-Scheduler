@@ -1,35 +1,18 @@
 {
-    "name": "Dimensity900/920/930/1080/7050",
-    "author": "chenzyadb",
+    "name": "_Universal_Config",
+    "author": "username",
     "configVersion": 7,
     "CpuGovernor": {
-      "enable": true,
+      "enable": false,
       "slowSampleTime": 40,
       "fastSampleTime": 20,
-      "policies": [
-        {
-          "coreNum": 6,
-          "perfScale": 100,
-          "lowPowerFreq": 600,
-          "optimalFreq": 1400,
-          "modelFreq": 1800,
-          "modelPower": 320
-        },
-        {
-          "coreNum": 2,
-          "perfScale": 260,
-          "lowPowerFreq": 700,
-          "optimalFreq": 1900,
-          "modelFreq": 2400,
-          "modelPower": 1560
-        }
-      ],
+      "policies": [],
       "modes": {
         "powersave": {
           "powerLimit": 3000,
-          "perfMargin": [10, 10],
-          "upRateLimitMs": [80, 80],
-          "smoothFreq": [800, 1100],
+          "perfMargin": [],
+          "upRateLimitMs": [],
+          "smoothFreq": [],
           "freqBurst": {
             "tap": {
               "unlimitPower": false,
@@ -65,9 +48,9 @@
         },
         "balance": {
           "powerLimit": 4000,
-          "perfMargin": [20, 20],
-          "upRateLimitMs": [60, 60],
-          "smoothFreq": [900, 1200],
+          "perfMargin": [],
+          "upRateLimitMs": [],
+          "smoothFreq": [],
           "freqBurst": {
             "tap": {
               "unlimitPower": false,
@@ -107,9 +90,9 @@
         },
         "performance": {
           "powerLimit": 5000,
-          "perfMargin": [30, 30],
-          "upRateLimitMs": [40, 40],
-          "smoothFreq": [900, 1200],
+          "perfMargin": [],
+          "upRateLimitMs": [],
+          "smoothFreq": [],
           "freqBurst": {
             "tap": {
               "unlimitPower": false,
@@ -149,9 +132,9 @@
         },
         "fast": {
           "powerLimit": 10000,
-          "perfMargin": [30, 30],
-          "upRateLimitMs": [0, 0],
-          "smoothFreq": [900, 1200],
+          "perfMargin": [],
+          "upRateLimitMs": [],
+          "smoothFreq": [],
           "freqBurst": {
             "tap": {
               "unlimitPower": true,
@@ -179,93 +162,51 @@
       }
     },
     "ThreadSchedOpt": {
-      "enable": true,
+      "enable": false,
       "MainThread": {
-        "cpus": [6, 7],
+        "cpus": [],
         "nice": -10
       },
       "GameSingleThread": {
-        "cpus": [7],
+        "cpus": [],
         "nice": -16
       },
       "GameMultiThread": {
-        "cpus": [0, 1, 2, 3, 4, 5, 6],
+        "cpus": [],
         "nice": -16
       },
       "UIThread": {
-        "cpus": [6, 7],
+        "cpus": [],
         "nice": -10
       },
       "MediaThread": {
-        "cpus": [0, 1, 2, 3, 4, 5, 6],
+        "cpus": [],
         "nice": -16
       },
       "WebViewThread": {
-        "cpus": [6, 7],
+        "cpus": [],
         "nice": -10
       },
       "ProcessThread": {
-        "cpus": [0, 1, 2, 3, 4, 5, 6],
+        "cpus": [],
         "nice": -8
       },
       "NonRealTimeThread": {
-        "cpus": [0, 1, 2, 3],
+        "cpus": [],
         "nice": 10
       },
       "OtherThread": {
-        "cpus": [0, 1, 2, 3, 4, 5, 6],
+        "cpus": [],
         "nice": 0
       }
     },
     "MtkGpuGovernor": {
-      "enable": true,
-      "slowSampleTime": 40,
-      "fastSampleTime": 20,
-      "preferredFreq": [],
-      "modes": {
-        "powersave": {
-          "maxFreq": 700,
-          "perfMargin": 10
-        },
-        "balance": {
-          "maxFreq": 800,
-          "perfMargin": 20
-        },
-        "performance": {
-          "maxFreq": 900,
-          "perfMargin": 30
-        },
-        "fast": {
-          "maxFreq": 1100,
-          "perfMargin": 40
-        }
-      }
+      "enable": false
     },
     "FileWriter": {
-      "enable": true,
+      "enable": false,
       "scenes": {
-        "init": [
-          {
-            "path": "/dev/cpuset/restricted/cpus",
-            "text": "0-3"
-          },
-          {
-            "path": "/dev/cpuset/system-background/cpus",
-            "text": "0-3"
-          },
-          {
-            "path": "/dev/cpuset/background/cpus",
-            "text": "0-3"
-          },
-          {
-            "path": "/dev/cpuset/foreground/cpus",
-            "text": "0-7"
-          },
-          {
-            "path": "/dev/cpuset/top-app/cpus",
-            "text": "0-7"
-          }
-        ],
+        "init": [],
         "screenOn": [],
         "screenOff": [],
         "powersaveMode": [],

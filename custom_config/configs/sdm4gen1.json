@@ -17,7 +17,7 @@
         },
         {
           "coreNum": 2,
-          "perfScale": 240,
+          "perfScale": 260,
           "lowPowerFreq": 700,
           "optimalFreq": 2000,
           "modelFreq": 2000,
