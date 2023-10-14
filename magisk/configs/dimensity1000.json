@@ -434,7 +434,7 @@
         "downRateDiff": 10
       },
       "performance": {
-        "maxFreq": 770,
+        "maxFreq": 790,
         "minFreq": 0,
         "upRateThres": 70,
         "downRateDiff": 20
