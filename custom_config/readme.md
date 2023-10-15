@@ -108,7 +108,7 @@ cpu亲和性设定即为限制线程仅能在指定的CPU核心上运行, 例如
 |idleRateHz      |int     |空闲时工作频率            |
 |preferredFreq   |ArrayInt|偏好GPU频率(单位:MHz)     |
   
-当GPU负载为0时调频器按照`activeRateHz`频率工作,当负载非0时调频器按照`activeRateHz`频率工作.  
+当GPU负载为0时调频器按照`idleRateHz`频率工作,当负载非0时调频器按照`activeRateHz`频率工作.  
 由于联发科内核提供的GPU频率数量过多,此调频器将只会选取部分GPU频率,具体信息请查看调度日志.  
 `preferredFreq`为偏好的GPU频率,调度选取GPU频率时将优先考虑这些频率.  
 #### modes - 模式参数 
