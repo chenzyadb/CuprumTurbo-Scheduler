@@ -329,39 +329,69 @@
   "ThreadSchedOpt": {
     "enable": true,
     "MainThread": {
-      "cpus": [2, 3],
+      "cpus": [
+        2,
+        3
+      ],
       "nice": -10
     },
     "GameSingleThread": {
-      "cpus": [3],
+      "cpus": [
+        3
+      ],
       "nice": -16
     },
     "GameMultiThread": {
-      "cpus": [0, 1, 2],
+      "cpus": [
+        0,
+        1,
+        2
+      ],
       "nice": -16
     },
     "UIThread": {
-      "cpus": [2, 3],
+      "cpus": [
+        2,
+        3
+      ],
       "nice": -10
     },
     "MediaThread": {
-      "cpus": [0, 1, 2],
+      "cpus": [
+        0,
+        1,
+        2
+      ],
       "nice": -16
     },
     "WebViewThread": {
-      "cpus": [2, 3],
+      "cpus": [
+        2,
+        3
+      ],
       "nice": -10
     },
     "ProcessThread": {
-      "cpus": [0, 1, 2],
+      "cpus": [
+        0,
+        1,
+        2
+      ],
       "nice": -8
     },
     "NonRealTimeThread": {
-      "cpus": [0, 1],
-      "nice": 10
+      "cpus": [
+        0,
+        1
+      ],
+      "nice": 0
     },
     "OtherThread": {
-      "cpus": [0, 1, 2],
+      "cpus": [
+        0,
+        1,
+        2
+      ],
       "nice": 0
     }
   },

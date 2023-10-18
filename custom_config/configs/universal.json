@@ -329,7 +329,7 @@
     },
     "NonRealTimeThread": {
       "cpus": [],
-      "nice": 10
+      "nice": 0
     },
     "OtherThread": {
       "cpus": [],

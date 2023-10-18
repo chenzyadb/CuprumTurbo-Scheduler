@@ -410,7 +410,7 @@
         1,
         2
       ],
-      "nice": 10
+      "nice": 0
     },
     "OtherThread": {
       "cpus": [
