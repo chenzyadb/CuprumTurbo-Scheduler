@@ -445,12 +445,12 @@
         "maxFreq": 700,
         "minFreq": 0,
         "upRateThres": 70,
-        "downRateDiff": 20
+        "downRateDiff": 10
       },
       "fast": {
         "maxFreq": 960,
         "minFreq": 0,
-        "upRateThres": 60,
+        "upRateThres": 70,
         "downRateDiff": 20
       }
     }

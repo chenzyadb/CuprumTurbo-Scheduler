@@ -14,7 +14,7 @@
         "coreNum": 4,
         "perfScale": 100,
         "lowPowerFreq": 500,
-        "optimalFreq": 1400,
+        "optimalFreq": 1600,
         "modelFreq": 1800,
         "modelPower": 360
       },
