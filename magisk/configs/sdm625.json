@@ -70,7 +70,7 @@
             "boost": 0
           },
           "bigJank": {
-            "durationTime": 50,
+            "durationTime": 100,
             "unlimitPower": true,
             "lowLatency": false,
             "extraMargin": 0,
@@ -79,19 +79,19 @@
         },
         "heatControl": [
           {
-            "cpuTemp": 70,
+            "cpuTemp": 80,
             "maxPower": 2750
           },
           {
-            "cpuTemp": 75,
+            "cpuTemp": 85,
             "maxPower": 2500
           },
           {
-            "cpuTemp": 80,
+            "cpuTemp": 90,
             "maxPower": 2250
           },
           {
-            "cpuTemp": 85,
+            "cpuTemp": 95,
             "maxPower": 2000
           }
         ]
@@ -139,14 +139,14 @@
             "boost": 0
           },
           "jank": {
-            "durationTime": 50,
+            "durationTime": 100,
             "unlimitPower": true,
             "lowLatency": true,
             "extraMargin": 0,
             "boost": 40
           },
           "bigJank": {
-            "durationTime": 50,
+            "durationTime": 100,
             "unlimitPower": true,
             "lowLatency": true,
             "extraMargin": 20,
@@ -155,19 +155,19 @@
         },
         "heatControl": [
           {
-            "cpuTemp": 70,
+            "cpuTemp": 80,
             "maxPower": 3500
           },
           {
-            "cpuTemp": 75,
+            "cpuTemp": 85,
             "maxPower": 3000
           },
           {
-            "cpuTemp": 80,
+            "cpuTemp": 90,
             "maxPower": 2500
           },
           {
-            "cpuTemp": 85,
+            "cpuTemp": 95,
             "maxPower": 2000
           }
         ]
@@ -215,14 +215,14 @@
             "boost": 0
           },
           "jank": {
-            "durationTime": 50,
+            "durationTime": 100,
             "unlimitPower": true,
             "lowLatency": true,
             "extraMargin": 0,
             "boost": 40
           },
           "bigJank": {
-            "durationTime": 50,
+            "durationTime": 100,
             "unlimitPower": true,
             "lowLatency": true,
             "extraMargin": 20,
@@ -291,14 +291,14 @@
             "boost": 0
           },
           "jank": {
-            "durationTime": 50,
+            "durationTime": 100,
             "unlimitPower": true,
             "lowLatency": true,
             "extraMargin": 0,
             "boost": 40
           },
           "bigJank": {
-            "durationTime": 50,
+            "durationTime": 100,
             "unlimitPower": true,
             "lowLatency": true,
             "extraMargin": 20,
