@@ -415,9 +415,9 @@
       "activeRateHz": 60,
       "idleRateHz": 30,
       "preferredFreq": [
-        532,
-        654,
-        735
+        540,
+        660,
+        790
       ]
     },
     "modes": {

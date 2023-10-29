@@ -430,7 +430,7 @@
     },
     "modes": {
       "powersave": {
-        "maxFreq": 500,
+        "maxFreq": 450,
         "minFreq": 0,
         "upRateThres": 90,
         "downRateDiff": 10
@@ -442,7 +442,7 @@
         "downRateDiff": 10
       },
       "performance": {
-        "maxFreq": 700,
+        "maxFreq": 750,
         "minFreq": 0,
         "upRateThres": 70,
         "downRateDiff": 10

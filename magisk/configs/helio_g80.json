@@ -422,13 +422,13 @@
     },
     "modes": {
       "powersave": {
-        "maxFreq": 800,
+        "maxFreq": 1000,
         "minFreq": 0,
         "upRateThres": 90,
         "downRateDiff": 10
       },
       "balance": {
-        "maxFreq": 900,
+        "maxFreq": 1000,
         "minFreq": 0,
         "upRateThres": 80,
         "downRateDiff": 10
