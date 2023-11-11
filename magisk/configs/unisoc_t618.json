@@ -1,5 +1,5 @@
 {
-  "name": "Unisoc_T618",
+  "name": "Unisoc_T618/T616/T612/T610/T606",
   "author": "chenzyadb",
   "configVersion": 8,
   "CpuGovernor": {
@@ -15,16 +15,16 @@
         "perfScale": 100,
         "lowPowerFreq": 600,
         "optimalFreq": 1600,
-        "modelFreq": 2000,
+        "modelFreq": 1800,
         "modelPower": 400
       },
       {
         "coreNum": 2,
         "perfScale": 180,
-        "lowPowerFreq": 700,
+        "lowPowerFreq": 800,
         "optimalFreq": 2000,
         "modelFreq": 2000,
-        "modelPower": 1380
+        "modelPower": 1400
       }
     ],
     "modes": {
