@@ -44,7 +44,7 @@
   
 CPU整体功耗限制会影响CPU频率上限, 调频器计算的是满载功耗,不会随CPU负载变化而改变.  
 `perfMargin`使用`ArrayInt`即整数数组方式存储参数, 数组的序号对应策略组编号.  
-CPU频率提升延迟用于降低CPU频率被提升得过高的几率, 每次升频时调频器都会根据频率提升延迟和性能容量判定是否需要升频.  
+CPU频率提升延迟用于降低CPU频率被提升得过高的几率, 每次升频时调频器都会根据频率提升延迟和能耗比变化判定是否需要升频.  
 频率提升延迟和性能冗余会影响CPU频率提升是否积极, 延迟越低冗余越高CPU频率提升越积极, 性能越好, 耗电越严重.  
 ##### freqBurst - CPU频率加速  
 CPU频率加速可以在特定条件触发时调高CPU频率提升积极性, 用于降低部分场景下卡顿的几率.  
@@ -61,7 +61,7 @@ CPU频率加速可以在特定条件触发时调高CPU频率提升积极性, 用
 当要求调频器不限制功耗时模式的`powerLimit`将被忽略, 适用于应用冷启动等短时间性能需求极高的场景.  
 当要求调频器降低延迟时调频器将会以最快的速度提升CPU频率, 适用于检测到掉帧等需要迅速提升CPU频率的场景.  
 `extraMargin`值用于提供额外的性能冗余, 计算公式如下: `acturalMargin = perfMargin + extraMargin`.  
-`boost`值用于夸大实际的CPU负载, 计算公式如下: `cpuLoad = cpuLoad + (100 - cpuLoad) * boost`.  
+`boost`值用于夸大实际的CPU负载, 计算公式如下: `cpuLoad = cpuLoad + (100 - cpuLoad) * boost / 100`.  
 ##### heatControl - 发热控制  
 发热控制可以按照CPU温度动态调整CPU整体功耗上限(优先级大于模式的`powerLimit`和`freqBurst`的`unlimitPower`).  
 此项配置类型为`ArrayJson`, 即数组中的每个Json元素对应一个发热控制策略.  
