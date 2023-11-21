@@ -22,17 +22,17 @@
         "coreNum": 4,
         "perfScale": 250,
         "lowPowerFreq": 600,
-        "optimalFreq": 1800,
+        "optimalFreq": 2000,
         "modelFreq": 2800,
-        "modelPower": 1620
+        "modelPower": 1750
       },
       {
         "coreNum": 1,
         "perfScale": 310,
         "lowPowerFreq": 700,
-        "optimalFreq": 2100,
-        "modelFreq": 3190,
-        "modelPower": 3880
+        "optimalFreq": 2200,
+        "modelFreq": 2950,
+        "modelPower": 3000
       }
     ],
     "modes": {
@@ -97,20 +97,8 @@
         },
         "heatControl": [
           {
-            "cpuTemp": 80,
-            "maxPower": 2750
-          },
-          {
-            "cpuTemp": 85,
-            "maxPower": 2500
-          },
-          {
-            "cpuTemp": 90,
-            "maxPower": 2250
-          },
-          {
             "cpuTemp": 95,
-            "maxPower": 2000
+            "maxPower": 3000
           }
         ]
       },
@@ -175,20 +163,12 @@
         },
         "heatControl": [
           {
-            "cpuTemp": 80,
+            "cpuTemp": 90,
             "maxPower": 3500
           },
           {
-            "cpuTemp": 85,
-            "maxPower": 3000
-          },
-          {
-            "cpuTemp": 90,
-            "maxPower": 2500
-          },
-          {
             "cpuTemp": 95,
-            "maxPower": 2000
+            "maxPower": 3000
           }
         ]
       },
@@ -253,20 +233,16 @@
         },
         "heatControl": [
           {
-            "cpuTemp": 80,
+            "cpuTemp": 85,
             "maxPower": 5000
           },
           {
-            "cpuTemp": 85,
+            "cpuTemp": 90,
             "maxPower": 4000
           },
           {
-            "cpuTemp": 90,
-            "maxPower": 3000
-          },
-          {
             "cpuTemp": 95,
-            "maxPower": 2000
+            "maxPower": 3000
           }
         ]
       },
@@ -332,7 +308,7 @@
         "heatControl": [
           {
             "cpuTemp": 95,
-            "maxPower": 2000
+            "maxPower": 3000
           }
         ]
       }
@@ -434,7 +410,7 @@
       "init": [
         {
           "path": "/dev/cpuset/restricted/cpus",
-          "text": "0-6"
+          "text": "0-3"
         },
         {
           "path": "/dev/cpuset/system-background/cpus",
