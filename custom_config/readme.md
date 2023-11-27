@@ -137,7 +137,7 @@ CPU频率加速可以在特定条件触发时调高CPU频率提升积极性, 用
 `extraMargin`值用于提供额外的性能冗余, 计算公式如下: `acturalMargin = perfMargin + extraMargin`.  
 `boost`值用于夸大实际的CPU负载, 计算公式如下: `cpuLoad = cpuLoad + (100 - cpuLoad) * boost / 100`.  
 
-``` 
+```json
 "CpuGovernor": {
    ......
     "modes": {
