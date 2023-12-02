@@ -4,7 +4,9 @@ function get_taro_name() {
     cpu7_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
     gpu_max_freq=$(cat /sys/class/kgsl/kgsl-3d0/max_clock_mhz)
     # SDM8+GEN1: 2.0+2.75+3.19 SDM8GEN1/8+GEN1UC: 1.8+2.5+3.0 SDM7+GEN2: 1.8+2.5+2.91.
-    if [ $cpu7_max_freq -gt 2950000 ]; then
+    if [ $cpu7_max_freq -gt 3100000 ]; then
+        echo "sdm8+gen1"
+    elif [ $cpu7_max_freq -gt 2950000 ]; then
         if [ $gpu_max_freq -gt 850 ]; then
             # Adreno730 @ 900MHz
             echo "sdm8+gen1"

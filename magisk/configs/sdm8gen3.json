@@ -30,17 +30,17 @@
         "coreNum": 3,
         "perfScale": 270,
         "lowPowerFreq": 600,
-        "optimalFreq": 2000,
+        "optimalFreq": 2200,
         "modelFreq": 3150,
         "modelPower": 2290
       },
       {
         "coreNum": 1,
-        "perfScale": 330,
+        "perfScale": 370,
         "lowPowerFreq": 700,
         "optimalFreq": 2200,
         "modelFreq": 2950,
-        "modelPower": 3400
+        "modelPower": 3600
       }
     ],
     "modes": {
@@ -384,7 +384,10 @@
     "ProcessThread": {
       "cpus": [
         2,
-        3
+        3,
+        4,
+        5,
+        6
       ],
       "nice": -8
     },

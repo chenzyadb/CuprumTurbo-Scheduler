@@ -1,5 +1,5 @@
 {
-    "name": "Dimensity9300",
+    "name": "Dimensity8300",
     "author": "chenzyadb",
     "configVersion": 8,
     "CpuGovernor": {
@@ -12,27 +12,27 @@
       "policies": [
         {
           "coreNum": 4,
-          "perfScale": 270,
-          "lowPowerFreq": 500,
-          "optimalFreq": 1600,
-          "modelFreq": 2000,
-          "modelPower": 800
+          "perfScale": 100,
+          "lowPowerFreq": 600,
+          "optimalFreq": 1400,
+          "modelFreq": 2200,
+          "modelPower": 600
         },
         {
           "coreNum": 3,
-          "perfScale": 360,
-          "lowPowerFreq": 600,
-          "optimalFreq": 2000,
-          "modelFreq": 2850,
-          "modelPower": 3400
+          "perfScale": 270,
+          "lowPowerFreq": 700,
+          "optimalFreq": 2200,
+          "modelFreq": 3200,
+          "modelPower": 2200
         },
         {
           "coreNum": 1,
-          "perfScale": 370,
+          "perfScale": 270,
           "lowPowerFreq": 1200,
           "optimalFreq": 2200,
-          "modelFreq": 3000,
-          "modelPower": 3600
+          "modelFreq": 3200,
+          "modelPower": 2200
         }
       ],
       "modes": {
@@ -362,23 +362,25 @@
         "cpus": [
           4,
           5,
-          6
+          6,
+          7
         ],
         "nice": -10
       },
       "ProcessThread": {
         "cpus": [
-          0,
-          1,
-          2,
-          3
+          4,
+          5,
+          6
         ],
         "nice": -8
       },
       "NonRealTimeThread": {
         "cpus": [
           0,
-          1
+          1,
+          2,
+          3
         ],
         "nice": 0
       },
@@ -404,25 +406,25 @@
       },
       "modes": {
         "powersave": {
-          "maxFreq": 400,
+          "maxFreq": 450,
           "minFreq": 0,
           "upRateThres": 90,
           "downRateDiff": 10
         },
         "balance": {
-          "maxFreq": 550,
+          "maxFreq": 600,
           "minFreq": 0,
           "upRateThres": 80,
           "downRateDiff": 10
         },
         "performance": {
-          "maxFreq": 700,
+          "maxFreq": 750,
           "minFreq": 0,
           "upRateThres": 70,
           "downRateDiff": 10
         },
         "fast": {
-          "maxFreq": 1300,
+          "maxFreq": 1400,
           "minFreq": 0,
           "upRateThres": 70,
           "downRateDiff": 20
@@ -439,11 +441,11 @@
           },
           {
             "path": "/dev/cpuset/system-background/cpus",
-            "text": "0-1"
+            "text": "0-3"
           },
           {
             "path": "/dev/cpuset/background/cpus",
-            "text": "0-1"
+            "text": "0-3"
           },
           {
             "path": "/dev/cpuset/foreground/cpus",
