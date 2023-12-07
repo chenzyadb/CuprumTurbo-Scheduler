@@ -202,7 +202,7 @@
             "boost": 40
           },
           "bigJank": {
-            "durationTime": 100,
+            "durationTime": 500,
             "unlimitPower": true,
             "lowLatency": true,
             "extraMargin": 20,
@@ -274,7 +274,7 @@
             "boost": 40
           },
           "bigJank": {
-            "durationTime": 100,
+            "durationTime": 500,
             "unlimitPower": true,
             "lowLatency": true,
             "extraMargin": 20,
