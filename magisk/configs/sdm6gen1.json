@@ -1,5 +1,5 @@
 {
-  "name": "Snapdragon7Gen1",
+  "name": "Snapdragon6Gen1/7sGen2",
   "author": "chenzyadb",
   "configVersion": 9,
   "CpuGovernor": {
@@ -14,32 +14,23 @@
         "coreNum": 4,
         "perfScale": 100,
         "lowPowerFreq": 600,
-        "optimalFreq": 1400,
+        "optimalFreq": 1600,
         "modelFreq": 1800,
-        "modelPower": 600
+        "modelPower": 300
       },
       {
-        "coreNum": 3,
-        "perfScale": 240,
+        "coreNum": 4,
+        "perfScale": 260,
         "lowPowerFreq": 700,
         "optimalFreq": 2200,
-        "modelFreq": 2360,
-        "modelPower": 1700
-      },
-      {
-        "coreNum": 1,
-        "perfScale": 240,
-        "lowPowerFreq": 800,
-        "optimalFreq": 2200,
-        "modelFreq": 2500,
-        "modelPower": 1900
+        "modelFreq": 2200,
+        "modelPower": 1400
       }
     ],
     "modes": {
       "powersave": {
         "powerLimit": 3000,
         "perfMargin": [
-          10,
           10,
           10
         ],
@@ -96,7 +87,6 @@
         "powerLimit": 4000,
         "perfMargin": [
           20,
-          20,
           20
         ],
         "upRateLatency": 800,
@@ -152,7 +142,6 @@
         "powerLimit": 5000,
         "perfMargin": [
           30,
-          30,
           30
         ],
         "upRateLatency": 600,
@@ -207,7 +196,6 @@
       "fast": {
         "powerLimit": 10000,
         "perfMargin": [
-          30,
           30,
           30
         ],
@@ -376,7 +364,7 @@
         },
         {
           "path": "/dev/cpuset/foreground/cpus",
-          "text": "0-6"
+          "text": "0-7"
         },
         {
           "path": "/dev/cpuset/top-app/cpus",

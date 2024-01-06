@@ -1,4 +1,4 @@
-## CuprumTurbo V17 自定义配置开发文档  
+## CuprumTurbo V18 自定义配置开发文档  
 此项目使用模块化设计, 每个子Json对象对应一个`Module`, 通过设置各个模块的`enable`字段可以启用或禁用模块.  
 当`enable`字段设置为`false`时程序将不会继续加载其余参数, 可以删除该子Json对象中的其余字段.  
 ### Json信息  
@@ -41,56 +41,45 @@
 |powerLimit      |int     |CPU整体功耗限制(单位:mW)       |
 |perfMargin      |ArrayInt|CPU性能冗余(范围:0-100)        |
 |upRateLatency   |int     |CPU频率提升延迟(单位:ms)       |
+|overHeatTemp    |int     |过热温度(单位:°C)              |
+|burstCapacity   |int     |频率加速容量(单位:W·ms)        |
+|recoverTime     |int     |容量恢复时间(单位:ms)          |
   
 CPU整体功耗限制会影响CPU频率上限, 调频器计算的是满载功耗,不会随CPU负载变化而改变.  
 `perfMargin`使用`ArrayInt`即整数数组方式存储参数, 数组的序号对应策略组编号.  
 CPU频率提升延迟用于降低CPU频率被提升得过高的几率, 每次升频时调频器都会根据频率提升延迟和能耗比变化判定是否需要升频.  
-频率提升延迟和性能冗余会影响CPU频率提升是否积极, 延迟越低冗余越高CPU频率提升越积极, 性能越好, 耗电越严重.  
+过热温度为触发调频器温度控制的阈值, 当CPU温度超过该值时将限制CPU功耗在`powerLimit`以内直到温度降低.  
+当触发CPU频率加速时调频器将会忽略`powerLimit`, 如果实时功耗超过`powerLimit`就会消耗`burstCapacity`, 直到容量耗尽时恢复功耗限制.  
+当实时功耗低于功耗限制值时将会逐渐恢复`burstCapacity`, `recoverTime`即为容量从耗尽到完全恢复所需的时间.  
 ##### freqBurst - CPU频率加速  
 CPU频率加速可以在特定条件触发时调高CPU频率提升积极性, 用于降低部分场景下卡顿的几率.  
 |字段            |类型   |定义                         |
 |:---------------|:------|:---------------------------|
 |durationTime    |int    |频率加速持续时间(单位:ms)     |
-|unlimitPower    |bool   |是否不限制功耗               |
 |lowLatency      |bool   |是否降低延迟                 |
 |extraMargin     |int    |额外性能冗余(范围:0-100)      |
 |boost           |int    |频率加速值(范围:0-100)       |
   
 触发条件包含`tap` `swipe` `gesture` `heavyload` `jank` `bigJank`,分别在 点击屏幕 滑动屏幕 手势操作 重负载 掉帧 严重掉帧 时触发.  
 触发的优先级为`none` < `tap` < `swipe` < `gesture` < `heavyload` < `jank` < `bigJank`, 当更高优先级的加速触发时将覆盖低优先级的加速.  
-当要求调频器不限制功耗时模式的`powerLimit`将被忽略, 适用于应用冷启动等短时间性能需求极高的场景.  
 当要求调频器降低延迟时调频器将会以最快的速度提升CPU频率, 适用于检测到掉帧等需要迅速提升CPU频率的场景.  
 `extraMargin`值用于提供额外的性能冗余, 计算公式如下: `acturalMargin = perfMargin + extraMargin`.  
 `boost`值用于夸大实际的CPU负载, 计算公式如下: `cpuLoad = cpuLoad + (100 - cpuLoad) * boost / 100`.  
-##### heatControl - 发热控制  
-发热控制可以按照CPU温度动态调整CPU整体功耗上限(优先级大于模式的`powerLimit`和`freqBurst`的`unlimitPower`).  
-此项配置类型为`ArrayJson`, 即数组中的每个Json元素对应一个发热控制策略.  
-|字段            |类型   |定义                          |
-|:---------------|:------|:----------------------------|
-|cpuTemp         |int    |CPU温度(单位:摄氏度, 范围0-99) |
-|maxPower        |int    |CPU整体功耗上限(单位:mW)       |
-  
-当CPU温度大于设定的`cpuTemp`时, CPU整体最大功耗将被限制在`maxPower`内, 例如:  
-``` JSON
-[
-  {"cpuTemp": 80, "maxPower": 5000},
-  {"cpuTemp": 90, "maxPower": 4000}
-]
-```
 当CPU温度小于80度时将不限制最大功耗, CPU温度大于等于80度小于90度时最大功耗限制在5000mW, CPU温度大于等于90度时最大功耗限制在4000mW.
 ### ThreadSchedOpt - 线程调度优化  
 > 此模块通过智能分类线程来实现较为合理的线程调度策略  
   
 ThreadSchedOpt模块基于线程名称和CPU占用等数据分类前台线程, 组别如下:  
-`MainThread`分组: 包含应用程序的主线程.   
-`GameSingleThread`分组: 包含游戏程序中占用CPU单核性能较多的线程.  
-`GameMultiThread`分组: 包含游戏程序中占用CPU多核性能较多的线程.  
+`GameRenderThread`分组: 包含游戏程序中负责画面渲染的相关线程.   
+`GameMainThread`分组: 包含游戏程序中的主线程.  
+`GameProcessThread`分组: 包含游戏程序中负责数据处理的相关线程.  
 `UIThread`分组: 包含应用程序中参与渲染用户界面的相关线程.  
 `MediaThread`分组: 包含应用程序中负责媒体（例如音频/视频解码）的相关线程.  
 `WebViewThread`分组: 包含应用程序中WebView组件的相关线程.  
 `ProcessThread`分组: 包含应用程序中负责数据处理的相关线程.  
-`NonRealTimeThread`分组: 包含应用程序中不需要数据实时处理的线程.  
-`OtherThread`分组: 包含其他未被分类的线程.  
+`CoProcessThread`分组: 包含应用程序中负责辅助处理的相关线程.  
+`JunkThread`分组: 包含应用程序中负责日志记录和性能追踪等功能的垃圾线程.  
+`Initial`分组: 初始状态.  
 |字段           |类型    |定义                              |
 |:--------------|:-------|:--------------------------------|
 |cpus           |ArrayInt|此分组的cpu亲和性设定              |

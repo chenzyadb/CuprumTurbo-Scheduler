@@ -71,6 +71,12 @@ function get_bengal_name() {
 
 function get_config_name() {
     case "$1" in
+    garnet*)
+        echo "sdm6gen1"
+        ;;
+    parrot*)
+        echo "sdm6gen1"
+        ;;
     pineapple*)
         echo "sdm8gen3"
         ;;
