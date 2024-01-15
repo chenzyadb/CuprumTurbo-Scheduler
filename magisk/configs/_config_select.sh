@@ -156,24 +156,24 @@ function get_config_name() {
     msm8996*)
         echo "sdm820"
         ;;
-    universal9925*)
-        echo "exynos2200"
-        ;;
-    universal2100*)
-        echo "exynos2100"
-        ;;
-    universal1080*)
-        echo "exynos1080"
-        ;;
-    universal990*)
-        echo "exynos990"
-        ;;
-    universal9825*)
-        echo "exynos9825"
-        ;;
-    universal9820*)
-        echo "exynos9820"
-        ;;
+#    universal9925*)
+#        echo "exynos2200"
+#        ;;
+#    universal2100*)
+#        echo "exynos2100"
+#        ;;
+#    universal1080*)
+#        echo "exynos1080"
+#        ;;
+#    universal990*)
+#        echo "exynos990"
+#        ;;
+#    universal9825*)
+#        echo "exynos9825"
+#        ;;
+#    universal9820*)
+#        echo "exynos9820"
+#        ;;
     mt6771*)
         # Helio P60/P70
         echo "helio_p60"

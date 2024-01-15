@@ -52,7 +52,7 @@
           10,
           10
         ],
-        "upRateLatency": 1000,
+        "upRateLatency": 800,
         "overHeatTemp": 80,
         "burstCapacity": 8000,
         "recoverTime": 2000,
@@ -109,7 +109,7 @@
           20,
           20
         ],
-        "upRateLatency": 800,
+        "upRateLatency": 600,
         "overHeatTemp": 80,
         "burstCapacity": 12000,
         "recoverTime": 3000,
@@ -166,7 +166,7 @@
           30,
           30
         ],
-        "upRateLatency": 600,
+        "upRateLatency": 400,
         "overHeatTemp": 90,
         "burstCapacity": 20000,
         "recoverTime": 4000,
@@ -223,7 +223,7 @@
           30,
           30
         ],
-        "upRateLatency": 400,
+        "upRateLatency": 0,
         "overHeatTemp": 95,
         "burstCapacity": 0,
         "recoverTime": 0,
