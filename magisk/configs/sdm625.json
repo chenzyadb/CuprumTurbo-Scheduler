@@ -37,40 +37,40 @@
             "boost": 0
           },
           "tap": {
-            "durationTime": 1000,
+            "durationTime": 200,
             "lowLatency": false,
-            "extraMargin": 0,
-            "boost": 20
+            "extraMargin": 10,
+            "boost": 0
           },
           "swipe": {
-            "durationTime": 500,
+            "durationTime": 100,
             "lowLatency": false,
             "extraMargin": 10,
             "boost": 0
           },
           "gesture": {
-            "durationTime": 1000,
+            "durationTime": 200,
             "lowLatency": false,
             "extraMargin": 20,
-            "boost": 20
+            "boost": 0
           },
           "heavyload": {
-            "durationTime": 2000,
+            "durationTime": 1000,
             "lowLatency": false,
             "extraMargin": 20,
             "boost": 0
           },
           "jank": {
-            "durationTime": 0,
-            "lowLatency": false,
-            "extraMargin": 0,
-            "boost": 0
-          },
-          "bigJank": {
             "durationTime": 100,
-            "lowLatency": false,
+            "lowLatency": true,
             "extraMargin": 0,
             "boost": 40
+          },
+          "bigJank": {
+            "durationTime": 200,
+            "lowLatency": true,
+            "extraMargin": 0,
+            "boost": 60
           }
         }
       },
@@ -91,25 +91,25 @@
             "boost": 0
           },
           "tap": {
-            "durationTime": 1000,
+            "durationTime": 200,
             "lowLatency": false,
-            "extraMargin": 0,
-            "boost": 20
+            "extraMargin": 10,
+            "boost": 0
           },
           "swipe": {
-            "durationTime": 500,
+            "durationTime": 100,
             "lowLatency": false,
             "extraMargin": 10,
             "boost": 0
           },
           "gesture": {
-            "durationTime": 1000,
+            "durationTime": 200,
             "lowLatency": false,
             "extraMargin": 20,
-            "boost": 20
+            "boost": 0
           },
           "heavyload": {
-            "durationTime": 2000,
+            "durationTime": 1000,
             "lowLatency": false,
             "extraMargin": 20,
             "boost": 0
@@ -121,10 +121,10 @@
             "boost": 40
           },
           "bigJank": {
-            "durationTime": 100,
+            "durationTime": 200,
             "lowLatency": true,
-            "extraMargin": 20,
-            "boost": 40
+            "extraMargin": 0,
+            "boost": 60
           }
         }
       },
@@ -145,25 +145,25 @@
             "boost": 0
           },
           "tap": {
-            "durationTime": 1000,
+            "durationTime": 200,
             "lowLatency": false,
-            "extraMargin": 0,
-            "boost": 20
+            "extraMargin": 10,
+            "boost": 0
           },
           "swipe": {
-            "durationTime": 500,
+            "durationTime": 100,
             "lowLatency": false,
             "extraMargin": 10,
             "boost": 0
           },
           "gesture": {
-            "durationTime": 1000,
+            "durationTime": 200,
             "lowLatency": false,
             "extraMargin": 20,
-            "boost": 20
+            "boost": 0
           },
           "heavyload": {
-            "durationTime": 2000,
+            "durationTime": 1000,
             "lowLatency": false,
             "extraMargin": 20,
             "boost": 0
@@ -175,10 +175,10 @@
             "boost": 40
           },
           "bigJank": {
-            "durationTime": 500,
+            "durationTime": 200,
             "lowLatency": true,
-            "extraMargin": 20,
-            "boost": 40
+            "extraMargin": 0,
+            "boost": 60
           }
         }
       },
@@ -199,25 +199,25 @@
             "boost": 0
           },
           "tap": {
-            "durationTime": 1000,
+            "durationTime": 200,
             "lowLatency": false,
-            "extraMargin": 0,
-            "boost": 20
+            "extraMargin": 10,
+            "boost": 0
           },
           "swipe": {
-            "durationTime": 500,
+            "durationTime": 100,
             "lowLatency": false,
             "extraMargin": 10,
             "boost": 0
           },
           "gesture": {
-            "durationTime": 1000,
+            "durationTime": 200,
             "lowLatency": false,
             "extraMargin": 20,
-            "boost": 20
+            "boost": 0
           },
           "heavyload": {
-            "durationTime": 2000,
+            "durationTime": 1000,
             "lowLatency": false,
             "extraMargin": 20,
             "boost": 0
@@ -229,10 +229,10 @@
             "boost": 40
           },
           "bigJank": {
-            "durationTime": 500,
+            "durationTime": 200,
             "lowLatency": true,
-            "extraMargin": 20,
-            "boost": 40
+            "extraMargin": 0,
+            "boost": 60
           }
         }
       }
