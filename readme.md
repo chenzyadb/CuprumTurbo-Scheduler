@@ -12,4 +12,4 @@
 #### 使用的开源项目  
 - [CuJSONObject](https://github.com/chenzyadb/CuJSONObject) by chenzyadb  
 - [CuLogger](https://github.com/chenzyadb/CuLogger) by chenzyadb  
-- [CuSimpleMatch](https://github.com/chenzyadb/CuSimpleMatch) by chenzyadb  
+- [CuStringMatcher](https://github.com/chenzyadb/CuStringMatcher) by chenzyadb  
