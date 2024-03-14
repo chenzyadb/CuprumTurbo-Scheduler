@@ -51,6 +51,26 @@ CPU频率提升延迟用于降低CPU频率被提升得过高的几率, 每次升
 过热温度为触发调频器温度控制的阈值, 当CPU温度超过该值时将限制CPU功耗在`powerLimit`以内并忽略频率加速直到温度降低.  
 当触发CPU频率加速时调频器将会忽略`powerLimit`, 如果实时功耗超过`powerLimit`就会消耗`burstCapacity`, 直到容量耗尽时恢复功耗限制.  
 当实时功耗低于功耗限制值时将会逐渐恢复`burstCapacity`, `recoverTime`即为容量从耗尽到完全恢复所需的时间.  
+
+功耗限制工作流程如下:  
+```mermaid
+    
+graph TB
+    A["计算实时满载功耗"] --> B{"实时满载功耗是否超过powerLimit"}
+    B --> |"是"| C{"CPU温度是否过热"}
+    B --> |"否"| D["不限制功耗"]
+    C --> |"是"| E["重新选择最优CPU频率保持功耗在powerLimit以内"]
+    C --> |"否"| F{"是否已触发freqBurst"}
+    F -->|"是"| G{"burstCapacity剩余值是否大于零"}
+    F -->|"否"| E
+    G -->|"是"| H["不限制功耗并按照实时功耗减少burstCapacity值"]
+    G -->|"否"| E
+    D --> I{"burstCapacity值是否等于容量"}
+    I -->|"是"| J["保持当前值"]
+    I -->|"否"| K["依据recoverTime恢复burstCapacity值"]
+
+```
+
 ##### freqBurst - CPU频率加速  
 CPU频率加速可以在特定条件触发时调高CPU频率提升积极性, 用于降低部分场景下卡顿的几率.  
 |字段            |类型   |定义                         |
@@ -65,7 +85,6 @@ CPU频率加速可以在特定条件触发时调高CPU频率提升积极性, 用
 当要求调频器降低延迟时调频器将会以最快的速度提升CPU频率, 适用于检测到掉帧等需要迅速提升CPU频率的场景.  
 `extraMargin`值用于提供额外的性能冗余, 计算公式如下: `acturalMargin = perfMargin + extraMargin`.  
 `boost`值用于夸大实际的CPU负载, 计算公式如下: `cpuLoad = cpuLoad + (100 - cpuLoad) * boost / 100`.  
-当CPU温度小于80度时将不限制最大功耗, CPU温度大于等于80度小于90度时最大功耗限制在5000mW, CPU温度大于等于90度时最大功耗限制在4000mW.
 ### ThreadSchedOpt - 线程调度优化  
 > 此模块通过智能分类线程来实现较为合理的线程调度策略  
   

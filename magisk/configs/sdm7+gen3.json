@@ -1,5 +1,5 @@
 {
-  "name": "Snapdragon8Gen3",
+  "name": "Snapdragon7+Gen3/8sGen3",
   "author": "chenzyadb",
   "configVersion": 9,
   "CpuGovernor": {
@@ -11,43 +11,34 @@
     },
     "policies": [
       {
-        "coreNum": 2,
+        "coreNum": 3,
         "perfScale": 100,
         "lowPowerFreq": 500,
-        "optimalFreq": 1600,
-        "modelFreq": 2270,
-        "modelPower": 600
+        "optimalFreq": 1400,
+        "modelFreq": 1900,
+        "modelPower": 460
       },
       {
-        "coreNum": 3,
+        "coreNum": 4,
         "perfScale": 270,
         "lowPowerFreq": 600,
         "optimalFreq": 2200,
-        "modelFreq": 3150,
-        "modelPower": 2290
-      },
-      {
-        "coreNum": 2,
-        "perfScale": 270,
-        "lowPowerFreq": 600,
-        "optimalFreq": 1800,
-        "modelFreq": 2960,
-        "modelPower": 1890
+        "modelFreq": 2610,
+        "modelPower": 1400
       },
       {
         "coreNum": 1,
         "perfScale": 370,
         "lowPowerFreq": 700,
         "optimalFreq": 2200,
-        "modelFreq": 2950,
-        "modelPower": 3600
+        "modelFreq": 2800,
+        "modelPower": 2600
       }
     ],
     "modes": {
       "powersave": {
         "powerLimit": 3000,
         "perfMargin": [
-          10,
           10,
           10,
           10
@@ -106,7 +97,6 @@
         "perfMargin": [
           20,
           20,
-          20,
           20
         ],
         "upRateLatency": 600,
@@ -163,7 +153,6 @@
         "perfMargin": [
           30,
           30,
-          30,
           30
         ],
         "upRateLatency": 400,
@@ -218,7 +207,6 @@
       "fast": {
         "powerLimit": 10000,
         "perfMargin": [
-          30,
           30,
           30,
           30
@@ -284,15 +272,15 @@
     },
     "GameMainThread": {
       "cpus": [
-        2,
         3,
-        4
+        4,
+        5,
+        6
       ],
       "nice": -20
     },
     "GameProcessThread": {
       "cpus": [
-        2,
         3,
         4,
         5,
@@ -302,7 +290,6 @@
     },
     "UIThread": {
       "cpus": [
-        2,
         3,
         4,
         5,
@@ -324,17 +311,16 @@
     },
     "WebViewThread": {
       "cpus": [
-        2,
         3,
         4,
         5,
-        6
+        6,
+        7
       ],
       "nice": -16
     },
     "ProcessThread": {
       "cpus": [
-        2,
         3,
         4,
         5,
@@ -345,14 +331,16 @@
     "CoProcessThread": {
       "cpus": [
         0,
-        1
+        1,
+        2
       ],
       "nice": -12
     },
     "JunkThread": {
       "cpus": [
         0,
-        1
+        1,
+        2
       ],
       "nice": 0
     },
@@ -379,15 +367,15 @@
       "init": [
         {
           "path": "/dev/cpuset/restricted/cpus",
-          "text": "0-1"
+          "text": "0-2"
         },
         {
           "path": "/dev/cpuset/system-background/cpus",
-          "text": "0-1"
+          "text": "0-2"
         },
         {
           "path": "/dev/cpuset/background/cpus",
-          "text": "0-1"
+          "text": "0-2"
         },
         {
           "path": "/dev/cpuset/foreground/cpus",

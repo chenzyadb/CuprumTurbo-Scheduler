@@ -1,8 +1,16 @@
 ui_print "- CuprumTurbo Scheduler Module"
 ui_print "- Installing..."
 
-unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH >&2
-chmod -R 0777 $MODPATH
+chmod -R 0777 ${MODPATH}/
+
+function get_pineapple_name() {
+    cpu7_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
+    if [ $cpu7_max_freq -gt 3200000 ]; then
+        echo "sdm8gen3"
+    else
+        echo "sdm7+gen3"
+    fi
+}
 
 function get_taro_name() {
     cpu7_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
@@ -75,8 +83,14 @@ function get_bengal_name() {
 
 function get_config_name() {
     case "$1" in
+    garnet*)
+        echo "sdm6gen1"
+        ;;
+    parrot*)
+        echo "sdm6gen1"
+        ;;
     pineapple*)
-        echo "sdm8gen3"
+        get_pineapple_name
         ;;
     sunstone*)
         echo "sdm4gen1"
