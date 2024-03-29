@@ -1,5 +1,5 @@
 {
-  "name": "Snapdragon632/636/660",
+  "name": "Snapdragon630",
   "author": "chenzyadb",
   "configVersion": 9,
   "CpuGovernor": {
@@ -14,9 +14,9 @@
         "coreNum": 4,
         "perfScale": 100,
         "lowPowerFreq": 500,
-        "optimalFreq": 1600,
+        "optimalFreq": 1800,
         "modelFreq": 1800,
-        "modelPower": 400
+        "modelPower": 300
       },
       {
         "coreNum": 4,
@@ -24,7 +24,7 @@
         "lowPowerFreq": 700,
         "optimalFreq": 2200,
         "modelFreq": 2200,
-        "modelPower": 1600
+        "modelPower": 400
       }
     ],
     "modes": {

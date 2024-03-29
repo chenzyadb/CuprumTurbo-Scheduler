@@ -1,5 +1,5 @@
 {
-  "name": "Snapdragon632/636/660",
+  "name": "Snapdragon439",
   "author": "chenzyadb",
   "configVersion": 9,
   "CpuGovernor": {
@@ -14,17 +14,17 @@
         "coreNum": 4,
         "perfScale": 100,
         "lowPowerFreq": 500,
-        "optimalFreq": 1600,
-        "modelFreq": 1800,
-        "modelPower": 400
+        "optimalFreq": 1450,
+        "modelFreq": 1450,
+        "modelPower": 150
       },
       {
         "coreNum": 4,
         "perfScale": 200,
         "lowPowerFreq": 700,
-        "optimalFreq": 2200,
-        "modelFreq": 2200,
-        "modelPower": 1600
+        "optimalFreq": 2000,
+        "modelFreq": 2000,
+        "modelPower": 300
       }
     ],
     "modes": {
