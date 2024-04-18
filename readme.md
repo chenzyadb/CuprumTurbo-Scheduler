@@ -10,6 +10,4 @@
 - 在只使用调度本体时不需要改动任何系统文件和注入运行中的进程.  
 - 支持JSON格式的自定义配置, 详见[自定义配置开发文档](https://github.com/chenzyadb/CuprumTurbo-Scheduler/blob/main/docs/config_dev_helper.md).  
 #### 使用的开源项目  
-- [CuJSONObject](https://github.com/chenzyadb/CuJSONObject) by chenzyadb  
-- [CuLogger](https://github.com/chenzyadb/CuLogger) by chenzyadb  
-- [CuStringMatcher](https://github.com/chenzyadb/CuStringMatcher) by chenzyadb  
+- [CU-Utils](https://github.com/chenzyadb/CU-Utils) by chenzyadb  
