@@ -1,12 +1,13 @@
 {
-  "name": "Helio_G99",
+  "name": "Helio_G99/Dimensity6100+",
   "author": "chenzyadb",
-  "configVersion": 9,
+  "configVersion": 10,
   "CpuGovernor": {
     "enable": true,
     "params": {
       "activeRateHz": 60,
       "idleRateHz": 30,
+      "activeDelay": 2000,
       "minFreqStep": 200
     },
     "policies": [
@@ -20,9 +21,9 @@
       },
       {
         "coreNum": 2,
-        "perfScale": 220,
+        "perfScale": 260,
         "lowPowerFreq": 700,
-        "optimalFreq": 2200,
+        "optimalFreq": 1800,
         "modelFreq": 2200,
         "modelPower": 1000
       }
@@ -30,14 +31,11 @@
     "modes": {
       "powersave": {
         "powerLimit": 3000,
-        "perfMargin": [
-          10,
-          10
-        ],
-        "upRateLatency": 800,
+        "perfMargin": [10, 10],
+        "upRateLatency": 600,
         "overHeatTemp": 80,
-        "burstCapacity": 8000,
-        "recoverTime": 2000,
+        "burstCapacity": 12000,
+        "recoverTime": 4000,
         "freqBurst": {
           "none": {
             "durationTime": 0,
@@ -46,19 +44,19 @@
             "boost": 0
           },
           "tap": {
-            "durationTime": 200,
+            "durationTime": 100,
             "lowLatency": false,
-            "extraMargin": 10,
+            "extraMargin": 20,
             "boost": 0
           },
           "swipe": {
-            "durationTime": 100,
+            "durationTime": 200,
             "lowLatency": false,
             "extraMargin": 10,
             "boost": 0
           },
           "gesture": {
-            "durationTime": 200,
+            "durationTime": 100,
             "lowLatency": false,
             "extraMargin": 20,
             "boost": 0
@@ -85,14 +83,11 @@
       },
       "balance": {
         "powerLimit": 4000,
-        "perfMargin": [
-          20,
-          20
-        ],
-        "upRateLatency": 600,
+        "perfMargin": [20, 20],
+        "upRateLatency": 400,
         "overHeatTemp": 80,
-        "burstCapacity": 12000,
-        "recoverTime": 3000,
+        "burstCapacity": 16000,
+        "recoverTime": 4000,
         "freqBurst": {
           "none": {
             "durationTime": 0,
@@ -101,19 +96,19 @@
             "boost": 0
           },
           "tap": {
-            "durationTime": 200,
+            "durationTime": 100,
             "lowLatency": false,
-            "extraMargin": 10,
+            "extraMargin": 20,
             "boost": 0
           },
           "swipe": {
-            "durationTime": 100,
+            "durationTime": 200,
             "lowLatency": false,
             "extraMargin": 10,
             "boost": 0
           },
           "gesture": {
-            "durationTime": 200,
+            "durationTime": 100,
             "lowLatency": false,
             "extraMargin": 20,
             "boost": 0
@@ -140,11 +135,8 @@
       },
       "performance": {
         "powerLimit": 5000,
-        "perfMargin": [
-          30,
-          30
-        ],
-        "upRateLatency": 400,
+        "perfMargin": [30, 30],
+        "upRateLatency": 200,
         "overHeatTemp": 90,
         "burstCapacity": 20000,
         "recoverTime": 4000,
@@ -156,19 +148,19 @@
             "boost": 0
           },
           "tap": {
-            "durationTime": 200,
+            "durationTime": 100,
             "lowLatency": false,
-            "extraMargin": 10,
+            "extraMargin": 20,
             "boost": 0
           },
           "swipe": {
-            "durationTime": 100,
+            "durationTime": 200,
             "lowLatency": false,
             "extraMargin": 10,
             "boost": 0
           },
           "gesture": {
-            "durationTime": 200,
+            "durationTime": 100,
             "lowLatency": false,
             "extraMargin": 20,
             "boost": 0
@@ -195,10 +187,7 @@
       },
       "fast": {
         "powerLimit": 10000,
-        "perfMargin": [
-          30,
-          30
-        ],
+        "perfMargin": [30, 30],
         "upRateLatency": 0,
         "overHeatTemp": 95,
         "burstCapacity": 0,
@@ -211,19 +200,19 @@
             "boost": 0
           },
           "tap": {
-            "durationTime": 200,
+            "durationTime": 100,
             "lowLatency": false,
-            "extraMargin": 10,
+            "extraMargin": 20,
             "boost": 0
           },
           "swipe": {
-            "durationTime": 100,
+            "durationTime": 200,
             "lowLatency": false,
             "extraMargin": 10,
             "boost": 0
           },
           "gesture": {
-            "durationTime": 200,
+            "durationTime": 100,
             "lowLatency": false,
             "extraMargin": 20,
             "boost": 0
@@ -252,110 +241,326 @@
   },
   "ThreadSchedOpt": {
     "enable": true,
-    "GameRenderThread": {
-      "cpus": [
-        7
-      ],
-      "nice": -20
+    "defaultCpus": [0, 1, 2, 3, 4, 5, 6, 7],
+    "defaultPriority": 0,
+    "appTypes": {
+      "unity_genshin": {
+        "pkgName": "*(.Yuanshen|.GenshinImpact)|*.ys.*",
+        "symbol": null
+      },
+      "unity_common": {
+        "pkgName": null,
+        "symbol": "Unity*"
+      },
+      "unreal_engine": {
+        "pkgName": null,
+        "symbol": "(TaskGraph|RHIThread)*"
+      },
+      "minecraft": {
+        "pkgName": null,
+        "symbol": "MINECRAFT*"
+      },
+      "neox_engine": {
+        "pkgName": "*(.mrzh|.qrzd|.jddsaef|.lglr|.zmq|.ldxy|.s4na|.g93na|.g78na|.onmyoji|.harrypotter|.moba|.party)*",
+        "symbol": null
+      },
+      "sky_game": {
+        "pkgName": "(com.netease.sky|com.tgc.sky)*",
+        "symbol": null
+      },
+      "benchmark": {
+        "pkgName": "com.futuremark.*|*[Bb]ench*",
+        "symbol": null
+      }
     },
-    "GameMainThread": {
-      "cpus": [
-        6
+    "schedRules": {
+      "DEFAULT_RULE": [
+        {
+          "threadName": "MAIN_THREAD",
+          "heavyCpus": null,
+          "commonCpus": [6, 7],
+          "priority": -12
+        },
+        {
+          "threadName": "*[Rr]ender*",
+          "heavyCpus": [7],
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -20
+        },
+        {
+          "threadName": "(GLThread|[Vv]sync|JNISurface|hwui|UiThread|ged-|mali-)*|*(.raster|.ui|.anim|.display)*",
+          "heavyCpus": null,
+          "commonCpus": [6, 7],
+          "priority": -12
+        },
+        {
+          "threadName": "(glide-|Fresco|[Ii]mage|[Ll]auncher)*|*([Bb]lur|[Aa]nim|[Oo]verlay|[Cc]horeographer)*",
+          "heavyCpus": null,
+          "commonCpus": [6, 7],
+          "priority": -12
+        },
+        {
+          "threadName": "(HWC release|GPU completion|FrameThread|FramePolicy|ScrollPolicy)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3],
+          "priority": -20
+        },
+        {
+          "threadName": "(Vlc|[Ii][Jj][Kk])*|*([Aa]udio|[Mm]ixer|[Vv]ideo|[Pp]layer|[Mm]edia|[Cc]odec|[Dd]ecode)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -16
+        },
+        {
+          "threadName": "(Chrome_|Compositor|CrGpuMain|CrRenderer|Viz|Gecko)*|*[Ww]eb[Vv]iew*",
+          "heavyCpus": null,
+          "commonCpus": [6, 7],
+          "priority": -12
+        },
+        {
+          "threadName": "(WeexJsBridge|libweexjsb|V8 DefaultWork|hippy.js|mqt_)*|*[Jj]ava[Ss]cript*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -8
+        },
+        {
+          "threadName": "*([Ww]ork|[Hh]andle|[Pp]ool|[Mm]essage|[Dd]ispatch|[Ee]xecutor|[Bb]ridge|[Cc]amera)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -8
+        },
+        {
+          "threadName": "(Chronos.|CRON.|AsyncTask|Thread-|Timer-)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -8
+        },
+        {
+          "threadName": "(HeapTask|HeapTrimmer|Finalizer|CleanupReferenc|GC)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3],
+          "priority": -8
+        },
+        {
+          "threadName": "(queued-work-|Jit thread pool|Signal Catcher|Profile Saver|ReferenceQueue)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3],
+          "priority": -8
+        },
+        {
+          "threadName": "(Moss|OkHttp|Okio|Rx|rx-)*|*([Nn]etwork|[Cc]ookie|[Ss]cheduler|[Cc]apture)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3],
+          "priority": -8
+        },
+        {
+          "threadName": "(BLog|xlog|[Bb]ugly|BUGLY|LogThread)*|*([Cc]rash|[Ll]ogger|[Rr]eport)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3],
+          "priority": 0
+        },
+        {
+          "threadName": "(APM-|TVKDL-|Firebase|koom|ADB-JDWP|MemoryInfra)*|*([Ww]atch[Dd]og|[Tt]racker|[Mm]onitor)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3],
+          "priority": 0
+        }
       ],
-      "nice": -20
-    },
-    "GameProcessThread": {
-      "cpus": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
+      "unity_genshin": [
+        {
+          "threadName": "MAIN_THREAD",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -12
+        },
+        {
+          "threadName": "UnityGfx*",
+          "heavyCpus": [7],
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -20
+        },
+        {
+          "threadName": "(UnityMain|UnityMulti|UnityPreload|UnityChoreograp|UnityCCeograp)*",
+          "heavyCpus": [6],
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -12
+        },
+        {
+          "threadName": "FMOD*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -16
+        },
+        {
+          "threadName": "(Worker Thread|Job.Worker|NativeThread|IL2CPP|CoreThread|Thread-)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -12
+        }
       ],
-      "nice": -16
-    },
-    "UIThread": {
-      "cpus": [
-        6,
-        7
+      "unity_common": [
+        {
+          "threadName": "MAIN_THREAD",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -12
+        },
+        {
+          "threadName": "UnityMain*",
+          "heavyCpus": [7],
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -20
+        },
+        {
+          "threadName": "(UnityGfx|UnityMulti|UnityPreload|UnityChoreograp|UnityCCeograp)*",
+          "heavyCpus": [6],
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -20
+        },
+        {
+          "threadName": "FMOD*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -16
+        },
+        {
+          "threadName": "(Worker Thread|Job.Worker|NativeThread|IL2CPP|ace_worker|Apollo-|CoreThread|Thread-)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -12
+        }
       ],
-      "nice": -16
-    },
-    "MediaThread": {
-      "cpus": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
+      "unreal_engine": [
+        {
+          "threadName": "MAIN_THREAD",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -12
+        },
+        {
+          "threadName": "(RenderThread|GameThread|RHIThread)*",
+          "heavyCpus": [7],
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -20
+        },
+        {
+          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|NativeThread|SDLThread|Thread-)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -12
+        },
+        {
+          "threadName": "FMOD*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5],
+          "priority": -16
+        }
       ],
-      "nice": -20
-    },
-    "WebViewThread": {
-      "cpus": [
-        6,
-        7
+      "minecraft": [
+        {
+          "threadName": "MAIN_THREAD",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -12
+        },
+        {
+          "threadName": "(Rendering Pool|MINECRAFT)*",
+          "heavyCpus": [7],
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -20
+        },
+        {
+          "threadName": "Thread-*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7],
+          "priority": -8
+        },
+        {
+          "threadName": "FMOD*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -16
+        }
       ],
-      "nice": -16
-    },
-    "ProcessThread": {
-      "cpus": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
+      "neox_engine": [
+        {
+          "threadName": "MAIN_THREAD",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -12
+        },
+        {
+          "threadName": "(MainThread|Thread-)*",
+          "heavyCpus": [7],
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -20
+        },
+        {
+          "threadName": "(IO|Compute|Resource|NativeThread)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -12
+        }
       ],
-      "nice": -12
-    },
-    "CoProcessThread": {
-      "cpus": [
-        0,
-        1,
-        2,
-        3
+      "sky_game": [
+        {
+          "threadName": "MAIN_THREAD",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -12
+        },
+        {
+          "threadName": "(MainThread|Program Thread)*",
+          "heavyCpus": [7],
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -20
+        },
+        {
+          "threadName": "(JobThread|Thread-)*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
+          "priority": -12
+        }
       ],
-      "nice": -12
-    },
-    "JunkThread": {
-      "cpus": [
-        0,
-        1,
-        2,
-        3
-      ],
-      "nice": 0
-    },
-    "Initial": {
-      "cpus": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
-      "nice": 0
+      "benchmark": []
     }
   },
   "MtkGpuGovernor": {
     "enable": true,
-    "params": {
-      "activeRateHz": 60,
-      "idleRateHz": 30,
-      "preferredFreq": []
+    "voltAdjust": {
+      "minVolt": 0,
+      "maxVolt": 100000,
+      "voltOffset": 0
     },
+    "ddrBoosts": [
+      {
+        "gpuFreq": 0,
+        "ddrMinFreq": 1200
+      },
+      {
+        "gpuFreq": 300,
+        "ddrMinFreq": 1800
+      },
+      {
+        "gpuFreq": 400,
+        "ddrMinFreq": 2400
+      },
+      {
+        "gpuFreq": 500,
+        "ddrMinFreq": 3000
+      },
+      {
+        "gpuFreq": 600,
+        "ddrMinFreq": 3600
+      },
+      {
+        "gpuFreq": 700,
+        "ddrMinFreq": 4200
+      }
+    ],
     "modes": {
       "powersave": {
-        "maxFreq": 700,
+        "maxFreq": 600,
         "minFreq": 0,
         "upRateThres": 90,
         "downRateDiff": 10
@@ -367,7 +572,7 @@
         "downRateDiff": 10
       },
       "performance": {
-        "maxFreq": 900,
+        "maxFreq": 1000,
         "minFreq": 0,
         "upRateThres": 70,
         "downRateDiff": 10
@@ -386,7 +591,7 @@
       "init": [
         {
           "path": "/dev/cpuset/restricted/cpus",
-          "text": "0-5"
+          "text": "0-3"
         },
         {
           "path": "/dev/cpuset/system-background/cpus",

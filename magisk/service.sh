@@ -36,7 +36,7 @@ lock_value() {
 		if [ -f "$file" ]; then
 			chown root:root "$file"
 			chmod 0666 "$file"
-			echo "$1" >"$file"
+			echo "$1" > "$file"
 			chmod 0444 "$file"
 		fi
 	done
@@ -44,20 +44,21 @@ lock_value() {
 
 change_task_cpuset() {
 	for pid in $(pgrep -f "$1"); do
-		echo "$pid" >"/dev/cpuset/${2}/cgroup.procs"
+		echo "$pid" > "/dev/cpuset/${2}/cgroup.procs"
 	done
 }
 
 change_task_sched() {
 	for pid in $(pgrep -f "$1"); do
 		if [ -d /dev/stune ]; then
-			echo "$pid" >"/dev/stune/${2}/cgroup.procs"
+			echo "$pid" > "/dev/stune/${2}/cgroup.procs"
 		elif [ -d /dev/cpuctl ]; then
-			echo "$pid" >"/dev/cpuctl/${2}/cgroup.procs"
+			echo "$pid" > "/dev/cpuctl/${2}/cgroup.procs"
 		fi
 	done
 }
 
+stop horae 2>/dev/null
 stop miuibooster 2>/dev/null
 stop oneplus_brain_service 2>/dev/null
 stop vendor.perfservice 2>/dev/null
@@ -75,8 +76,12 @@ lock_value "0" "/sys/module/mtk_fpsgo/parameters/perfmgr_enable"
 lock_value "0" "/sys/module/perfmgr/parameters/perfmgr_enable"
 lock_value "0" "/sys/module/perfmgr_policy/parameters/perfmgr_enable"
 lock_value "0" "/sys/kernel/fpsgo/common/fpsgo_enable"
-lock_value "0" "/sys/kernel/debug/fpsgo/common/force_onoff"
 lock_value "0" "/sys/kernel/fpsgo/common/force_onoff"
+lock_value "0" "/sys/kernel/fpsgo/fbt/enable*"
+lock_value "0" "/sys/kernel/fpsgo/fbt/limit*"
+lock_value "0" "/sys/kernel/fpsgo/fbt/switch_idleprefer"
+lock_value "0" "/sys/kernel/debug/fpsgo/common/fpsgo_enable"
+lock_value "0" "/sys/kernel/debug/fpsgo/common/force_onoff"
 lock_value "0" "/sys/kernel/ged/hal/dcs_mode"
 lock_value "enable: 0" "/proc/perfmgr/tchbst/user/usrtch"
 if [ -f "/proc/ppm/policy_status" ]; then
@@ -136,6 +141,9 @@ lock_value "0" "/sys/class/input_booster/*"
 lock_value "0" "/proc/mz_thermal_boost/sched_boost_enabled"
 lock_value "0" "/proc/mz_thermal_boost/boost_enabled"
 lock_value "0" "/proc/mz_scheduler/vip_task/enabled"
+lock_value "0" "/proc/oplus_scheduler/sched_assist/sched_assist_enabled"
+lock_value "1" "/proc/game_opt/disable_cpufreq_limit"
+lock_value "-1" "/proc/game_opt/game_pid"
 lock_value "0" "/proc/sys/fbg/frame_boost_enabled"
 lock_value "0" "/proc/sys/fbg/input_boost_enabled"
 lock_value "0" "/proc/sys/fbg/slide_boost_enabled"

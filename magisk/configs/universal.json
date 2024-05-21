@@ -1,7 +1,7 @@
 {
   "name": "_Universal_Config",
   "author": "username",
-  "configVersion": 9,
+  "configVersion": 10,
   "CpuGovernor": {
     "enable": false
   },
