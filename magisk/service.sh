@@ -307,6 +307,6 @@ if [ ! -d /sdcard/Android/ct/ ]; then
 fi
 
 #CuDaemon -R [config] [mode] [log]
-"${BASE_DIR}/CuDaemon" -R "${SCRIPT_PATH}/config.json" "/sdcard/Android/ct/cur_mode.txt" "/sdcard/Android/ct/scheduler.log"
+"${BASE_DIR}/CuDaemon" -R "${BASE_DIR}/config.json" "/sdcard/Android/ct/cur_mode.txt" "/sdcard/Android/ct/scheduler.log"
 
 exit 0
