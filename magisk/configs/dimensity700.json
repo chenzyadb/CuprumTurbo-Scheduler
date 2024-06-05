@@ -535,26 +535,22 @@
     "ddrBoosts": [
       {
         "gpuFreq": 0,
-        "ddrMinFreq": 1200
-      },
-      {
-        "gpuFreq": 300,
         "ddrMinFreq": 1800
       },
       {
-        "gpuFreq": 400,
+        "gpuFreq": 300,
         "ddrMinFreq": 2400
       },
       {
-        "gpuFreq": 500,
+        "gpuFreq": 400,
         "ddrMinFreq": 3000
       },
       {
-        "gpuFreq": 600,
+        "gpuFreq": 500,
         "ddrMinFreq": 3600
       },
       {
-        "gpuFreq": 700,
+        "gpuFreq": 600,
         "ddrMinFreq": 4200
       }
     ],
