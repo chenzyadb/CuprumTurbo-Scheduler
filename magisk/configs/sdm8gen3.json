@@ -488,7 +488,7 @@
         {
           "threadName": "Thread-*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7],
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
           "priority": -8
         },
         {
