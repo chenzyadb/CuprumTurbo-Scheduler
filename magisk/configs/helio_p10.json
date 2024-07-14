@@ -1,5 +1,5 @@
 {
-  "name": "Snapdragon835",
+  "name": "Helio_P10/mt675x",
   "author": "chenzyadb",
   "configVersion": 10,
   "CpuGovernor": {
@@ -15,17 +15,17 @@
         "coreNum": 4,
         "perfScale": 80,
         "lowPowerFreq": 500,
-        "optimalFreq": 1400,
-        "modelFreq": 1900,
-        "modelPower": 360
+        "optimalFreq": 1500,
+        "modelFreq": 1500,
+        "modelPower": 450
       },
       {
         "coreNum": 4,
-        "perfScale": 160,
+        "perfScale": 80,
         "lowPowerFreq": 700,
-        "optimalFreq": 1800,
-        "modelFreq": 2450,
-        "modelPower": 1460
+        "optimalFreq": 2000,
+        "modelFreq": 2000,
+        "modelPower": 600
       }
     ],
     "modes": {

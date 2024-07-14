@@ -1,5 +1,5 @@
 {
-  "name": "Kirin650/655/658/659",
+  "name": "Snapdragon630",
   "author": "chenzyadb",
   "configVersion": 10,
   "CpuGovernor": {
@@ -14,7 +14,7 @@
       {
         "coreNum": 4,
         "perfScale": 80,
-        "lowPowerFreq": 600,
+        "lowPowerFreq": 500,
         "optimalFreq": 1800,
         "modelFreq": 1800,
         "modelPower": 300

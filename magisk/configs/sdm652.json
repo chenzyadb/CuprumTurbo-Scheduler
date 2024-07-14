@@ -1,5 +1,5 @@
 {
-  "name": "Snapdragon835",
+  "name": "Snapdragon652/653",
   "author": "chenzyadb",
   "configVersion": 10,
   "CpuGovernor": {
@@ -15,17 +15,17 @@
         "coreNum": 4,
         "perfScale": 80,
         "lowPowerFreq": 500,
-        "optimalFreq": 1400,
-        "modelFreq": 1900,
-        "modelPower": 360
+        "optimalFreq": 1300,
+        "modelFreq": 1300,
+        "modelPower": 400
       },
       {
         "coreNum": 4,
-        "perfScale": 160,
+        "perfScale": 150,
         "lowPowerFreq": 700,
         "optimalFreq": 1800,
-        "modelFreq": 2450,
-        "modelPower": 1460
+        "modelFreq": 1800,
+        "modelPower": 2000
       }
     ],
     "modes": {

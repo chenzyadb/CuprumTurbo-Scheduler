@@ -84,27 +84,6 @@ lock_value "0" "/sys/kernel/debug/fpsgo/common/fpsgo_enable"
 lock_value "0" "/sys/kernel/debug/fpsgo/common/force_onoff"
 lock_value "0" "/sys/kernel/ged/hal/dcs_mode"
 lock_value "enable: 0" "/proc/perfmgr/tchbst/user/usrtch"
-if [ -f "/proc/ppm/policy_status" ]; then
-    for ppm_policy in $(seq 0 10); do
-        write_value "${ppm_policy} 1" "/proc/ppm/policy_status"
-    done
-    disable_policy_list="
-       PPM_POLICY_PTPOD
-       PPM_POLICY_UT
-       PPM_POLICY_FORCE_LIMIT
-       PPM_POLICY_PWR_THRO
-       PPM_POLICY_THERMAL
-       PPM_POLICY_DLPT
-       PPM_POLICY_USER_LIMIT
-       PPM_POLICY_LCM_OFF
-       PPM_POLICY_SYS_BOOST
-       PPM_POLICY_HICA"
-    for policy in $disable_policy_list; do
-        IDX_INFO=$(grep "$policy" < "/proc/ppm/policy_status")
-        IDX_NUM=$(expr substr "$IDX_INFO" 1 1)
-        write_value "${IDX_NUM} 0" "/proc/ppm/policy_status"
-    done
-fi
 
 lock_value "0" "/sys/power/cpuhotplug/enabled"
 lock_value "0" "/sys/power/pnpmgr/touch_boost"
@@ -276,6 +255,8 @@ change_task_sched "android.hardware.graphics.composer" ""
 change_task_cpuset "vendor.qti.hardware.display.composer-service" "top-app"
 change_task_sched "vendor.qti.hardware.display.composer-service" ""
 
+change_task_cpuset "adbd" "system-background"
+change_task_sched "adbd" ""
 change_task_cpuset "logd" "system-background"
 change_task_sched "logd" ""
 change_task_cpuset "lmkd" "system-background"
@@ -294,7 +275,7 @@ change_task_sched "compactd" ""
 ### Run CuprumTurbo-Scheduler Daemon.
 
 # Check if /sdcard is ready.
-while [ ! -e /sdcard/.test_file ]; do
+while [ ! -f /sdcard/.test_file ]; do
 	true >/sdcard/.test_file
 	sleep 1
 done
