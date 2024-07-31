@@ -151,6 +151,12 @@ get_config_name() {
     msm8953*)
         echo "sdm625"
         ;;
+    msm8937*)
+        echo "sdm430"
+        ;;
+    msm8940*)
+        echo "sdm430"
+        ;;
     sdm660*)
         echo "sdm660"
         ;;
@@ -178,6 +184,18 @@ get_config_name() {
     msm8996*)
         echo "sdm820"
         ;;
+    mt6750*)
+        echo "helio_p10"
+        ;;
+    mt6752*)
+        echo "helio_p10"
+        ;;
+    mt6753*)
+        echo "helio_p10"
+        ;;
+    mt6755*)
+        echo "helio_p10"
+        ;;
     mt6771*)
         echo "helio_p60"
         ;;
@@ -198,6 +216,12 @@ get_config_name() {
         ;;
     mt6789*)
         echo "helio_g99"
+        ;;
+    mt6797*)
+        echo "helio_x20"
+        ;;
+    mt6799*)
+        echo "helio_x30"
         ;;
     mt6833*)
         echo "dimensity700"

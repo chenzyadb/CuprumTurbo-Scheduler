@@ -260,6 +260,14 @@
     "defaultCpus": [0, 1, 2, 3, 4, 5, 6, 7],
     "defaultPriority": 0,
     "appTypes": {
+      "surfaceflinger": {
+        "pkgName": null,
+        "symbol": "[Ss]urface[Ff]linger"
+      },
+      "system_server": {
+        "pkgName": "system_server",
+        "symbol": null
+      },
       "unity_genshin": {
         "pkgName": "*(.Yuanshen|.GenshinImpact)|*.ys.*",
         "symbol": null
@@ -284,8 +292,12 @@
         "pkgName": "(com.netease.sky|com.tgc.sky)*",
         "symbol": null
       },
+      "native_game": {
+        "pkgName": "*(ea.game.|gameloft.|kiloo.|sybogames.|yodo1.|rockstargames.|corrodinggames.)*",
+        "symbol": null
+      },
       "benchmark": {
-        "pkgName": "com.futuremark.*|*[Bb]ench*",
+        "pkgName": "*[Bb]ench*|com.futuremark.*|*ioncannon.*|*.probe|*.devcheck",
         "symbol": null
       }
     },
@@ -380,6 +392,34 @@
           "heavyCpus": null,
           "commonCpus": [0, 1],
           "priority": 0
+        }
+      ],
+      "surfaceflinger": [
+        {
+          "threadName": "MAIN_THREAD",
+          "heavyCpus": null,
+          "commonCpus": [2, 3, 4],
+          "priority": -20
+        },
+        {
+          "threadName": "(RenderEngine|OverlayEngine|app)*",
+          "heavyCpus": null,
+          "commonCpus": [2, 3, 4],
+          "priority": -20
+        }
+      ],
+      "system_server": [
+        {
+          "threadName": "MAIN_THREAD",
+          "heavyCpus": null,
+          "commonCpus": [5, 6],
+          "priority": -20
+        },
+        {
+          "threadName": "android.*",
+          "heavyCpus": null,
+          "commonCpus": [5, 6],
+          "priority": -20
         }
       ],
       "unity_genshin": [
@@ -536,6 +576,26 @@
           "heavyCpus": null,
           "commonCpus": [2, 3, 4, 5, 6],
           "priority": -12
+        }
+      ],
+      "native_game": [
+        {
+          "threadName": "MAIN_THREAD",
+          "heavyCpus": null,
+          "commonCpus": [2, 3, 4, 5, 6],
+          "priority": -12
+        },
+        {
+          "threadName": "(Thread-|GameThread|NativeThread|MainThread|RenderThread)*",
+          "heavyCpus": [7],
+          "commonCpus": [2, 3, 4, 5, 6],
+          "priority": -20
+        },
+        {
+          "threadName": "(GLThread|FMOD)*|*(Audio|Media)*",
+          "heavyCpus": null,
+          "commonCpus": [2, 3, 4, 5, 6],
+          "priority": -16
         }
       ],
       "benchmark": []

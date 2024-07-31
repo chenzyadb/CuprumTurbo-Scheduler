@@ -212,6 +212,12 @@ get_config_name() {
     mt6789*)
         echo "helio_g99"
         ;;
+    mt6797*)
+        echo "helio_x20"
+        ;;
+    mt6799*)
+        echo "helio_x30"
+        ;;
     mt6833*)
         echo "dimensity700"
         ;;
