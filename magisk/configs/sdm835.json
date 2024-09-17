@@ -246,7 +246,7 @@
     "appTypes": {
       "surfaceflinger": {
         "pkgName": null,
-        "symbol": "[Ss]urface[Ff]linger"
+        "symbol": "[Ss]urface[Ff]linger*"
       },
       "system_server": {
         "pkgName": "system_server",
