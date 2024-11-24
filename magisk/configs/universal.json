@@ -1,7 +1,7 @@
 {
-  "name": "_Universal_Config",
-  "author": "username",
-  "configVersion": 10,
+  "name": "Universal_Config",
+  "author": "Unsupported_Device",
+  "configVersion": 11,
   "CpuGovernor": {
     "enable": false
   },
@@ -11,7 +11,13 @@
   "MtkGpuGovernor": {
     "enable": false
   },
-  "FileWriter": {
+  "DevfreqTurner": {
+    "enable": false
+  },
+  "Trigger": {
+    "enable": false
+  },
+  "Thermal": {
     "enable": false
   }
 }

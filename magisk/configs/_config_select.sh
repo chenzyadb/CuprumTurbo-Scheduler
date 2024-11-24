@@ -98,6 +98,9 @@ get_config_name() {
     kalama*)
         echo "sdm8gen2"
         ;;
+    sun*)
+        echo "sdm8elite"
+        ;;
     taro*)
         get_taro_name
         ;;
@@ -145,12 +148,6 @@ get_config_name() {
         ;;
     msm8953*)
         echo "sdm625"
-        ;;
-    msm8937*)
-        echo "sdm430"
-        ;;
-    msm8940*)
-        echo "sdm430"
         ;;
     sdm660*)
         echo "sdm660"
@@ -236,6 +233,9 @@ get_config_name() {
     mt6877*)
         echo "dimensity900"
         ;;
+    mt6878*)
+        echo "dimensity7300"
+        ;;
     mt6885*)
         echo "dimensity1000"
         ;;
@@ -262,6 +262,9 @@ get_config_name() {
         ;;
     mt6989*)
         echo "dimensity9300"
+        ;;
+    mt6991*)
+        echo "dimensity9400"
         ;;
     kirin970*)
         echo "kirin970"

@@ -1,9 +1,5 @@
-#!/system/bin/sh
-
-ui_print "- CuprumTurbo Scheduler Module"
-ui_print "- Installing..."
-
-chmod -R 0777 ${MODPATH}/
+#!/sbin/sh
+SKIPUNZIP=1
 
 get_pineapple_name() {
     cpu_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
@@ -103,6 +99,9 @@ get_config_name() {
     kalama*)
         echo "sdm8gen2"
         ;;
+    sun*)
+        echo "sdm8elite"
+        ;;
     taro*)
         get_taro_name
         ;;
@@ -150,12 +149,6 @@ get_config_name() {
         ;;
     msm8953*)
         echo "sdm625"
-        ;;
-    msm8937*)
-        echo "sdm430"
-        ;;
-    msm8940*)
-        echo "sdm430"
         ;;
     sdm660*)
         echo "sdm660"
@@ -241,6 +234,9 @@ get_config_name() {
     mt6877*)
         echo "dimensity900"
         ;;
+    mt6878*)
+        echo "dimensity7300"
+        ;;
     mt6885*)
         echo "dimensity1000"
         ;;
@@ -267,6 +263,9 @@ get_config_name() {
         ;;
     mt6989*)
         echo "dimensity9300"
+        ;;
+    mt6991*)
+        echo "dimensity9400"
         ;;
     kirin970*)
         echo "kirin970"
@@ -307,15 +306,24 @@ get_config_name() {
     esac
 }
 
+ui_print "= CuprumTurbo Scheduler Module ="
+ui_print "- Installing..."
+
+ui_print "- Extracting module files."
+if [ -d "$MODPATH" ]; then
+    rm -rf "$MODPATH"
+fi
+unzip -o "$ZIPFILE" -x "META-INF/*" -d "$MODPATH" >/dev/null 2>&1
+chmod -R 0777 "$MODPATH"
+
 platform_name=$(getprop "ro.board.platform")
 config_name=$(get_config_name "$platform_name")
-
 if [ -f "${MODPATH}/configs/${config_name}.json" ]; then
     cp -f "${MODPATH}/configs/${config_name}.json" "${MODPATH}/config.json"
     rm -rf "${MODPATH}/configs/"
 
     ui_print "- ${platform_name} is supported."
-    ui_print "- install finished."
+    ui_print "- Installation finished."
 else
     ui_print "- ${platform_name} is unsupported."
     abort "- Abort!"
