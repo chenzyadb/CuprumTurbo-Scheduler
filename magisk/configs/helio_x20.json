@@ -462,8 +462,8 @@
           {"path": "/dev/cpuset/restricted/cpus", "text": "0-3"},
           {"path": "/dev/cpuset/system-background/cpus", "text": "0-3"},
           {"path": "/dev/cpuset/background/cpus", "text": "0-3"},
-          {"path": "/dev/cpuset/foreground/cpus", "text": "0-7"},
-          {"path": "/dev/cpuset/top-app/cpus", "text": "0-7"}
+          {"path": "/dev/cpuset/foreground/cpus", "text": "0-9"},
+          {"path": "/dev/cpuset/top-app/cpus", "text": "0-9"}
         ]
       },
       "screenOn": {
