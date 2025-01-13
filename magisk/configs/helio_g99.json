@@ -425,12 +425,12 @@
         "downRateDelay": 50
       },
       "balance": {
-        "margin": 20,
+        "margin": 10,
         "upRateDelay": 50,
         "downRateDelay": 50
       },
       "performance": {
-        "margin": 30,
+        "margin": 20,
         "upRateDelay": 0,
         "downRateDelay": 50
       },
