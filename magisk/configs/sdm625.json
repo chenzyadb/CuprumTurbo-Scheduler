@@ -223,7 +223,7 @@
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3],
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
           "priority": -12
         },
         {
@@ -255,7 +255,7 @@
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3],
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
           "priority": -12
         },
         {

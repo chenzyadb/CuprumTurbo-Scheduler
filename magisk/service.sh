@@ -68,6 +68,9 @@ setprop "persist.miui.miperf.enable" "false" 2>/dev/null
 setprop "persist.sys.oiface.enable" "0" 2>/dev/null
 setprop "persist.sys.horae.enable" "0" 2>/dev/null
 
+setprop "persist.device_config.runtime_native.usap_pool_enabled" "true" 2>/dev/null
+setprop "sys.usap.enable" "true" 2>/dev/null
+
 lock_value "2" "/sys/devices/system/cpu/eas/enable"
 lock_value "0" "/sys/module/fbt_cpu/parameters/boost_affinity*"
 lock_value "0" "/sys/module/mtk_fpsgo/parameters/boost_affinity*"

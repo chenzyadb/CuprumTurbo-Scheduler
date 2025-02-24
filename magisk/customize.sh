@@ -301,7 +301,7 @@ get_config_name() {
         echo "unisoc_t618"
         ;;
     *)
-        echo "universal"
+        echo "unsupport"
         ;;
     esac
 }
