@@ -254,6 +254,12 @@ get_config_name() {
     mt6895*)
         get_mt6895_name
         ;;
+    mt6897*)
+        echo "dimensity8300"
+        ;;
+    mt6899*)
+        echo "dimensity8400"
+        ;;
     mt6983*)
         echo "dimensity9000"
         ;;

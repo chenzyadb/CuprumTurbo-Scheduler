@@ -35,8 +35,8 @@
         "lowPowerFreq": 700,
         "optimalFreq": 1800,
         "modelType": "medium-core",
-        "modelFreq": 3200,
-        "modelPower": 2090
+        "modelFreq": 3350,
+        "modelPower": 2300
       }
     ],
     "modes": {

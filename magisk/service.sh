@@ -153,6 +153,8 @@ if [ -d "/dev/cpuctl/" ]; then
     lock_value "0" "/dev/cpuctl/*/cpu.idle"
     lock_value "1024" "/dev/cpuctl/*/cpu.shares"
 fi
+lock_value "512" "/dev/cpuctl/background/cpu.shares"
+lock_value "512" "/dev/cpuctl/background/cpu.uclamp.max"
 
 if [ -d "/proc/perfmgr/boost_ctrl/eas_ctrl/" ]; then
     lock_value "0" "/proc/perfmgr/boost_ctrl/eas_ctrl/perfserv_*_boost"
