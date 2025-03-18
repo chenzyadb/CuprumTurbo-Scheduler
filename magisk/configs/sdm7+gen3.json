@@ -73,7 +73,6 @@
   "ThreadSchedOpt": {
     "enable": true,
     "defaultCpus": [0, 1, 2, 3, 4, 5, 6, 7],
-    "defaultPriority": 0,
     "appTypes": {
       "surfaceflinger": {
         "pkgName": null,
@@ -129,426 +128,359 @@
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": [7],
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "*[Rr]ender*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(GLThread|[Vv]sync|JNISurface|hwui|UiThread|ged-|mali-)*|*(.raster|.ui|.anim|.display)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(glide-|Fresco|[Ii]mage|[Ll]auncher)*|*([Bb]lur|[Aa]nim|[Oo]verlay|[Cc]horeographer)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(HWC release|GPU completion|FrameThread|FramePolicy|ScrollPolicy)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2],
-          "priority": -20
+          "commonCpus": [0, 1, 2]
         },
         {
           "threadName": "(Vlc|[Ii][Jj][Kk])*|*([Aa]udio|[Mm]ixer|[Vv]ideo|[Pp]layer|[Mm]edia|[Cc]odec|[Dd]ecode)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -16
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "(Chrome_|Compositor|CrGpuMain|CrRenderer|Viz|Gecko)*|*[Ww]eb[Vv]iew*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(WeexJsBridge|libweexjsb|V8 DefaultWork|hippy.js|mqt_)*|*[Jj]ava[Ss]cript*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -8
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "*([Ww]ork|[Hh]andle|[Pp]ool|[Mm]essage|[Dd]ispatch|[Ee]xecutor|[Bb]ridge|[Cc]amera)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -8
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "(Mod|Captain|[Tt]hread[-_]|pool-|Chronos.|CRON.|AsyncTask|Timer-)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -8
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "(HeapTask|HeapTrimmer|Finalizer|CleanupReferenc|GC)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2],
-          "priority": -8
+          "commonCpus": [0, 1, 2]
         },
         {
           "threadName": "(queued-work-|Jit thread pool|Signal Catcher|Profile Saver|ReferenceQueue)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2],
-          "priority": -8
+          "commonCpus": [0, 1, 2]
         },
         {
           "threadName": "(Moss|OkHttp|Okio|Rx|rx-)*|*([Nn]etwork|[Cc]ookie|[Ss]cheduler|[Cc]apture)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2],
-          "priority": -8
+          "commonCpus": [0, 1, 2]
         },
         {
           "threadName": "([Bb]ugly|BUGLY)*|*([Cc]rash|[Ll]og|[Rr]eport)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2],
-          "priority": 0
+          "commonCpus": [0, 1, 2]
         },
         {
           "threadName": "(APM-|TVKDL-|Firebase|koom|ADB-|MemoryInfra)*|*([Aa]nalytic|[Ww]atch[Dd]og|[Tt]racker|[Mm]onitor)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2],
-          "priority": 0
+          "commonCpus": [0, 1, 2]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": 0
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "surfaceflinger": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(RenderEngine|OverlayEngine|app)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7],
-          "priority": -20
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
         }
       ],
       "system_server": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "android.*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7],
-          "priority": -20
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
         }
       ],
       "unity_genshin": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "UnityGfx*",
           "heavyCpus": [7],
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(UnityMain|UnityMulti|UnityPreload|UnityChoreograp|UnityCCeograp)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(FMOD|[Aa]udio)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -16
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
-          "threadName": "(Worker Thread|Job.Worker|NativeThread|IL2CPP|CoreThread|Thread-)*",
+          "threadName": "(Worker Thread|NativeThread|IL2CPP|CoreThread|Thread-)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": 0
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "unity_common": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "UnityMain*",
           "heavyCpus": [7],
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(UnityGfx|UnityMulti|UnityPreload|UnityChoreograp|UnityCCeograp)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(FMOD|[Aa]udio|GVoice)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -16
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
-          "threadName": "(Worker Thread|Job.Worker|NativeThread|IL2CPP|GThread|ace_worker|Apollo-|CoreThread|Thread-)*",
+          "threadName": "(NativeThread|IL2CPP|GThread|Apollo-|CoreThread|Thread-)*|*[Ww]orker*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": 0
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "unreal_pubg": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "Thread-*",
           "heavyCpus": [7],
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(RenderThread|RHIThread)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|NativeThread|SDLThread|Thread-)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(FMOD|[Aa]udio|GVoice)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -16
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": 0
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "unreal_common": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(RenderThread|GameThread|RHIThread)*",
           "heavyCpus": [7],
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|NativeThread|SDLThread|Thread-)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(FMOD|[Aa]udio|GVoice)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -16
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": 0
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "minecraft": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "(Rendering Pool|MINECRAFT)*",
           "heavyCpus": [7],
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "Thread-*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -8
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "FMOD*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -16
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": 0
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "neox_engine": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "(MainThread|Thread-)*",
           "heavyCpus": [7],
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(IO|Compute|Resource|NativeThread)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": 0
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "sky_game": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "(MainThread|Program Thread)*",
           "heavyCpus": [7],
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(JobThread|Thread-)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": 0
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "roblox_game": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "Thread-*",
           "heavyCpus": [7],
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "RBX Worker*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(FMOD|[Aa]udio)*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": -16
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": 0
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "native_game": [
         {
           "threadName": "MAIN_THREAD",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -12
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(Thread-|GameThread|NativeThread|MainThread|RenderThread)*",
           "heavyCpus": [7],
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -20
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "(GLThread|FMOD)*|*(Audio|Media)*",
           "heavyCpus": null,
-          "commonCpus": [3, 4, 5, 6],
-          "priority": -16
+          "commonCpus": [3, 4, 5, 6]
         },
         {
           "threadName": "*",
           "heavyCpus": null,
-          "commonCpus": [0, 1, 2, 3, 4, 5, 6],
-          "priority": 0
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "benchmark": []
