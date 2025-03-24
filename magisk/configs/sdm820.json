@@ -192,6 +192,11 @@
           "commonCpus": [0, 1]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3]
@@ -258,6 +263,11 @@
           "commonCpus": [0, 1]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1]
@@ -290,6 +300,11 @@
           "commonCpus": [0, 1]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1]
@@ -312,7 +327,7 @@
           "commonCpus": [0, 1]
         },
         {
-          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|NativeThread|SDLThread|Thread-)*",
+          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*",
           "heavyCpus": null,
           "commonCpus": [0, 1]
         },
@@ -320,6 +335,11 @@
           "threadName": "(FMOD|[Aa]udio|GVoice)*",
           "heavyCpus": null,
           "commonCpus": [0, 1]
+        },
+        {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3]
         },
         {
           "threadName": "*",
@@ -339,7 +359,7 @@
           "commonCpus": [0, 1, 2]
         },
         {
-          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|NativeThread|SDLThread|Thread-)*",
+          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2]
         },
@@ -347,6 +367,11 @@
           "threadName": "(FMOD|[Aa]udio|GVoice)*",
           "heavyCpus": null,
           "commonCpus": [0, 1]
+        },
+        {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3]
         },
         {
           "threadName": "*",
@@ -376,6 +401,11 @@
           "commonCpus": [0, 1, 2]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2]
@@ -398,6 +428,11 @@
           "commonCpus": [0, 1, 2]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2]
@@ -418,6 +453,11 @@
           "threadName": "(JobThread|Thread-)*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2]
+        },
+        {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3]
         },
         {
           "threadName": "*",
@@ -447,6 +487,11 @@
           "commonCpus": [0, 1, 2]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2]
@@ -467,6 +512,11 @@
           "threadName": "(GLThread|FMOD)*|*(Audio|Media)*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2]
+        },
+        {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3]
         },
         {
           "threadName": "*",
@@ -828,7 +878,7 @@
         }
       },
       "jank": {
-        "durationTime": 50,
+        "durationTime": 100,
         "modes": {
           "powersave": {
             "setProperty": [
@@ -889,7 +939,7 @@
         }
       },
       "bigJank": {
-        "durationTime": 100,
+        "durationTime": 200,
         "modes": {
           "powersave": {
             "setProperty": [

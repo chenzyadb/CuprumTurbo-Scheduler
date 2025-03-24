@@ -192,6 +192,11 @@
           "commonCpus": [0, 1]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
@@ -226,6 +231,11 @@
           "commonCpus": [0, 1, 2, 3, 4, 5]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5]
@@ -258,6 +268,11 @@
           "commonCpus": [0, 1, 2, 3, 4, 5]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5]
@@ -280,7 +295,7 @@
           "commonCpus": [0, 1, 2, 3, 4, 5]
         },
         {
-          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|NativeThread|SDLThread|Thread-)*",
+          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5]
         },
@@ -288,6 +303,11 @@
           "threadName": "(FMOD|[Aa]udio|GVoice)*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5]
+        },
+        {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
         },
         {
           "threadName": "*",
@@ -307,7 +327,7 @@
           "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
-          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|NativeThread|SDLThread|Thread-)*",
+          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
@@ -315,6 +335,11 @@
           "threadName": "(FMOD|[Aa]udio|GVoice)*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5]
+        },
+        {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
         },
         {
           "threadName": "*",
@@ -344,6 +369,11 @@
           "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5, 6]
@@ -366,6 +396,11 @@
           "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5, 6]
@@ -386,6 +421,11 @@
           "threadName": "(JobThread|Thread-)*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5, 6]
+        },
+        {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
         },
         {
           "threadName": "*",
@@ -415,6 +455,11 @@
           "commonCpus": [0, 1, 2, 3, 4, 5, 6]
         },
         {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
+        },
+        {
           "threadName": "*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5, 6]
@@ -435,6 +480,11 @@
           "threadName": "(GLThread|FMOD)*|*(Audio|Media)*",
           "heavyCpus": null,
           "commonCpus": [0, 1, 2, 3, 4, 5, 6]
+        },
+        {
+          "threadName": "*[Bb]inder*",
+          "heavyCpus": null,
+          "commonCpus": [0, 1, 2, 3, 4, 5, 6, 7]
         },
         {
           "threadName": "*",
@@ -796,7 +846,7 @@
         }
       },
       "jank": {
-        "durationTime": 50,
+        "durationTime": 100,
         "modes": {
           "powersave": {
             "setProperty": [
@@ -857,7 +907,7 @@
         }
       },
       "bigJank": {
-        "durationTime": 100,
+        "durationTime": 200,
         "modes": {
           "powersave": {
             "setProperty": [
