@@ -1,6 +1,8 @@
 ## CuprumTurbo Scheduler
 一个简单可靠的性能调度.  
 `A Simple and Reliable Performance Scheduler.`  
+  
+[![Releases](https://img.shields.io/github/v/release/chenzyadb/CuprumTurbo-Scheduler?label=Release&logo=github)](https://github.com/chenzyadb/CuprumTurbo-Scheduler/releases/latest) [![License](https://img.shields.io/github/license/chenzyadb/CuprumTurbo-Scheduler?logo=bsd)](/LICENSE) ![Downloads](https://img.shields.io/github/downloads/chenzyadb/CuprumTurbo-Scheduler/total)
 ### 项目介绍  
 - 通过识别使用场景动态进行性能调控以改善流畅度和能效表现.  
 - 支持安卓6-15的arm64设备(APP最低支持安卓9).  
