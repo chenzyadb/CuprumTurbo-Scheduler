@@ -128,7 +128,7 @@
         "symbol": null
       },
       "benchmark": {
-        "pkgName": "*[Bb]ench*|com.futuremark.*|*ioncannon.*|*.probe|*.devcheck",
+        "pkgName": "*[Bb]ench*|com.futuremark.*|*ioncannon.*|*.probe|*.devcheck|*.mnnllm.*",
         "symbol": null
       }
     },
@@ -345,7 +345,7 @@
           "commonCpus": [2, 3, 4]
         },
         {
-          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*",
+          "threadName": "([Ww]orker|TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*",
           "heavyCpus": null,
           "commonCpus": [2, 3, 4, 5, 6]
         },
@@ -377,7 +377,7 @@
           "commonCpus": [2, 3, 4]
         },
         {
-          "threadName": "(TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*",
+          "threadName": "([Ww]orker|TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*",
           "heavyCpus": null,
           "commonCpus": [2, 3, 4, 5, 6]
         },
@@ -896,7 +896,7 @@
         }
       },
       "jank": {
-        "durationTime": 100,
+        "durationTime": 50,
         "modes": {
           "powersave": {
             "setProperty": [
@@ -957,7 +957,7 @@
         }
       },
       "bigJank": {
-        "durationTime": 200,
+        "durationTime": 100,
         "modes": {
           "powersave": {
             "setProperty": [
