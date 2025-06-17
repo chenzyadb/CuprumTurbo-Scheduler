@@ -1,0 +1,195 @@
+function stop_service {
+    service = $0
+    std.system(std.str_merge("stop \"", service, "\" >/dev/null 2>&1"))
+}
+
+function set_prop {
+    name = $0
+    value = $1
+    std.system(std.str_merge("setprop \"", name, "\" \"", value, "\" >/dev/null 2>&1"))
+}
+
+function lock_value {
+    path = $0
+    value = $1
+    lib.write(path, std.str_merge(value, "\n"))
+    lib.chmod(path, 292) # 0444 = 292
+}
+
+function lock_value_group {
+    path = $0
+    value = $1
+
+    paths = lib.list_path(path)
+    pos = 0
+    while (std.less(pos, std.sizeof(paths))) {
+        lock_value(std.list_get_elem(paths, pos), value)
+        pos = std.summation(pos, 1)
+    }
+}
+
+function set_task_cgroup {
+    task = $0
+    cgroup = $1
+    sub_group = $2
+
+    task_pid = lib.getpid(task)
+    lib.write(std.str_merge("/dev/", cgroup, "/", sub_group, "/cgroup.procs"), 
+        std.str_merge(task_pid, "\n"))
+}
+
+function disable_boosts {
+    stop_service("horae")
+    stop_service("miuibooster")
+    stop_service("oneplus_brain_service")
+    stop_service("vendor.perfservice")
+    stop_service("perfd")
+
+    set_prop("persist.sys.hardcoder.name", "")
+    set_prop("persist.miui.miperf.enable", "false")
+    set_prop("persist.sys.oiface.enable", "0")
+    set_prop("persist.sys.horae.enable", "0")
+    set_prop("persist.device_config.runtime_native.usap_pool_enabled", "true")
+    set_prop("sys.usap.enable", "true")
+
+    lock_value("/sys/devices/system/cpu/eas/enable", "2")
+    lock_value("/sys/module/perfmgr/parameters/perfmgr_enable", "0")
+    lock_value("/sys/module/perfmgr_policy/parameters/perfmgr_enable", "0")
+    lock_value("/sys/kernel/fpsgo/common/fpsgo_enable", "0")
+    lock_value("/sys/kernel/fpsgo/common/force_onoff", "0")
+    lock_value("/sys/kernel/fpsgo/fbt/switch_idleprefer", "0")
+    lock_value("/sys/kernel/fpsgo/fbt/boost_ta", "0")
+    lock_value("/sys/kernel/fpsgo/fbt/enable_switch_cap_margin", "0")
+    lock_value("/sys/kernel/fpsgo/fbt/enable_switch_down_throttle", "0")
+    lock_value("/sys/kernel/fpsgo/fbt/enable_switch_sync_flag", "0")
+    lock_value("/sys/kernel/debug/fpsgo/common/fpsgo_enable", "0")
+    lock_value("/sys/kernel/debug/fpsgo/common/force_onoff", "0")
+    lock_value("/sys/power/cpuhotplug/enabled", "0")
+    lock_value("/sys/power/pnpmgr/touch_boost", "0")
+    lock_value("/sys/power/pnpmgr/long_duration_touch_boost", "0")
+    lock_value("/sys/kernel/ems/eff_mode", "0")
+    lock_value("/sys/kernel/hmp/boost", "0")
+    lock_value("/sys/kernel/hmp/boostpulse_duration", "0")
+    lock_value("/sys/kernel/intelli_plug/intelli_plug_active", "0")
+    lock_value("/sys/kernel/zen_decision/enabled", "0")
+    lock_value("/sys/devices/system/cpu/sched/sched_boost", "0")
+    lock_value("/sys/devices/system/cpu/cpufreq/hotplug/cpu_hotplug_disable", "1")
+    lock_value("/sys/devices/system/cpu/cpuhotplug/enabled", "0")
+    lock_value("/sys/devices/system/cpu/hyp_core_ctl/enable", "0")
+    lock_value("/sys/devices/virtual/misc/mako_hotplug_control/enabled", "0")
+    lock_value("/sys/module/msm_performance/parameters/touchboost", "0")
+    lock_value("/sys/module/msm_thermal/vdd_restriction/enabled", "0")
+    lock_value("/sys/module/msm_thermal/core_control/enabled", "0")
+    lock_value("/sys/module/msm_thermal/parameters/enabled", "N")
+    lock_value("/sys/module/aigov/parameters/enable", "0")
+    lock_value("/sys/module/opchain/parameters/chain_on", "0")
+    lock_value("/sys/module/blu_plug/parameters/enabled", "0")
+    lock_value("/sys/module/autosmp/parameters/enabled", "0")
+    lock_value("/proc/perfmgr/tchbst/user/usrtch", "enable: 0")
+    lock_value("/proc/mz_thermal_boost/sched_boost_enabled", "0")
+    lock_value("/proc/mz_thermal_boost/boost_enabled", "0")
+    lock_value("/proc/mz_scheduler/vip_task/enabled", "0")
+    lock_value("/proc/oplus_scheduler/sched_assist/sched_assist_enabled", "0")
+    lock_value("/proc/game_opt/disable_cpufreq_limit", "1")
+    lock_value("/proc/game_opt/game_pid", "-1")
+    lock_value("/proc/sys/fbg/frame_boost_enabled", "0")
+    lock_value("/proc/sys/fbg/input_boost_enabled", "0")
+    lock_value("/proc/sys/fbg/slide_boost_enabled", "0")
+    lock_value("/proc/sys/kernel/sched_util_clamp_min", "0")
+    lock_value("/proc/sys/kernel/sched_util_clamp_max", "1024")
+    lock_value("/proc/sys/kernel/sched_boost", "0")
+    lock_value("/proc/sys/kernel/sched_boost_on_input", "0")
+    lock_value("/proc/sys/kernel/sched_per_task_boost", "0")
+    lock_value("/proc/sys/kernel/sched_ed_boost", "0")
+    lock_value("/proc/sys/kernel/sched_asymcap_boost", "0")
+    lock_value("/proc/sys/kernel/task_load_boost", "0")
+    lock_value("/proc/sys/kernel/sched_lib_name", "")
+    lock_value("/proc/sys/walt/sched_boost", "0")
+    lock_value("/proc/sys/walt/sched_boost_on_input", "0")
+    lock_value("/proc/sys/walt/sched_per_task_boost", "0")
+    lock_value("/proc/sys/walt/sched_ed_boost", "0")
+    lock_value("/proc/sys/walt/sched_asymcap_boost", "0")
+    lock_value("/proc/sys/walt/task_load_boost", "0")
+    lock_value("/proc/sys/walt/sched_lib_name", "")
+
+    lock_value_group("/sys/module/fbt_cpu/parameters", "0")
+    lock_value_group("/sys/kernel/cpu_input_boost", "0")
+    lock_value_group("/sys/devices/system/cpu/cpu_boost", "0")
+    lock_value_group("/sys/devices/system/cpu/cpu_boost/parameters", "0")
+    lock_value_group("/sys/module/cpu_boost/parameters", "0")
+    lock_value_group("/sys/module/houston/parameters", "0")
+    lock_value_group("/sys/module/dsboost/parameters", "0")
+    lock_value_group("/sys/module/cpu_input_boost/parameters", "0")
+    lock_value_group("/sys/module/input_cfboost/parameters", "0")
+    lock_value_group("/sys/class/input_booster", "0")
+    lock_value_group("/sys/module/control_center/parameters", "N")
+    lock_value_group("/proc/perfmgr/boost_ctrl/eas_ctrl", "0")
+    lock_value_group("/proc/sys/walt/input_boost", "0")
+}
+
+function stune_opt_impl {
+    stune_path = $0
+    if (lib.is_path_exists(std.str_merge(stune_path, "/schedtune.boost"))) {
+        lock_value(std.str_merge(stune_path, "/schedtune.boost"), "0")
+        lock_value(std.str_merge(stune_path, "/schedtune.prefer_idle"), "0")
+        lock_value(std.str_merge(stune_path, "/schedtune.util.max"), "1024")
+        lock_value(std.str_merge(stune_path, "/schedtune.util.min"), "0")
+    }
+}
+
+function stune_opt {
+    if (lib.is_path_exists("/dev/stune")) {
+        lock_value("/dev/stune/schedtune.boost", "0")
+        lock_value("/dev/stune/schedtune.prefer_idle", "0")
+        lock_value("/dev/stune/schedtune.util.max", "1024")
+        lock_value("/dev/stune/schedtune.util.min", "0")
+
+        stunes = lib.list_path("/dev/stune")
+        pos = 0
+        while (std.less(pos, std.sizeof(stunes))) {
+            stune_opt_impl(std.list_get_elem(stunes, pos))
+            pos = std.summation(pos, 1)
+        }
+    }
+}
+
+function cpuctl_opt_impl {
+    cpuctl_path = $0
+    if (lib.is_path_exists(std.str_merge(cpuctl_path, "/cpu.shares"))) {
+        lock_value(std.str_merge(cpuctl_path, "/cpu.idle"), "0")
+        lock_value(std.str_merge(cpuctl_path, "/cpu.shares"), "1024")
+        lock_value(std.str_merge(cpuctl_path, "/cpu.uclamp.latency_sensitive"), "0")
+        lock_value(std.str_merge(cpuctl_path, "/cpu.uclamp.max"), "max")
+        lock_value(std.str_merge(cpuctl_path, "/cpu.uclamp.min"), "0")
+    }
+}
+
+function cpuctl_opt {
+    if (lib.is_path_exists("/dev/cpuctl")) {
+        lock_value("/dev/cpuctl/cpu.idle", "0")
+        lock_value("/dev/cpuctl/cpu.shares", "1024")
+
+        cpuctls = lib.list_path("/dev/cpuctl")
+        pos = 0
+        while (std.less(pos, std.sizeof(cpuctls))) {
+            cpuctl_opt_impl(std.list_get_elem(cpuctls, pos))
+            pos = std.summation(pos, 1)
+        }
+    }
+}
+
+function system_proc_opt {
+    set_task_cgroup("surfaceflinger", "cpuset", "top-app")
+    set_task_cgroup("system_server", "cpuset", "top-app")
+    set_task_cgroup("android.hardware.graphics.composer", "cpuset", "top-app")
+    set_task_cgroup("vendor.qti.hardware.display.composer-service", "cpuset", "top-app")
+
+    set_task_cgroup("adbd", "cpuset", "system-background")
+    set_task_cgroup("logd", "cpuset", "system-background")
+    set_task_cgroup("lmkd", "cpuset", "system-background")
+    set_task_cgroup("mdnsd", "cpuset", "system-background")
+    set_task_cgroup("tombstoned", "cpuset", "system-background")
+    set_task_cgroup("traced", "cpuset", "system-background")
+    set_task_cgroup("swapd", "cpuset", "system-background")
+    set_task_cgroup("compactd", "cpuset", "system-background")
+}

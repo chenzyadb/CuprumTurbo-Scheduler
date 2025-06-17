@@ -310,18 +310,11 @@ get_config_name() {
 platform_name=$(getprop "ro.board.platform")
 config_name=$(get_config_name "$platform_name")
 
-while [ ! -f /sdcard/.test_file ]; do
-    true > /sdcard/.test_file
-    sleep 1
-done
-rm -f /sdcard/.test_file
-
-if [ ! -d /sdcard/Android/ct/ ]; then
-    mkdir -p /sdcard/Android/ct/
-    echo "balance" > /sdcard/Android/ct/cur_mode.txt
+if [ ! -f "${DIR_PATH}/mode.txt" ]; then
+    echo "balance" > "${DIR_PATH}/mode.txt"
 fi
 
-"${DIR_PATH}/scheduler/CuDaemon" --run \
-"${DIR_PATH}/scheduler/configs/${config_name}.ccf" \
-"/sdcard/Android/ct/cur_mode.txt" \
-"/sdcard/Android/ct/scheduler.log"
+"${DIR_PATH}/CuDaemon" --run \
+"${DIR_PATH}/configs/${config_name}.ccf" \
+"${DIR_PATH}/mode.txt" \
+"${DIR_PATH}/scheduler_log.txt"

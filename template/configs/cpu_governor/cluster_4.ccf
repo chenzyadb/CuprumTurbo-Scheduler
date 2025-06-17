@@ -1,0 +1,36 @@
+config CpuGovernor.profile {
+    maxRateHz = 100
+    minRateHz = 20
+    activeDelay = 2000
+    freqStep = 200
+    perMode = {
+        powersave = {
+            powerLimit = 3000
+            multiLoadLimit = true
+            multiLoadThres = [50, 50, 50, 50]
+            maxMargin = [10, 10, 10, 10]
+            maxLatency = [40, 40, 40, 40]
+        }
+        balance = {
+            powerLimit = 4000
+            multiLoadLimit = true
+            multiLoadThres = [50, 50, 50, 50]
+            maxMargin = [20, 20, 20, 20]
+            maxLatency = [30, 30, 30, 30]
+        }
+        performance = {
+            powerLimit = 5000
+            multiLoadLimit = false
+            multiLoadThres = [50, 50, 50, 50]
+            maxMargin = [30, 30, 30, 30]
+            maxLatency = [20, 20, 20, 20]
+        }
+        fast = {
+            powerLimit = 10000
+            multiLoadLimit = false
+            multiLoadThres = [50, 50, 50, 50]
+            maxMargin = [30, 30, 30, 30]
+            maxLatency = [10, 10, 10, 10]
+        }
+    }
+}

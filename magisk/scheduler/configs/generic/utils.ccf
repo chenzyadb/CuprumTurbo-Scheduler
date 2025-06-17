@@ -1,0 +1,13 @@
+define "UNKNOWN_MODE" "-1"
+define "POWERSAVE_MODE" "0"
+define "BALANCE_MODE" "1"
+define "PERFORMANCE_MODE" "2"
+define "FAST_MODE" "3"
+
+function get_scheduler_mode {
+    return lib.get_property_integer("scheduler.mode")
+}
+
+function get_topapp_pkg_name {
+    return lib.get_property_string("topapp.pkg_name")
+}

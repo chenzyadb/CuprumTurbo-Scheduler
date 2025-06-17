@@ -1,0 +1,18 @@
+config Trigger.hint.profile {
+    durationTimes = {
+        tap = 100
+        swipe = 200
+        gesture = 200
+        heavyload = 1000
+        jank = 50
+        bigJank = 100
+    }
+}
+
+function Trigger.scene.onScreenOn { }
+
+function Trigger.scene.onScreenOff { }
+
+function Trigger.scene.onModeSwitched { }
+
+function Trigger.scene.onTopAppChanged { }

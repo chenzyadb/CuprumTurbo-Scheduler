@@ -1,0 +1,477 @@
+config ThreadSchedOpt.profile {
+    defaultCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+    appTypes = {
+        surfaceflinger = {
+            pkgName = none
+            symbol = "[Ss]urface[Ff]linger*"
+        }
+        system_server = {
+            pkgName = "system_server"
+            symbol = none
+        }
+        unity_genshin = {
+            pkgName = "*(.Yuanshen|.GenshinImpact)|*.ys.*"
+            symbol = none
+        }
+        unity_common = {
+            pkgName = none
+            symbol = "Unity*"
+        }
+        unreal_pubg = {
+            pkgName = "*.pubg*"
+            symbol = none
+        }
+        unreal_common = {
+            pkgName = none
+            symbol = "(TaskGraph|RHIThread)*"
+        }
+        minecraft = {
+            pkgName = none
+            symbol = "MINECRAFT*"
+        }
+        neox_engine = {
+            pkgName = "*(.mrzh|.qrzd|.lglr|.zmq|.ldxy|.s4na|.g93na|.g78na|.onmyoji|.harrypotter|.moba|.party)*"
+            symbol = none
+        }
+        sky_game = {
+            pkgName = "(com.netease.sky|com.tgc.sky)*"
+            symbol = none
+        }
+        roblox_game = {
+            pkgName = none
+            symbol = "*(roblox|RBX)*"
+        }
+        native_game = {
+            pkgName = "*(ea.game.|gameloft.|kiloo.|sybogames.|yodo1.|rockstargames.|corrodinggames.)*"
+            symbol = none
+        }
+        benchmark = {
+            pkgName = "*[Bb]ench*|com.futuremark.*|*ioncannon.*|*.probe|*.devcheck|*.mnnllm.*"
+            symbol = none
+        }
+    }
+    schedRules = {
+        DEFAULT_RULE = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = [7]
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Rr]ender*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(GLThread|[Vv]sync|JNISurface|hwui|UiThread|ged-|mali-)*|*(.raster|.ui|.anim|.display)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(glide-|Fresco|[Ii]mage|[Ll]auncher)*|*([Bb]lur|[Aa]nim|[Oo]verlay|[Cc]horeographer)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(HWC release|GPU completion|FrameThread|FramePolicy|ScrollPolicy)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(Vlc|[Ii][Jj][Kk])*|*([Aa]udio|[Mm]ixer|[Vv]ideo|[Pp]layer|[Mm]edia|[Cc]odec|[Dd]ecode)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(Chrome_|Compositor|CrGpuMain|CrRenderer|Viz|Gecko)*|*[Ww]eb[Vv]iew*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(WeexJsBridge|libweexjsb|V8 DefaultWork|hippy.js|mqt_)*|*[Jj]ava[Ss]cript*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*([Ww]ork|[Hh]andle|[Pp]ool|[Mm]essage|[Dd]ispatch|[Ee]xecutor|[Bb]ridge|[Cc]amera)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(Mod|Captain|[Tt]hread[-_]|pool-|Chronos.|CRON.|AsyncTask|Timer-)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(HeapTask|HeapTrimmer|Finalizer|CleanupReferenc|GC)*"
+                heavyCpus = none
+                commonCpus = [0, 1]
+            },
+            {
+                threadName = "(queued-work-|Jit thread pool|Signal Catcher|Profile Saver|ReferenceQueue)*"
+                heavyCpus = none
+                commonCpus = [0, 1]
+            },
+            {
+                threadName = "(Moss|OkHttp|Okio|Rx|rx-)*|*([Nn]etwork|[Cc]ookie|[Ss]cheduler|[Cc]apture)*"
+                heavyCpus = none
+                commonCpus = [0, 1]
+            },
+            {
+                threadName = "([Bb]ugly|BUGLY)*|*([Cc]rash|[Ll]og|[Rr]eport)*"
+                heavyCpus = none
+                commonCpus = [0, 1]
+            },
+            {
+                threadName = "(APM-|TVKDL-|Firebase|koom|ADB-|MemoryInfra)*|*([Aa]nalytic|[Ww]atch[Dd]og|[Tt]racker|[Mm]onitor)*"
+                heavyCpus = none
+                commonCpus = [0, 1]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        surfaceflinger = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(RenderEngine|OverlayEngine|app)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            }
+        ]
+        system_server = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "android.*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            }
+        ]
+        unity_genshin = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "UnityGfx*"
+                heavyCpus = [7]
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(UnityMain|UnityMulti|UnityPreload|UnityChoreograp|UnityCCeograp)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(FMOD|[Aa]udio)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(Worker Thread|NativeThread|IL2CPP|CoreThread|Thread-)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        unity_common = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "UnityMain*"
+                heavyCpus = [7]
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(UnityGfx|UnityMulti|UnityPreload|UnityChoreograp|UnityCCeograp)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(FMOD|[Aa]udio|GVoice)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(NativeThread|IL2CPP|GThread|Apollo-|CoreThread|Thread-)*|*[Ww]orker*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        unreal_pubg = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "Thread-*"
+                heavyCpus = [7]
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(RenderThread|RHIThread)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "([Ww]orker|TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(FMOD|[Aa]udio|GVoice)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        unreal_common = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(RenderThread|GameThread|RHIThread)*"
+                heavyCpus = [7]
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "([Ww]orker|TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(FMOD|[Aa]udio|GVoice)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        minecraft = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(Rendering Pool|MINECRAFT)*"
+                heavyCpus = [7]
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "Thread-*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "FMOD*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        neox_engine = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(MainThread|Thread-)*"
+                heavyCpus = [7]
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(IO|Compute|Resource|NativeThread)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        sky_game = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(MainThread|Program Thread)*"
+                heavyCpus = [7]
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(JobThread|Thread-)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        roblox_game = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "Thread-*"
+                heavyCpus = [7]
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "RBX Worker*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(FMOD|[Aa]udio)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        native_game = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(Thread-|GameThread|NativeThread|MainThread|RenderThread)*"
+                heavyCpus = [7]
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(GLThread|FMOD)*|*(Audio|Media)*"
+                heavyCpus = none
+                commonCpus = [2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        benchmark = []
+    }
+}
+
+function cpuset_opt {
+    if (std.not(lib.is_path_exists("/dev/cpuset/top-app"))) {
+        lib.mkdir("/dev/cpuset/top-app")
+    }
+    
+    std.write_file("/dev/cpuset/restricted/cpus", "0-1")
+    std.write_file("/dev/cpuset/system-background/cpus", "0-1")
+    std.write_file("/dev/cpuset/background/cpus", "0-1")
+    std.write_file("/dev/cpuset/foreground/cpus", "0-7")
+    std.write_file("/dev/cpuset/top-app/cpus", "0-7")
+}

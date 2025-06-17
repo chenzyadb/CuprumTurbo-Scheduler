@@ -1,0 +1,26 @@
+config MtkGpuGovernor.profile {
+    baseRateHz = 30
+    burstRateHz = 60
+    perMode = {
+        powersave = {
+            margin = 10
+            upRateDelay = 50
+            downRateDelay = 50
+        }
+        balance = {
+            margin = 10
+            upRateDelay = 50
+            downRateDelay = 50
+        }
+        performance = {
+            margin = 20
+            upRateDelay = 0
+            downRateDelay = 50
+        }
+        fast = {
+            margin = 30
+            upRateDelay = 0
+            downRateDelay = 50
+        }
+    }
+}

@@ -1,0 +1,178 @@
+import "generic/utils.ccf"
+import "generic/sysfs_opt.ccf"
+import "generic/trigger.ccf"
+import "cpu_governor/cluster_2.ccf"
+import "thread/cpu_6_2.ccf"
+
+config meta_data {
+    name = "Snapdragon710/712/670"
+    version = "v1.0.0"
+    author = "chenzyadb"
+}
+
+config modules_switch {
+    CpuGovernor.enable = true
+    ThreadSchedOpt.enable = true
+    MtkGpuGovernor.enable = false
+    DevFreqTuner.enable = true
+    Trigger.enable = true
+    Thermal.enable = true
+}
+
+function init {
+    disable_boosts()
+    stune_opt()
+    cpuctl_opt()
+    system_proc_opt()
+    cpuset_opt()
+}
+
+config CpuGovernor.model {
+    clusters = [
+        {
+            coreNum = 6
+            perfRatio = 100
+            lowPowerFreq = 600
+            optimumFreq = 1700
+            modelType = "little-core"
+            modelFreq = 1700
+            modelPower = 320
+        },
+        {
+            coreNum = 2
+            perfRatio = 180
+            lowPowerFreq = 700
+            optimumFreq = 1800
+            modelType = "medium-core"
+            modelFreq = 2200
+            modelPower = 1280
+        }
+    ]
+}
+
+function Trigger.hint.onNone {
+    lib.set_property("cpu.boost", 0)
+    lib.set_property("cpu.extra_margin", 0)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 0)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+function Trigger.hint.onTap {
+    lib.set_property("cpu.boost", 20)
+    lib.set_property("cpu.extra_margin", 0)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 0)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+function Trigger.hint.onSwipe {
+    lib.set_property("cpu.boost", 0)
+    lib.set_property("cpu.extra_margin", 10)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 0)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+function Trigger.hint.onGesture {
+    lib.set_property("cpu.boost", 20)
+    lib.set_property("cpu.extra_margin", 10)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 0)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+function Trigger.hint.onHeavyload {
+    lib.set_property("cpu.boost", 0)
+    lib.set_property("cpu.extra_margin", 20)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 0)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+function Trigger.hint.onJank {
+    lib.set_property("cpu.boost", 40)
+    lib.set_property("cpu.extra_margin", 0)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 0)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+function Trigger.hint.onBigJank {
+    lib.set_property("cpu.boost", 40)
+    lib.set_property("cpu.extra_margin", 20)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 0)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+config Thermal.profile {
+    interval = 1000
+    resolution = 5
+    matchRule = "*(soc|cluster|cpu|tsens_tz_sensor)*"
+}
+
+function Thermal.onTempChanged {
+    cpuTemp = $0
+    mode = get_scheduler_mode()
+    
+    lib.set_property("devfreq.ddr.max_freq", 10000)
+    lib.set_property("devfreq.gpu.max_freq", 10000)
+    lib.set_property("mtk_gpu.max_freq", 10000)
+
+    if (std.equals(mode, POWERSAVE_MODE)) {
+        if (std.greater(cpuTemp, 90)) {
+            lib.set_property("cpu.max_power", 2000)
+        } else {
+            lib.set_property("cpu.max_power", 5000)
+        }
+    } else if (std.equals(mode, BALANCE_MODE)) {
+        if (std.greater(cpuTemp, 90)) {
+            lib.set_property("cpu.max_power", 2000)
+        } else if (std.greater(cpuTemp, 85)) {
+            lib.set_property("cpu.max_power", 5000)
+        } else {
+            lib.set_property("cpu.max_power", 8000)
+        }
+    } else if (std.equals(mode, PERFORMANCE_MODE)) {
+        if (std.greater(cpuTemp, 90)) {
+            lib.set_property("cpu.max_power", 2000)
+        } else if (std.greater(cpuTemp, 85)) {
+            lib.set_property("cpu.max_power", 5000)
+        } else if (std.greater(cpuTemp, 80)) {
+            lib.set_property("cpu.max_power", 8000)
+        } else {
+            lib.set_property("cpu.max_power", 10000)
+        }
+    } else if (std.equals(mode, FAST_MODE)) {
+        lib.set_property("cpu.max_power", 10000)
+    }
+}
