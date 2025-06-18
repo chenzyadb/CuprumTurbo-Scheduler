@@ -7,7 +7,7 @@ import "thread/cpu_6_2.ccf"
 
 config meta_data {
     name = "Helio_G80/G81/G85/G70/P65/P90"
-    version = "v1.0.0"
+    version = "v1.1.0"
     author = "chenzyadb"
 }
 

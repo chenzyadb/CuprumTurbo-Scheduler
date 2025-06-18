@@ -1,7 +1,4 @@
 config CpuGovernor.profile {
-    maxRateHz = 100
-    minRateHz = 20
-    activeDelay = 2000
     freqStep = 200
     perMode = {
         powersave = {

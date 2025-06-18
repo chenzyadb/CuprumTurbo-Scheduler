@@ -1,6 +1,4 @@
 config MtkGpuGovernor.profile {
-    baseRateHz = 30
-    burstRateHz = 60
     perMode = {
         powersave = {
             margin = 10

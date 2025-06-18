@@ -6,7 +6,7 @@ import "thread/cpu_3_4_1.ccf"
 
 config meta_data {
     name = "Snapdragon8Gen2"
-    version = "v1.0.0"
+    version = "v1.1.0"
     author = "chenzyadb"
 }
 
