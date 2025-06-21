@@ -6,7 +6,7 @@ import "thread/cpu_4_4.ccf"
 
 config meta_data {
     name = "Snapdragon835"
-    version = "v1.1.0"
+    version = "v1.2.0"
     author = "chenzyadb"
 }
 
@@ -113,7 +113,7 @@ function Trigger.hint.onHeavyload {
 function Trigger.hint.onJank {
     lib.set_property("cpu.boost", 40)
     lib.set_property("cpu.extra_margin", 0)
-    lib.set_property("cpu.low_latency", false)
+    lib.set_property("cpu.low_latency", true)
     lib.set_property("mtk_gpu.min_freq", 0)
     lib.set_property("mtk_gpu.boost", 0)
     lib.set_property("mtk_gpu.extra_margin", 0)
@@ -125,7 +125,7 @@ function Trigger.hint.onJank {
 function Trigger.hint.onBigJank {
     lib.set_property("cpu.boost", 40)
     lib.set_property("cpu.extra_margin", 20)
-    lib.set_property("cpu.low_latency", false)
+    lib.set_property("cpu.low_latency", true)
     lib.set_property("mtk_gpu.min_freq", 0)
     lib.set_property("mtk_gpu.boost", 0)
     lib.set_property("mtk_gpu.extra_margin", 0)
