@@ -78,8 +78,7 @@ get_bengal_name() {
 }
 
 get_sun_name() {
-    cpu_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
-    if [ "$cpu_max_freq" -gt 4000000 ]; then
+    if [ -d "/sys/devices/system/cpu/cpufreq/policy6" ]; then
         echo "sdm8elite"
     else
         echo "sdm8sgen4"
