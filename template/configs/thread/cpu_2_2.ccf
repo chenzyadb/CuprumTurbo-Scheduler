@@ -1,5 +1,4 @@
 config ThreadSchedOpt.profile {
-    defaultCpus = [0, 1, 2, 3]
     appTypes = {
         surfaceflinger = {
             pkgName = none
@@ -445,7 +444,7 @@ config ThreadSchedOpt.profile {
                 commonCpus = [0, 1, 2]
             },
             {
-                threadName = "(GLThread|FMOD)*|*(Audio|Media)*"
+                threadName = "(GLThread|Render|FMOD)*|*(Audio|Media)*"
                 heavyCpus = none
                 commonCpus = [0, 1, 2]
             },

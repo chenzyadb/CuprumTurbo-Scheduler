@@ -6,7 +6,7 @@ import "thread/cpu_6_2.ccf"
 
 config meta_data {
     name = "Snapdragon750/750G/690"
-    version = "v1.2.0"
+    version = "v1.2.1"
     author = "chenzyadb"
 }
 

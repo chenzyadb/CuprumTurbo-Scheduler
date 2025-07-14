@@ -7,7 +7,7 @@ import "thread/cpu_6_2.ccf"
 
 config meta_data {
     name = "Dimensity900/920/930/1080"
-    version = "v1.2.0"
+    version = "v1.2.1"
     author = "chenzyadb"
 }
 
