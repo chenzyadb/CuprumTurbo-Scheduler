@@ -1,0 +1,859 @@
+# CuprumTurbo 调度 单文件配置模板
+# CuprumTurbo V21 版本使用CuConfig作为配置文件格式, 简单介绍如下:
+
+# 此配置可以被调度程序正常执行, 可以修改后导入调度通过日志文件判断语法是否正确.
+# 注释以'#'字符开头, 以换行符结尾. 换行符支持\r\n 以及 \n 格式.
+
+# 支持使用`import`语句引入外部配置文件, 假设有一个如下结构的配置文件目录:
+# configs/
+#   main.ccf
+#   utils/
+#       misc.ccf
+# 你就可以在main.ccf文件中使用 `import "utils/misc.ccf"` 的方式导入misc.ccf文件, 双引号不可省略.
+# 只支持导入在原文件同一目录下的其他文件, 不支持导入上级文件夹的文件.
+# 导入的原理类似将外部文件插入到当前文件的末尾.
+
+# 支持使用`define`语句替换配置文件中的字符串, 该语句在所有配置文件中都生效, 具体写法如下:
+define "DEFAULT_VALUE" "0"
+# 上述语句就可以将所有配置文件中的`DEFAULT_VALUE`字符串替换为`0`, 双引号同样不可省略.
+
+# CuConfig格式支持两种类型的Section: `config`和`function`.
+# 其中`config`与JSON格式类似, 用于存储键值对形式的配置.
+# `function` 则为一种简单的脚本语言, 支持相互调用和递归调用, 且调用时不需要提前定义.
+
+# `config`的简单模板如下:
+config template_conf { # 开始定义名称为`template_conf`的config节.
+   text = "this is string" # 定义一个名称为`text`的字符串(String), 如果不使用';'字符分开键值对则默认以行尾作为结尾.
+   num = 3.141592 # 定义一个名称为`num`的数字(Number), 数字支持整数和浮点类型.
+   enabled = true # 定义一个名称为`enabled`的布尔(Boolean).
+   nothing = none # 定义一个名称为`nothing`的空类型(None).
+   list = [1, true, "string", [], {}] # 定义一个名称为`list`的数组(List).
+   object = {a = "string";} # 定义一个名称为`object`的对象(Object).
+} # 每个节都必须以'}'结束.
+
+# `function`的简单模板如下:
+function template_func { # 开始定义名称为`template_func`的function节.
+    args_num = $$ # CuConfig的所有函数都支持可变参数, 使用`$$`运算符获取参数数量并存入变量`args_num`
+    if (std.equals(args_num, 0)) { # 使用`if`语句判断函数参数数量是否为0个, `std.equals`为CuConfig标准库中的比较函数.
+        std.print("函数没有获取到参数") # 调用函数`std.print`输出, 所有语句如果不使用';'字符分开则默认以换行符结尾.
+    } else if (std.greater(args_num, 1)) { # 调用函数`std.greater`判断函数参数数量是否大于1个.
+        std.print("函数获取到超过1个参数")
+        std.print(std.str_merge("第一个参数是: ", $0, "类型是: ", std.typeof($0))) # 使用`$0`运算符得到函数的第一个参数,
+        # 使用`std.str_merge`函数合并字符串, 此函数支持传入String, Number, Boolean类型并返回String类型的字符串.
+    }
+
+    text = "this is string"
+    num = 3.141592
+    enabled = true
+    nothing = none # function中支持String, Number, Boolean, None 类型.
+    string_list = std.make_list("hello", "world") # 支持使用`std.make_list`函数创建数组.
+    num_list = std.make_list(1, 2, 3)
+    std.print(std.str_merge("数组中的第一个元素: ", std.list_get_elem(num_list, 0))) # 使用`std.list_get_elem`函数得到成员.
+
+    &num_ref = num # 定义`num`变量的引用.
+    num_ref = 1 
+    std.print(std.str_merge("变量num的值为:", num)) # 引用的值改变后原来的变量也会改变.
+
+    i = 0
+    while (std.less(i, 10)) { # 使用`while`语句定义循环体, 当变量`i`小于10时一直循环.
+        std.print(std.str_merge("第", std.summation(i, 1), "次循环."))
+        i = std.summation(i, 1) # 将变量i中的值加一.
+    } # 当变量`i`等于10就退出循环.
+}
+
+# 下面以骁龙888的配置文件为例.
+
+# 配置文件的基础信息. 
+config meta_data {
+    name = "Snapdragon888/888+" # 配置文件的名称.
+    version = "v1.0" # 配置文件的版本号, 支持自定义.
+    author = "your_name" # 配置文件的作者.
+}
+
+# 调度模块开关.
+config modules_switch {
+    CpuGovernor.enable = true # CPU调频器模块开关.
+    ThreadSchedOpt.enable = true # 线程调度优化模块开关.
+    MtkGpuGovernor.enable = false # 联发科GPU调频器模块开关.
+    DevFreqTuner.enable = true # 内存/GPU频率调谐器模块开关.
+    Trigger.enable = true # 触发器模块开关.
+    Thermal.enable = true # 温控模块开关.
+}
+
+# 调度程序初始化时调用的函数.
+function init { 
+    cpuset_opt() # 调用下方定义的`cpuset_opt`函数.
+}
+
+# 定义调度模式.
+define "UNKNOWN_MODE" "-1"
+define "POWERSAVE_MODE" "0"
+define "BALANCE_MODE" "1"
+define "PERFORMANCE_MODE" "2"
+define "FAST_MODE" "3"
+
+# 获取调度模式函数.
+function get_scheduler_mode {
+    # `lib.get_property_integer`函数用于获取调度内部Property的值(Number类型).
+    return lib.get_property_integer("scheduler.mode")
+}
+
+# 获取前台应用包名函数.
+function get_topapp_pkg_name {
+    # `lib.get_property_string`函数用于获取调度内部Property的值(String类型).
+    return lib.get_property_string("topapp.pkg_name")
+}
+
+# 触发器Hint配置.
+config Trigger.hint.profile {
+    durationTimes = {
+        tap = 100 # 点击屏幕的Hint持续时间(ms).
+        swipe = 200 # 划动屏幕的Hint持续时间.
+        gesture = 200 # 手势操作的Hint持续时间.
+        heavyload = 1000 # 重负载(APP启动/亮屏)的Hint持续时间.
+        jank = 50 # 掉帧的Hint持续时间.
+        bigJank = 100 # 严重掉帧的Hint持续时间.
+    }
+}
+
+# 点亮屏幕场景时触发的函数.
+function Trigger.scene.onScreenOn { }
+
+# 熄灭屏幕场景时触发的函数.
+function Trigger.scene.onScreenOff { }
+
+# 调度模式切换场景时触发的函数.
+function Trigger.scene.onModeSwitched { }
+
+# 顶层应用切换场景时触发的函数.
+function Trigger.scene.onTopAppChanged { }
+
+# CPU调频器功耗模型配置.
+config CpuGovernor.model {
+    clusters = [ # 此数组每个元素对应一个丛集.
+        {
+            coreNum = 4 # 丛集的CPU核心数量.
+            perfRatio = 100 # 丛集的CPU性能值.
+            lowPowerFreq = 600 # 丛集的CPU最低功耗频率(MHz).
+            optimumFreq = 1600 # 丛集的CPU最优频率(MHz).
+            modelType = "little-core" # 丛集的CPU功耗模型类型.
+            modelFreq = 1800 # 丛集的CPU功耗模型典型频率(MHz).
+            modelPower = 320 # 丛集的CPU功耗模型典型频率对应的满载功耗(mW).
+        },
+        {
+            coreNum = 3
+            perfRatio = 320
+            lowPowerFreq = 700
+            optimumFreq = 1900
+            modelType = "medium-core"
+            modelFreq = 2420
+            modelPower = 1740
+        },
+        {
+            coreNum = 1
+            perfRatio = 400
+            lowPowerFreq = 800
+            optimumFreq = 2100
+            modelType = "big-core"
+            modelFreq = 2840
+            modelPower = 3160
+        }
+    ]
+}
+
+# CPU调频器参数配置.
+config CpuGovernor.profile {
+    perMode = {
+        # 配置中的数组都是每个元素对应一个丛集.
+        powersave = { # 省电模式下.
+            powerLimit = 3000 # 基础功耗限制, 在cpu.boost/cpu.extra_margin/cpu.low_latency 为0/false时生效.
+            multiLoadLimit = true # 多核负载限制.
+            # 负载最高核心的load减去其他核心的平均load超过阈值时限制此丛集的最高频率至`optimumFreq`.
+            multiLoadThres = [50, 50, 50] # 多核负载限制阈值(%).
+            maxMargin = [10, 10, 10] # 最大冗余(%), 冗余越高升频越积极.
+            maxLatency = [40, 40, 40] # 最大升频延迟(ms), 延迟越高升频越缓慢.
+            maxFreqStep = [200, 200, 200] # 每次调频最大步幅(MHz).
+        }
+        balance = { # 均衡模式下.
+            powerLimit = 4000
+            multiLoadLimit = true
+            multiLoadThres = [50, 50, 50]
+            maxMargin = [20, 20, 20]
+            maxLatency = [30, 30, 30]
+            maxFreqStep = [200, 200, 200]
+        }
+        performance = { # 性能模式下.
+            powerLimit = 5000
+            multiLoadLimit = false
+            multiLoadThres = [50, 50, 50]
+            maxMargin = [30, 30, 30]
+            maxLatency = [20, 20, 20]
+            maxFreqStep = [200, 200, 200]
+        }
+        fast = { # 极速模式下.
+            powerLimit = 10000
+            multiLoadLimit = false
+            multiLoadThres = [50, 50, 50]
+            maxMargin = [30, 30, 30]
+            maxLatency = [10, 10, 10]
+            maxFreqStep = [200, 200, 200]
+        }
+    }
+}
+
+# 当Hint为None时触发的函数.
+function Trigger.hint.onNone {
+    # `lib.set_property`函数可以设置调度内部的Property值用于动态改变调度行为, 第一个参数为Property的键, 第二个参数为Property的值.
+    # 键必须时String类型, 值支持 String, Number, Boolean 类型, Number类型只支持整数, 浮点数会被强转为整数.
+    lib.set_property("cpu.boost", 0) # cpu.boost值可以在CPU负载较低时"夸大"CPU负载, 用于在某些场景下提前提升CPU频率.
+    lib.set_property("cpu.extra_margin", 0) # cpu.extra_margin值用于额外增加冗余.
+    lib.set_property("cpu.low_latency", false) # cpu.low_latency值为true时CPU调频器会以最低延迟提升频率.
+    lib.set_property("mtk_gpu.min_freq", 0) # 联发科GPU调频器最低频率(MHz).
+    lib.set_property("mtk_gpu.boost", 0) # 联发科GPU调频器boost值.
+    lib.set_property("mtk_gpu.extra_margin", 0) # 联发科GPU调频器额外冗余值.
+    lib.set_property("mtk_gpu.low_latency", false) # 联发科GPU调频器请求低延迟.
+    lib.set_property("devfreq.ddr.min_freq", 0) # DDR最低频率(MHz/Mbps).
+    lib.set_property("devfreq.gpu.min_freq", 0) # GPU最低频率(MHz).
+}
+
+# 当Hint为Tap时触发的函数.
+function Trigger.hint.onTap {
+    lib.set_property("cpu.boost", 20)
+    lib.set_property("cpu.extra_margin", 0)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 0)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+# 当Hint为Swipe时触发的函数.
+function Trigger.hint.onSwipe {
+    lib.set_property("cpu.boost", 0)
+    lib.set_property("cpu.extra_margin", 10)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 0)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+# 当Hint为Gesture时触发的函数.
+function Trigger.hint.onGesture {
+    lib.set_property("cpu.boost", 20)
+    lib.set_property("cpu.extra_margin", 10)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 3200)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+# 当Hint为Heavyload时触发的函数.
+function Trigger.hint.onHeavyload {
+    lib.set_property("cpu.boost", 0)
+    lib.set_property("cpu.extra_margin", 20)
+    lib.set_property("cpu.low_latency", false)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 3200)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+# 当Hint为Jank时触发的函数.
+function Trigger.hint.onJank {
+    lib.set_property("cpu.boost", 40)
+    lib.set_property("cpu.extra_margin", 0)
+    lib.set_property("cpu.low_latency", true)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 4800)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+# 当Hint为BigJank时触发的函数.
+function Trigger.hint.onBigJank {
+    lib.set_property("cpu.boost", 40)
+    lib.set_property("cpu.extra_margin", 20)
+    lib.set_property("cpu.low_latency", true)
+    lib.set_property("mtk_gpu.min_freq", 0)
+    lib.set_property("mtk_gpu.boost", 0)
+    lib.set_property("mtk_gpu.extra_margin", 0)
+    lib.set_property("mtk_gpu.low_latency", false)
+    lib.set_property("devfreq.ddr.min_freq", 4800)
+    lib.set_property("devfreq.gpu.min_freq", 0)
+}
+
+# 温控配置.
+config Thermal.profile {
+    interval = 1000 # 温控计时器间隔(ms).
+    resolution = 5 # 温控精度(°C)
+    matchRule = "*(soc|cluster|cpu|tsens_tz_sensor)*" # 温控类型匹配规则.
+}
+
+# 当温度变化时触发此函数.
+function Thermal.onTempChanged {
+    cpuTemp = $0 # 函数的第一个参数为CPU温度.
+    mode = get_scheduler_mode() # 获取调度当前模式.
+    
+    lib.set_property("devfreq.ddr.max_freq", 10000) # DDR最高频率(MHz).
+    lib.set_property("mtk_gpu.max_freq", 10000) # 联发科GPU调频器最高频率(MHz).
+
+    if (std.equals(mode, POWERSAVE_MODE)) { # 当调度模式为省电模式(POWERSAVE_MODE)时.
+        if (std.greater(cpuTemp, 90)) { # 当CPU温度大于90度时.
+            # `cpu.max_power`值为最高优先级, 所有场景下功耗都不得超过这个值.
+            lib.set_property("cpu.max_power", 2000) # 限制CPU调频器最大功耗(mW).
+            lib.set_property("devfreq.gpu.max_freq", 380) # 限制GPU最高频率(MHz).
+        } else { # CPU温度低于90度时.
+            lib.set_property("cpu.max_power", 5000)
+            lib.set_property("devfreq.gpu.max_freq", 450)
+        }
+    } else if (std.equals(mode, BALANCE_MODE)) {
+        if (std.greater(cpuTemp, 90)) {
+            lib.set_property("cpu.max_power", 2000)
+            lib.set_property("devfreq.gpu.max_freq", 380)
+        } else if (std.greater(cpuTemp, 85)) {
+            lib.set_property("cpu.max_power", 5000)
+            lib.set_property("devfreq.gpu.max_freq", 450)
+        } else {
+            lib.set_property("cpu.max_power", 8000)
+            lib.set_property("devfreq.gpu.max_freq", 550)
+        }
+    } else if (std.equals(mode, PERFORMANCE_MODE)) {
+        if (std.greater(cpuTemp, 90)) {
+            lib.set_property("cpu.max_power", 2000)
+            lib.set_property("devfreq.gpu.max_freq", 380)
+        } else if (std.greater(cpuTemp, 85)) {
+            lib.set_property("cpu.max_power", 5000)
+            lib.set_property("devfreq.gpu.max_freq", 450)
+        } else if (std.greater(cpuTemp, 80)) {
+            lib.set_property("cpu.max_power", 8000)
+            lib.set_property("devfreq.gpu.max_freq", 550)
+        } else {
+            lib.set_property("cpu.max_power", 10000)
+            lib.set_property("devfreq.gpu.max_freq", 610)
+        }
+    } else if (std.equals(mode, FAST_MODE)) {
+        lib.set_property("cpu.max_power", 10000)
+        lib.set_property("devfreq.gpu.max_freq", 840)
+    }
+}
+
+# 联发科GPU调频器配置.
+# 高通设备不支持联发科GPU调频器, 在此配置文件中会被忽略.
+config MtkGpuGovernor.profile {
+    perMode = {
+        powersave = { # 省电模式下
+            margin = 10 # GPU调频器冗余(%).
+            upRateDelay = 50 # GPU调频器升频延迟(ms).
+            downRateDelay = 50 # GPU调频器降频延迟(ms).
+        }
+        balance = { # 均衡模式下.
+            margin = 10
+            upRateDelay = 50
+            downRateDelay = 50
+        }
+        performance = { # 性能模式下.
+            margin = 20
+            upRateDelay = 0
+            downRateDelay = 50
+        }
+        fast = { # 极速模式下.
+            margin = 30
+            upRateDelay = 0
+            downRateDelay = 50
+        }
+    }
+}
+
+# 线程调度优化配置.
+config ThreadSchedOpt.profile {
+    appTypes = { # 定义APP类型和匹配方式.
+        surfaceflinger = { # 定义surfaceflinger类型的匹配方式.
+            # 字符串匹配为CuStringMatcher格式, 不支持正则匹配表达式, 简单介绍如下:
+            # `[AaBb]`为此位置的字符可以是'A', 'a', 'B', 'b', `[0-9]`为此位置的字符可以是0-9的数字.
+            # `*A` 为字符串必须以A结尾, `B*` 为字符串必须以B开头, `*123*`为字符串中间必须包含"123".
+            # `*(ABC|123)` 为字符串必须以"ABC"或者"123"结尾.
+            pkgName = none # 使用APP包名匹配, 设置为`none`时不使用这个匹配.
+            symbol = "[Ss]urface[Ff]linger*" # 使用特征匹配, 设置为`none`时不使用这个匹配.
+        }
+        system_server = {
+            pkgName = "system_server"
+            symbol = none
+        }
+        unity_genshin = {
+            pkgName = "*(.Yuanshen|.GenshinImpact)|*.ys.*"
+            symbol = none
+        }
+        unity_common = {
+            pkgName = none
+            symbol = "Unity*"
+        }
+        unreal_pubg = {
+            pkgName = "*.pubg*"
+            symbol = none
+        }
+        unreal_common = {
+            pkgName = none
+            symbol = "(TaskGraph|RHIThread)*"
+        }
+        minecraft = {
+            pkgName = none
+            symbol = "MINECRAFT*"
+        }
+        neox_engine = {
+            pkgName = "*(.mrzh|.qrzd|.lglr|.zmq|.ldxy|.s4na|.g93na|.g78na|.onmyoji|.harrypotter|.moba|.party)*"
+            symbol = none
+        }
+        sky_game = {
+            pkgName = "(com.netease.sky|com.tgc.sky)*"
+            symbol = none
+        }
+        roblox_game = {
+            pkgName = none
+            symbol = "*(roblox|RBX)*"
+        }
+        native_game = {
+            pkgName = "*(ea.game.|gameloft.|kiloo.|sybogames.|yodo1.|rockstargames.|corrodinggames.)*"
+            symbol = none
+        }
+        benchmark = {
+            pkgName = "*[Bb]ench*|com.futuremark.*|*ioncannon.*|*.probe|*.devcheck|*.mnnllm.*"
+            symbol = none
+        }
+    }
+    schedRules = { # 定义调度策略.
+        DEFAULT_RULE = [ # 默认调度策略.
+            {
+                threadName = "MAIN_THREAD" # 线程名称匹配, 设置为`MAIN_THREAD`时自动匹配主线程.
+                heavyCpus = [7] # 选择CPU负载最高的线程绑定到此数组设定的CPU上, 可以为`none`即不区分负载最高的线程.
+                commonCpus = [4, 5, 6] # 其他所有线程绑定到此数组设定的CPU上.
+            },
+            {
+                threadName = "*[Rr]ender*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(GLThread|[Vv]sync|JNISurface|hwui|UiThread|ged-|mali-)*|*(.raster|.ui|.anim|.display)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(glide-|Fresco|[Ii]mage|[Ll]auncher)*|*([Bb]lur|[Aa]nim|[Oo]verlay|[Cc]horeographer)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(HWC release|GPU completion|FrameThread|FramePolicy|ScrollPolicy)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3]
+            },
+            {
+                threadName = "(Vlc|[Ii][Jj][Kk])*|*([Aa]udio|[Mm]ixer|[Vv]ideo|[Pp]layer|[Mm]edia|[Cc]odec|[Dd]ecode)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(Chrome_|Compositor|CrGpuMain|CrRenderer|Viz|Gecko)*|*[Ww]eb[Vv]iew*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(WeexJsBridge|libweexjsb|V8 DefaultWork|hippy.js|mqt_)*|*[Jj]ava[Ss]cript*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "*([Ww]ork|[Hh]andle|[Pp]ool|[Mm]essage|[Dd]ispatch|[Ee]xecutor|[Bb]ridge|[Cc]amera)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(Mod|Captain|[Tt]hread[-_]|pool-|Chronos.|CRON.|AsyncTask|Timer-)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(HeapTask|HeapTrimmer|Finalizer|CleanupReferenc|GC)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3]
+            },
+            {
+                threadName = "(queued-work-|Jit thread pool|Signal Catcher|Profile Saver|ReferenceQueue)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3]
+            },
+            {
+                threadName = "(Moss|OkHttp|Okio|Rx|rx-)*|*([Nn]etwork|[Cc]ookie|[Ss]cheduler|[Cc]apture)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3]
+            },
+            {
+                threadName = "([Bb]ugly|BUGLY)*|*([Cc]rash|[Ll]og|[Rr]eport)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3]
+            },
+            {
+                threadName = "(APM-|TVKDL-|Firebase|koom|ADB-|MemoryInfra)*|*([Aa]nalytic|[Ww]atch[Dd]og|[Tt]racker|[Mm]onitor)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        surfaceflinger = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(RenderEngine|OverlayEngine|app)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            }
+        ]
+        system_server = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "android.*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            }
+        ]
+        unity_genshin = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "UnityGfx*"
+                heavyCpus = [7]
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(UnityMain|UnityMulti|UnityPreload|UnityChoreograp|UnityCCeograp)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(FMOD|[Aa]udio)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(Worker Thread|NativeThread|IL2CPP|CoreThread|Thread-)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        unity_common = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "UnityMain*"
+                heavyCpus = [7]
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(UnityGfx|UnityMulti|UnityPreload|UnityChoreograp|UnityCCeograp)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(FMOD|[Aa]udio|GVoice)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(NativeThread|IL2CPP|GThread|Apollo-|CoreThread|Thread-)*|*[Ww]orker*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        unreal_pubg = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "Thread-*"
+                heavyCpus = [7]
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(RenderThread|RHIThread)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "([Ww]orker|TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(FMOD|[Aa]udio|GVoice)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        unreal_common = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(RenderThread|GameThread|RHIThread)*"
+                heavyCpus = [7]
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "([Ww]orker|TaskGraph|CmpJob|Apollo-|glp|glt|FChunk|NativeThread|SDLThread|Thread-)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(FMOD|[Aa]udio|GVoice)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        minecraft = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(Rendering Pool|MINECRAFT)*"
+                heavyCpus = [7]
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "Thread-*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "FMOD*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        neox_engine = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(MainThread|Thread-)*"
+                heavyCpus = [7]
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(IO|Compute|Resource|NativeThread)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        sky_game = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "(MainThread|Program Thread)*"
+                heavyCpus = [7]
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(JobThread|Thread-)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        roblox_game = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "Thread-*"
+                heavyCpus = [7]
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "RBX Worker*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(FMOD|[Aa]udio)*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        native_game = [
+            {
+                threadName = "MAIN_THREAD"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(Thread-|GameThread|NativeThread|MainThread|RenderThread)*"
+                heavyCpus = [7]
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "(GLThread|Render|FMOD)*|*(Audio|Media)*"
+                heavyCpus = none
+                commonCpus = [4, 5, 6]
+            },
+            {
+                threadName = "*[Bb]inder*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            {
+                threadName = "*"
+                heavyCpus = none
+                commonCpus = [0, 1, 2, 3, 4, 5, 6]
+            }
+        ]
+        benchmark = []
+    }
+}
+
+function cpuset_opt {
+    if (std.not(lib.is_path_exists("/dev/cpuset/top-app"))) { # 当top-app group不存在时创建.
+        lib.mkdir("/dev/cpuset/top-app")
+    }
+    
+    std.write_file("/dev/cpuset/restricted/cpus", "0-3") # 调用标准库函数`std.write_file`写文件. 此函数两个参数都必须是String类型.
+    std.write_file("/dev/cpuset/system-background/cpus", "0-3")
+    std.write_file("/dev/cpuset/background/cpus", "0-3")
+    std.write_file("/dev/cpuset/foreground/cpus", "0-7")
+    std.write_file("/dev/cpuset/top-app/cpus", "0-7")
+}

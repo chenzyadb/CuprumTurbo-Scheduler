@@ -1,5 +1,4 @@
 config CpuGovernor.profile {
-    freqStep = 200
     perMode = {
         powersave = {
             powerLimit = 3000
