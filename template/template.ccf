@@ -168,7 +168,7 @@ config CpuGovernor.profile {
         powersave = { # 省电模式下.
             powerLimit = 3000 # 基础功耗限制, 在cpu.boost/cpu.extra_margin/cpu.low_latency 为0/false时生效.
             multiLoadLimit = true # 多核负载限制.
-            # 负载最高核心的load减去其他核心的平均load超过阈值时限制此丛集的最高频率至`optimumFreq`.
+            # 负载最高核心的load减去其他核心的平均load没有超过阈值时限制此丛集的最高频率至`optimumFreq`.
             multiLoadThres = [50, 50, 50] # 多核负载限制阈值(%).
             maxMargin = [10, 10, 10] # 最大冗余(%), 冗余越高升频越积极.
             maxLatency = [40, 40, 40] # 最大升频延迟(ms), 延迟越高升频越缓慢.
