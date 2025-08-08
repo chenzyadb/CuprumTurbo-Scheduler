@@ -3,7 +3,7 @@ config CpuGovernor.profile {
         powersave = {
             powerLimit = 3000
             multiLoadLimit = true
-            multiLoadThres = [50, 50, 50]
+            multiLoadThres = [80, 80, 80]
             maxMargin = [10, 10, 10]
             maxLatency = [40, 40, 40]
             maxFreqStep = [200, 200, 200]
@@ -19,7 +19,7 @@ config CpuGovernor.profile {
         performance = {
             powerLimit = 5000
             multiLoadLimit = false
-            multiLoadThres = [50, 50, 50]
+            multiLoadThres = [0, 0, 0]
             maxMargin = [30, 30, 30]
             maxLatency = [20, 20, 20]
             maxFreqStep = [200, 200, 200]
@@ -27,7 +27,7 @@ config CpuGovernor.profile {
         fast = {
             powerLimit = 10000
             multiLoadLimit = false
-            multiLoadThres = [50, 50, 50]
+            multiLoadThres = [0, 0, 0]
             maxMargin = [30, 30, 30]
             maxLatency = [10, 10, 10]
             maxFreqStep = [200, 200, 200]

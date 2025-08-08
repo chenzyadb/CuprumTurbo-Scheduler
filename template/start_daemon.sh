@@ -3,7 +3,7 @@ SCRIPT_PATH=$(readlink -f "$0")
 DIR_PATH=$(dirname "$SCRIPT_PATH")
 
 get_pineapple_name() {
-    cpu_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
+    cpu_max_freq=$(cat /sys/devices/system/cpu/cpu7/cpufreq/cpuinfo_max_freq)
     if [ "$cpu_max_freq" -gt 3200000 ]; then
         echo "sdm8gen3"
     else
@@ -12,11 +12,11 @@ get_pineapple_name() {
 }
 
 get_taro_name() {
-    cpu7_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
-    gpu_max_freq=$(cat /sys/class/kgsl/kgsl-3d0/max_clock_mhz)
+    cpu7_max_freq=$(cat /sys/devices/system/cpu/cpu7/cpufreq/cpuinfo_max_freq)
     if [ "$cpu7_max_freq" -gt 3100000 ]; then
         echo "sdm8+gen1"
     elif [ "$cpu7_max_freq" -gt 2950000 ]; then
+        gpu_max_freq=$(cat /sys/class/kgsl/kgsl-3d0/max_clock_mhz)
         if [ "$gpu_max_freq" -gt 850 ]; then
             echo "sdm8+gen1"
         else
@@ -30,8 +30,8 @@ get_taro_name() {
 }
 
 get_lahaina_name() {
-    cpu7_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
-    cpu4_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy4/cpuinfo_max_freq)
+    cpu7_max_freq=$(cat /sys/devices/system/cpu/cpu7/cpufreq/cpuinfo_max_freq)
+    cpu4_max_freq=$(cat /sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq)
     if [ "$cpu7_max_freq" -gt 2800000 ]; then
         echo "sdm888"
     elif [ "$cpu4_max_freq" -gt 2300000 ]; then
@@ -42,7 +42,7 @@ get_lahaina_name() {
 }
 
 get_lito_name() {
-    cpu_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
+    cpu_max_freq=$(cat /sys/devices/system/cpu/cpu7/cpufreq/cpuinfo_max_freq)
     if [ "$cpu_max_freq" -gt 2300000 ]; then
         echo "sdm765"
     else
@@ -51,7 +51,7 @@ get_lito_name() {
 }
 
 get_sm6150_name() {
-    cpu_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
+    cpu_max_freq=$(cat /sys/devices/system/cpu/cpu7/cpufreq/cpuinfo_max_freq)
     if [ "$cpu_max_freq" -gt 2200000 ]; then
         echo "sdm730"
     else
@@ -60,7 +60,7 @@ get_sm6150_name() {
 }
 
 get_mt6895_name() {
-    cpu_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
+    cpu_max_freq=$(cat /sys/devices/system/cpu/cpu7/cpufreq/cpuinfo_max_freq)
     if [ "$cpu_max_freq" -gt 3000000 ]; then
         echo "dimensity8200"
     else
@@ -69,7 +69,7 @@ get_mt6895_name() {
 }
 
 get_bengal_name() {
-    cpu_max_freq=$(cat /sys/devices/system/cpu/cpufreq/policy7/cpuinfo_max_freq)
+    cpu_max_freq=$(cat /sys/devices/system/cpu/cpu7/cpufreq/cpuinfo_max_freq)
     if [ "$cpu_max_freq" -gt 2300000 ]; then
         echo "sdm680"
     else

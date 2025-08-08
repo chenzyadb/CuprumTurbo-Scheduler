@@ -8,10 +8,6 @@ config ThreadSchedOpt.profile {
             pkgName = "system_server"
             symbol = none
         }
-        unity_genshin = {
-            pkgName = "*(.Yuanshen|.GenshinImpact)|*.ys.*"
-            symbol = none
-        }
         unity_common = {
             pkgName = none
             symbol = "Unity*"
@@ -117,12 +113,12 @@ config ThreadSchedOpt.profile {
                 commonCpus = [0, 1, 2]
             },
             {
-                threadName = "([Bb]ugly|BUGLY)*|*([Cc]rash|[Ll]og|[Rr]eport)*"
+                threadName = "([Bb]ugly|BUGLY)*|*([Cc]rash|[Ll]og|[Rr]eport|[Aa]nalytic|[Ww]atch[Dd]og|[Tt]racker|[Mm]onitor)*"
                 heavyCpus = none
                 commonCpus = [0, 1, 2]
             },
             {
-                threadName = "(APM-|TVKDL-|Firebase|koom|ADB-|MemoryInfra)*|*([Aa]nalytic|[Ww]atch[Dd]og|[Tt]racker|[Mm]onitor)*"
+                threadName = "(APM-|TVKDL-|Firebase|koom|ADB-|MemoryInfra|perfetto)*"
                 heavyCpus = none
                 commonCpus = [0, 1, 2]
             },
@@ -169,43 +165,6 @@ config ThreadSchedOpt.profile {
                 threadName = "*"
                 heavyCpus = none
                 commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
-            }
-        ]
-        unity_genshin = [
-            {
-                threadName = "MAIN_THREAD"
-                heavyCpus = none
-                commonCpus = [0, 1, 2, 3, 4, 5, 6]
-            },
-            {
-                threadName = "UnityGfx*"
-                heavyCpus = [7]
-                commonCpus = [3, 4, 5, 6]
-            },
-            {
-                threadName = "(UnityMain|UnityMulti|UnityPreload|UnityChoreograp|UnityCCeograp)*"
-                heavyCpus = none
-                commonCpus = [3, 4, 5, 6]
-            },
-            {
-                threadName = "(FMOD|[Aa]udio)*"
-                heavyCpus = none
-                commonCpus = [0, 1, 2, 3, 4, 5, 6]
-            },
-            {
-                threadName = "(Worker Thread|NativeThread|IL2CPP|CoreThread|Thread-)*"
-                heavyCpus = none
-                commonCpus = [3, 4, 5, 6]
-            },
-            {
-                threadName = "*[Bb]inder*"
-                heavyCpus = none
-                commonCpus = [0, 1, 2, 3, 4, 5, 6, 7]
-            },
-            {
-                threadName = "*"
-                heavyCpus = none
-                commonCpus = [0, 1, 2, 3, 4, 5, 6]
             }
         ]
         unity_common = [
