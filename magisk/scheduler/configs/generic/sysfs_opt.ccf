@@ -38,6 +38,16 @@ function set_task_cgroup {
         std.str_merge(task_pid, "\n"))
 }
 
+function wakeup_cpus {
+    cpu_paths = lib.list_path("/sys/devices/system/cpu")
+    pos = 0
+    while (std.less(pos, std.sizeof(cpu_paths))) {
+        cpu_online_path = std.str_merge(std.list_get_elem(cpu_paths, pos), "/online")
+        lock_value(cpu_online_path, "1")
+        pos = std.summation(pos, 1)
+    }
+}
+
 function disable_boosts {
     stop_service("horae")
     stop_service("miuibooster")

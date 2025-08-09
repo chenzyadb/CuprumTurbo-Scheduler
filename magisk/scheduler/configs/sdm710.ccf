@@ -6,7 +6,7 @@ import "thread/cpu_6_2.ccf"
 
 config meta_data {
     name = "Snapdragon710/712/670"
-    version = "v1.3.0"
+    version = "v1.3.1"
     author = "chenzyadb"
 }
 
@@ -20,6 +20,7 @@ config modules_switch {
 }
 
 function init {
+    wakeup_cpus()
     disable_boosts()
     stune_opt()
     cpuctl_opt()
