@@ -2,11 +2,12 @@ import "generic/utils.ccf"
 import "generic/sysfs_opt.ccf"
 import "generic/trigger.ccf"
 import "cpu_governor/cluster_4.ccf"
+import "cpu_governor/expect_power.ccf"
 import "thread/cpu_2_5_1.ccf"
 
 config meta_data {
     name = "Snapdragon8sGen4"
-    version = "v1.3.1"
+    version = "v1.4.0"
     author = "chenzyadb"
 }
 
@@ -70,6 +71,7 @@ config CpuGovernor.model {
 }
 
 function Trigger.hint.onNone {
+    set_expect_power(CPU_IDLE_POWER_LIMIT)
     lib.set_property("cpu.boost", 0)
     lib.set_property("cpu.extra_margin", 0)
     lib.set_property("cpu.low_latency", false)
@@ -82,6 +84,7 @@ function Trigger.hint.onNone {
 }
 
 function Trigger.hint.onTap {
+    set_expect_power(CPU_NORMAL_POWER_LIMIT)
     lib.set_property("cpu.boost", 20)
     lib.set_property("cpu.extra_margin", 0)
     lib.set_property("cpu.low_latency", false)
@@ -94,6 +97,7 @@ function Trigger.hint.onTap {
 }
 
 function Trigger.hint.onSwipe {
+    set_expect_power(CPU_NORMAL_POWER_LIMIT)
     lib.set_property("cpu.boost", 0)
     lib.set_property("cpu.extra_margin", 10)
     lib.set_property("cpu.low_latency", false)
@@ -106,6 +110,7 @@ function Trigger.hint.onSwipe {
 }
 
 function Trigger.hint.onGesture {
+    set_expect_power(CPU_NORMAL_POWER_LIMIT)
     lib.set_property("cpu.boost", 20)
     lib.set_property("cpu.extra_margin", 10)
     lib.set_property("cpu.low_latency", false)
@@ -118,6 +123,7 @@ function Trigger.hint.onGesture {
 }
 
 function Trigger.hint.onHeavyload {
+    set_expect_power(CPU_NORMAL_POWER_LIMIT)
     lib.set_property("cpu.boost", 0)
     lib.set_property("cpu.extra_margin", 20)
     lib.set_property("cpu.low_latency", false)
@@ -130,6 +136,7 @@ function Trigger.hint.onHeavyload {
 }
 
 function Trigger.hint.onJank {
+    set_expect_power(CPU_BURST_POWER_LIMIT)
     lib.set_property("cpu.boost", 40)
     lib.set_property("cpu.extra_margin", 0)
     lib.set_property("cpu.low_latency", true)
@@ -142,6 +149,7 @@ function Trigger.hint.onJank {
 }
 
 function Trigger.hint.onBigJank {
+    set_expect_power(CPU_BURST_POWER_LIMIT)
     lib.set_property("cpu.boost", 40)
     lib.set_property("cpu.extra_margin", 20)
     lib.set_property("cpu.low_latency", true)

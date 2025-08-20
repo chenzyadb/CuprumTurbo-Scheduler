@@ -104,6 +104,9 @@ get_mt6895_name() {
 
 get_config_name() {
     case "$1" in
+        canoe*)
+            echo "sdm8elite2"
+            ;;
         crow*)
             echo "sdm7gen3"
             ;;

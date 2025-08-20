@@ -166,7 +166,6 @@ config CpuGovernor.profile {
     perMode = {
         # 配置中的数组都是每个元素对应一个丛集.
         powersave = { # 省电模式下.
-            powerLimit = 3000 # 基础功耗限制, 在cpu.boost/cpu.extra_margin/cpu.low_latency 为0/false时生效.
             multiLoadLimit = true # 多核负载限制.
             # 负载最高核心的load减去其他核心的平均load没有超过阈值时限制此丛集的最高频率至`optimumFreq`.
             multiLoadThres = [50, 50, 50] # 多核负载限制阈值(%).
@@ -175,7 +174,6 @@ config CpuGovernor.profile {
             maxFreqStep = [200, 200, 200] # 每次调频最大步幅(MHz).
         }
         balance = { # 均衡模式下.
-            powerLimit = 4000
             multiLoadLimit = true
             multiLoadThres = [50, 50, 50]
             maxMargin = [20, 20, 20]
@@ -183,7 +181,6 @@ config CpuGovernor.profile {
             maxFreqStep = [200, 200, 200]
         }
         performance = { # 性能模式下.
-            powerLimit = 5000
             multiLoadLimit = false
             multiLoadThres = [50, 50, 50]
             maxMargin = [30, 30, 30]
@@ -191,7 +188,6 @@ config CpuGovernor.profile {
             maxFreqStep = [200, 200, 200]
         }
         fast = { # 极速模式下.
-            powerLimit = 10000
             multiLoadLimit = false
             multiLoadThres = [50, 50, 50]
             maxMargin = [30, 30, 30]
@@ -201,8 +197,44 @@ config CpuGovernor.profile {
     }
 }
 
+define "CPU_IDLE_POWER_LIMIT" "0" # 定义CPU_IDLE_POWER_LIMIT.
+define "CPU_NORMAL_POWER_LIMIT" "1" # 定义CPU_NORMAL_POWER_LIMIT.
+define "CPU_BURST_POWER_LIMIT" "2" # 定义CPU_BURST_POWER_LIMIT.
+
+# 用于设置`expect_power`的函数.
+function set_expect_power {
+    power_limit = $0
+    if (std.equals(power_limit, CPU_IDLE_POWER_LIMIT)) {
+        mode = get_scheduler_mode()
+        if (std.equals(mode, POWERSAVE_MODE)) {
+            # cpu.expect_power值用于设定期望的功耗上限(mW).
+            lib.set_property("cpu.expect_power", 2000)
+        } else if (std.equals(mode, BALANCE_MODE)) {
+            lib.set_property("cpu.expect_power", 3000)
+        } else if (std.equals(mode, PERFORMANCE_MODE)) {
+            lib.set_property("cpu.expect_power", 5000)
+        } else if (std.equals(mode, FAST_MODE)) {
+            lib.set_property("cpu.expect_power", 10000)
+        }
+    } else if (std.equals(power_limit, CPU_NORMAL_POWER_LIMIT)) {
+        mode = get_scheduler_mode()
+        if (std.equals(mode, POWERSAVE_MODE)) {
+            lib.set_property("cpu.expect_power", 3000)
+        } else if (std.equals(mode, BALANCE_MODE)) {
+            lib.set_property("cpu.expect_power", 5000)
+        } else if (std.equals(mode, PERFORMANCE_MODE)) {
+            lib.set_property("cpu.expect_power", 8000)
+        } else if (std.equals(mode, FAST_MODE)) {
+            lib.set_property("cpu.expect_power", 10000)
+        }
+    } else if (std.equals(power_limit, CPU_BURST_POWER_LIMIT)) {
+        lib.set_property("cpu.expect_power", 10000)
+    }
+}
+
 # 当Hint为None时触发的函数.
 function Trigger.hint.onNone {
+    set_expect_power(CPU_IDLE_POWER_LIMIT)
     # `lib.set_property`函数可以设置调度内部的Property值用于动态改变调度行为, 第一个参数为Property的键, 第二个参数为Property的值.
     # 键必须时String类型, 值支持 String, Number, Boolean 类型, Number类型只支持整数, 浮点数会被强转为整数.
     lib.set_property("cpu.boost", 0) # cpu.boost值可以在CPU负载较低时"夸大"CPU负载, 用于在某些场景下提前提升CPU频率.
@@ -218,6 +250,7 @@ function Trigger.hint.onNone {
 
 # 当Hint为Tap时触发的函数.
 function Trigger.hint.onTap {
+    set_expect_power(CPU_NORMAL_POWER_LIMIT)
     lib.set_property("cpu.boost", 20)
     lib.set_property("cpu.extra_margin", 0)
     lib.set_property("cpu.low_latency", false)
@@ -231,6 +264,7 @@ function Trigger.hint.onTap {
 
 # 当Hint为Swipe时触发的函数.
 function Trigger.hint.onSwipe {
+    set_expect_power(CPU_NORMAL_POWER_LIMIT)
     lib.set_property("cpu.boost", 0)
     lib.set_property("cpu.extra_margin", 10)
     lib.set_property("cpu.low_latency", false)
@@ -244,6 +278,7 @@ function Trigger.hint.onSwipe {
 
 # 当Hint为Gesture时触发的函数.
 function Trigger.hint.onGesture {
+    set_expect_power(CPU_NORMAL_POWER_LIMIT)
     lib.set_property("cpu.boost", 20)
     lib.set_property("cpu.extra_margin", 10)
     lib.set_property("cpu.low_latency", false)
@@ -257,6 +292,7 @@ function Trigger.hint.onGesture {
 
 # 当Hint为Heavyload时触发的函数.
 function Trigger.hint.onHeavyload {
+    set_expect_power(CPU_NORMAL_POWER_LIMIT)
     lib.set_property("cpu.boost", 0)
     lib.set_property("cpu.extra_margin", 20)
     lib.set_property("cpu.low_latency", false)
@@ -270,6 +306,7 @@ function Trigger.hint.onHeavyload {
 
 # 当Hint为Jank时触发的函数.
 function Trigger.hint.onJank {
+    set_expect_power(CPU_BURST_POWER_LIMIT)
     lib.set_property("cpu.boost", 40)
     lib.set_property("cpu.extra_margin", 0)
     lib.set_property("cpu.low_latency", true)
@@ -283,6 +320,7 @@ function Trigger.hint.onJank {
 
 # 当Hint为BigJank时触发的函数.
 function Trigger.hint.onBigJank {
+    set_expect_power(CPU_BURST_POWER_LIMIT)
     lib.set_property("cpu.boost", 40)
     lib.set_property("cpu.extra_margin", 20)
     lib.set_property("cpu.low_latency", true)

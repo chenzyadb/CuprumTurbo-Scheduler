@@ -1,0 +1,32 @@
+define "CPU_IDLE_POWER_LIMIT" "0"
+define "CPU_NORMAL_POWER_LIMIT" "1"
+define "CPU_BURST_POWER_LIMIT" "2"
+
+function set_expect_power {
+    power_limit = $0
+    if (std.equals(power_limit, CPU_IDLE_POWER_LIMIT)) {
+        mode = get_scheduler_mode()
+        if (std.equals(mode, POWERSAVE_MODE)) {
+            lib.set_property("cpu.expect_power", 2000)
+        } else if (std.equals(mode, BALANCE_MODE)) {
+            lib.set_property("cpu.expect_power", 3000)
+        } else if (std.equals(mode, PERFORMANCE_MODE)) {
+            lib.set_property("cpu.expect_power", 5000)
+        } else if (std.equals(mode, FAST_MODE)) {
+            lib.set_property("cpu.expect_power", 10000)
+        }
+    } else if (std.equals(power_limit, CPU_NORMAL_POWER_LIMIT)) {
+        mode = get_scheduler_mode()
+        if (std.equals(mode, POWERSAVE_MODE)) {
+            lib.set_property("cpu.expect_power", 3000)
+        } else if (std.equals(mode, BALANCE_MODE)) {
+            lib.set_property("cpu.expect_power", 5000)
+        } else if (std.equals(mode, PERFORMANCE_MODE)) {
+            lib.set_property("cpu.expect_power", 8000)
+        } else if (std.equals(mode, FAST_MODE)) {
+            lib.set_property("cpu.expect_power", 10000)
+        }
+    } else if (std.equals(power_limit, CPU_BURST_POWER_LIMIT)) {
+        lib.set_property("cpu.expect_power", 10000)
+    }
+}

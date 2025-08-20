@@ -1,4 +1,3 @@
-define "UNKNOWN_MODE" "-1"
 define "POWERSAVE_MODE" "0"
 define "BALANCE_MODE" "1"
 define "PERFORMANCE_MODE" "2"
