@@ -8,7 +8,7 @@ import "thread/cpu_6_2.ccf"
 
 config meta_data {
     name = "Helio_G99/Dimensity6100"
-    version = "v1.4.0"
+    version = "v1.4.1"
     author = "chenzyadb"
 }
 

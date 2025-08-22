@@ -12,6 +12,7 @@ function set_prop {
 function lock_value {
     path = $0
     value = $1
+    lib.chmod(path, 438) # 0666 = 438
     lib.write(path, std.str_merge(value, "\n"))
     lib.chmod(path, 292) # 0444 = 292
 }

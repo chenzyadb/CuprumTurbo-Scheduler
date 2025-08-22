@@ -8,7 +8,7 @@ import "thread/cpu_4_4.ccf"
 
 config meta_data {
     name = "Dimensity1100/1200/1300/8050"
-    version = "v1.4.0"
+    version = "v1.4.1"
     author = "chenzyadb"
 }
 
