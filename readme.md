@@ -5,7 +5,7 @@
 [![Releases](https://img.shields.io/github/v/release/chenzyadb/CuprumTurbo-Scheduler?label=Release&logo=github)](https://github.com/chenzyadb/CuprumTurbo-Scheduler/releases/latest) [![License](https://img.shields.io/github/license/chenzyadb/CuprumTurbo-Scheduler?logo=bsd)](/LICENSE) ![Downloads](https://img.shields.io/github/downloads/chenzyadb/CuprumTurbo-Scheduler/total)
 ### 项目介绍  
 - 通过识别使用场景动态进行性能调控以改善流畅度和能效表现.  
-- 支持安卓9-15的arm64设备.  
+- 支持安卓9-16的arm64设备.  
 - 软件本体使用C++语言编写, 自身性能开销较小.  
 - 支持通过提供的APP/magisk模块方式自动配置运行, 也可自由修改为其他启动方式.  
 - 支持多种调度模式, 配合CuToolbox APP可以实现动态模式切换.  
