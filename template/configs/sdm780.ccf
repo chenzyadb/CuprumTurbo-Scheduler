@@ -7,7 +7,7 @@ import "thread/cpu_4_4.ccf"
 
 config meta_data {
     name = "Snapdragon780/780G"
-    version = "v1.4.1"
+    version = "v1.5.0"
     author = "chenzyadb"
 }
 

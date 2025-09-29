@@ -25,7 +25,7 @@ function lock_value_group {
     pos = 0
     while (std.less(pos, std.sizeof(paths))) {
         lock_value(std.list_get_elem(paths, pos), value)
-        pos = std.summation(pos, 1)
+        pos++
     }
 }
 
@@ -45,7 +45,7 @@ function wakeup_cpus {
     while (std.less(pos, std.sizeof(cpu_paths))) {
         cpu_online_path = std.str_merge(std.list_get_elem(cpu_paths, pos), "/online")
         lock_value(cpu_online_path, "1")
-        pos = std.summation(pos, 1)
+        pos++
     }
 }
 
@@ -159,7 +159,7 @@ function stune_opt {
         pos = 0
         while (std.less(pos, std.sizeof(stunes))) {
             stune_opt_impl(std.list_get_elem(stunes, pos))
-            pos = std.summation(pos, 1)
+            pos++
         }
     }
 }
@@ -184,7 +184,7 @@ function cpuctl_opt {
         pos = 0
         while (std.less(pos, std.sizeof(cpuctls))) {
             cpuctl_opt_impl(std.list_get_elem(cpuctls, pos))
-            pos = std.summation(pos, 1)
+            pos++
         }
     }
 }

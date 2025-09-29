@@ -57,7 +57,7 @@ function template_func { # 开始定义名称为`template_func`的function节.
     i = 0
     while (std.less(i, 10)) { # 使用`while`语句定义循环体, 当变量`i`小于10时一直循环.
         std.print(std.str_merge("第", std.summation(i, 1), "次循环."))
-        i = std.summation(i, 1) # 将变量i中的值加一.
+        i++ # 变量i自增.
     } # 当变量`i`等于10就退出循环.
 }
 
@@ -127,6 +127,9 @@ function Trigger.scene.onModeSwitched { }
 
 # 顶层应用切换场景时触发的函数.
 function Trigger.scene.onTopAppChanged { }
+
+# 基于调度程序内部事件定期触发的函数.
+function Trigger.scene.onTick { }
 
 # CPU调频器功耗模型配置.
 config CpuGovernor.model {

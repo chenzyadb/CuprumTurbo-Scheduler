@@ -8,7 +8,7 @@ import "thread/cpu_4_4.ccf"
 
 config meta_data {
     name = "Helio_P22/P22T/P25/P35/G25/G35"
-    version = "v1.4.1"
+    version = "v1.5.0"
     author = "chenzyadb"
 }
 

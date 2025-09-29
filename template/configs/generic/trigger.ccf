@@ -16,3 +16,5 @@ function Trigger.scene.onScreenOff { }
 function Trigger.scene.onModeSwitched { }
 
 function Trigger.scene.onTopAppChanged { }
+
+function Trigger.scene.onTick { }
